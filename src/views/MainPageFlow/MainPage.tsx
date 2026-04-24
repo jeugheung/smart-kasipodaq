@@ -1,10 +1,11 @@
 import { colors } from "@shared/theme/colors";
 import { DefaultLayout } from "@widgets/Layout/DefaultLayout";
+import { WelcomeCard } from "@widgets/WelcomeCard";
 import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Text } from "react-native";
 
 
-export const MainPage = ({ navigation }: Props) => {
+export const MainPage = ({ navigation }: any) => {
 
 
  
@@ -12,7 +13,7 @@ export const MainPage = ({ navigation }: Props) => {
   return (
     <DefaultLayout variant="default" onRightPress={() => alert("EN")}>
       <View style={styles.content}>
-         <Text>dsds31313</Text>
+         <WelcomeCard />
       
       </View>
     </DefaultLayout>

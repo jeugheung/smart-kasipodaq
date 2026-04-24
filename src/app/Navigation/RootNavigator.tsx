@@ -1,10 +1,8 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../shared/navigation/types';
-
-import { AppTabsNavigator } from './AppTabsNavigator';
-
-
+import { RootStackParamList } from '@shared/navigation/types';
+import { AppTabsNavigator } from './AppTabsNavitagor';
+import { EventsPage } from '@views/MainPageFlow';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -17,7 +15,7 @@ export const RootNavigator = () => {
       {/* 2. Группируем все "глубокие" экраны, которые скроют табы */}
       <Stack.Group screenOptions={{ animation: 'slide_from_right' }}>
         {/* Home Flow Screens */}
- 
+         <Stack.Screen name="EventsPage" component={EventsPage} />
       </Stack.Group>
     </Stack.Navigator>
   );

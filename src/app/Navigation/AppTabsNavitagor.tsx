@@ -8,11 +8,12 @@ import {
   RequestsIcon,
   NotificationsIcon,
   ProfileIcon,
-} from '../../shared/ui/TabIcons/TabIcons';
+} from '@shared/ui/TabIcons/TabIcons';
 
 import { AnimatedTabIcon } from '@shared/ui/AnimatedTabIcon';
 import { TabBounceButton } from '@shared/ui/TabBounceButton';
 import { MainPage } from '@views/MainPageFlow/MainPage';
+import { RequestPage } from '@views/RequestPageFlow/RequestPage';
 
 const Tab = createBottomTabNavigator();
 
@@ -61,9 +62,20 @@ export const AppTabsNavigator = () => {
       {/* REQUESTS */}
       <Tab.Screen
         name="RequestsTab"
-        component={RequestsPage}
+        component={RequestPage}
         options={{
           tabBarLabel: 'Request',
+          tabBarIcon: ({ color }) => <RequestsIcon color={color} />,
+          tabBarButton: (props) => <TabBounceButton {...props} />,
+        }}
+      />
+
+      {/* REQUESTS */}
+      <Tab.Screen
+        name="RequestsTab"
+        component={RequestPage}
+        options={{
+          tabBarLabel: 'Опросы',
           tabBarIcon: ({ color }) => <RequestsIcon color={color} />,
           tabBarButton: (props) => <TabBounceButton {...props} />,
         }}

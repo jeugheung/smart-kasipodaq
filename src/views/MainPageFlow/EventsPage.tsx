@@ -4,12 +4,13 @@ import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Text } from "react-native";
 
 
-export const RequestPage = ({ navigation }: any) => {
+export const EventsPage = ({ navigation }: any) => {
+
 
   return (
     <DefaultLayout variant="default" onRightPress={() => alert("EN")}>
       <View style={styles.content}>
-        <Text>dsds</Text>
+         <Text>Events Page</Text>
       
       </View>
     </DefaultLayout>
@@ -27,3 +28,4 @@ const styles = StyleSheet.create({
     minHeight: "100%",
   },
 });
+
