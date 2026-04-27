@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { colors } from '@shared/theme/colors';
+import { LanguageChanger } from '@features/LanguageChanger';
+
 
 type Props = {
   title: string;
@@ -13,6 +15,8 @@ export const DefaultHeader = ({ title }: Props) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
+
+      <LanguageChanger/>
     </View>
   );
 };
@@ -29,8 +33,8 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    color: colors.primary,
-    fontSize: 20,
-    fontWeight: '600',
+    color: 'rgba(0, 0, 0, 1)',
+    fontSize: 24,
+    fontWeight: '700',
   },
 });

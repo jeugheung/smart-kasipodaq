@@ -11,7 +11,7 @@ export const MainPage = ({ navigation }: any) => {
  
 
   return (
-    <DefaultLayout variant="default" onRightPress={() => alert("EN")}>
+    <DefaultLayout variant="default" title="Smart Kasipodaq" onRightPress={() => alert("EN")}>
       <View style={styles.content}>
          <WelcomeCard />
       
