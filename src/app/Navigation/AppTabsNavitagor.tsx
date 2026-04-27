@@ -14,6 +14,7 @@ import { AnimatedTabIcon } from '@shared/ui/AnimatedTabIcon';
 import { TabBounceButton } from '@shared/ui/TabBounceButton';
 import { MainPage } from '@views/MainPageFlow/MainPage';
 import { RequestPage } from '@views/RequestPageFlow/RequestPage';
+import { SurveyPage } from '@views/SurveysFlow';
 
 const Tab = createBottomTabNavigator();
 
@@ -70,10 +71,10 @@ export const AppTabsNavigator = () => {
         }}
       />
 
-      {/* REQUESTS */}
+      {/* surveys */}
       <Tab.Screen
-        name="RequestsTab"
-        component={RequestPage}
+        name="SurveysTab"
+        component={SurveyPage}
         options={{
           tabBarLabel: 'Опросы',
           tabBarIcon: ({ color }) => <RequestsIcon color={color} />,
