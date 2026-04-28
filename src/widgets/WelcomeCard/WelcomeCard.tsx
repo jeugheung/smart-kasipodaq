@@ -17,13 +17,15 @@ export const WelcomeCard = () => {
           <Text style={styles.littleTitle}>Добро пожаловать</Text>
           <Text style={styles.nameValue}>Андрей Ким</Text>
         </View>
-        <View style={styles.bottomHeader}>
+        <View style={styles.topHeader}>
           <Text style={styles.littleTitle}>Организация</Text>
           <Text style={styles.organizationTitle}>Профсоюз “Парасат”</Text>
         </View>
       </View>
       <View style={styles.rightHeader}>
+        <View style={styles.statusCard}>
 
+        </View>
       </View>
     </LinearGradient>
   );
@@ -31,6 +33,8 @@ export const WelcomeCard = () => {
 
 const styles = StyleSheet.create({
   card: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     width: '100%',
     minHeight: 160,
     borderRadius: 24, // Хорошая практика для карточек с тенями
@@ -49,7 +53,7 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   leftHeader: {
-    maxWidth: 250,
+    maxWidth: 220,
     width: '100%',
 
     height: '100%',
@@ -72,5 +76,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     lineHeight: 24,
     color: '#fff'
+  },
+  topHeader: {
+    flexDirection: 'column',
+  },
+  rightHeader: {
+    width: '100%',
+    maxWidth: 140,
+    minHeight: '100%',
+    backgroundColor: 'red'
   }
 });
