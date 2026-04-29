@@ -24,7 +24,8 @@ export const WelcomeCard = () => {
       </View>
       <View style={styles.rightHeader}>
         <View style={styles.statusCard}>
-
+          <Text style={styles.statusTitle}>Статус:</Text>
+          <Text style={styles.statusValue}>Активен</Text>
         </View>
       </View>
     </LinearGradient>
@@ -36,7 +37,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    minHeight: 160,
+    minHeight: 170,
     borderRadius: 24, // Хорошая практика для карточек с тенями
     padding: 15,
     // --- Настройка теней ---
@@ -81,9 +82,32 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   rightHeader: {
+    alignItems: 'center',
+    justifyContent: 'center',
     width: '100%',
     maxWidth: 140,
     minHeight: '100%',
-    backgroundColor: 'red'
+  },
+  statusCard: {
+    width: 130,
+    height: 60,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  statusTitle: {
+    fontWeight: '700',
+    fontSize: 16,
+    lineHeight: 24,
+    color: 'white'
+  },
+  statusValue: {
+    fontWeight: '700',
+    fontSize: 14,
+    lineHeight: 24,
+    color: 'white'
   }
 });
