@@ -1,3 +1,4 @@
+import { RequestForm } from "@features/RequestForm";
 import { colors } from "@shared/theme/colors";
 import { DefaultLayout } from "@widgets/Layout/DefaultLayout";
 import React, { useEffect, useState } from "react";
@@ -7,11 +8,8 @@ import { View, StyleSheet, Text } from "react-native";
 export const RequestPage = ({ navigation }: any) => {
 
   return (
-    <DefaultLayout variant="default" onRightPress={() => alert("EN")}>
-      <View style={styles.content}>
-        <Text>dsds</Text>
-      
-      </View>
+    <DefaultLayout variant="default" title="Smart Kasipodaq" onRightPress={() => alert("EN")}>
+      <RequestForm />
     </DefaultLayout>
   );
 };
