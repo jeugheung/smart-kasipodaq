@@ -47,14 +47,17 @@ const styles = StyleSheet.create({
   wrapper: {
     width: '100%',
     backgroundColor: '#fff',
-    borderRadius: 12,
+    borderRadius: 24,
     padding: 12,
+    borderWidth: 2,
+    borderColor: '#rgba(137, 137, 137, 1)'
   },
   input: {
     fontSize: 14,
     color: colors.primary,
     padding: 0,
     minHeight: 40,
+    justifyContent: 'flex-start'
   },
   multiline: {
     minHeight: 120,

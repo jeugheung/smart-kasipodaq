@@ -1,11 +1,16 @@
 import { colors } from "@shared/theme/colors";
 import { InputWithCounter } from "@shared/ui/InputWithCounter";
+import { ToggleSwitch } from "@shared/ui/ToggleSwitch";
 import { DefaultLayout } from "@widgets/Layout/DefaultLayout";
 import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Text, FlatList, Pressable } from "react-native";
 
+
 export const RequestForm = ({ navigation }: any) => {
   const [activeTab, setActiveTab] = useState<RequestType>('ideas');
+  const [problem, setProblem] = useState("");
+  const [contacts, setContacts] = useState("");
+  const [anonymous, setAnonymous] = useState(true);
 
   type RequestType =
     | "ideas"
@@ -26,7 +31,7 @@ export const RequestForm = ({ navigation }: any) => {
     <View style={styles.content}>
       {/* 1. ТАБЫ (Горизонтальный список) */}
       <View style={styles.tabsWrapper}>
-        <Text style={styles.tabsTitle}>Тема обращения</Text>
+        <Text style={styles.tabsTitle}>Выберите тему обращения</Text>
         <FlatList
           data={TABS}
           horizontal
@@ -55,18 +60,31 @@ export const RequestForm = ({ navigation }: any) => {
       </View>
 
       <InputWithCounter
-          value={problem}
-          onChangeText={setProblem}
-          placeholder={'Опишите проблему'}
-          multiline
-          maxLength={1000}
+        value={problem}
+        onChangeText={setProblem}
+        placeholder={"Опишите проблему"}
+        multiline
+        maxLength={1000}
+      />
+      <InputWithCounter
+        value={contacts}
+        onChangeText={setContacts}
+        placeholder={"Оставьте контакты"}
+        maxLength={100}
+      />
+
+      <View>
+        <View>
+          <Text>Анонимное обращение</Text>
+          <Text>Скрыть мои данные</Text>
+        </View>
+
+        <ToggleSwitch
+          value={anonymous} label={""} onChange={function (value: boolean): void {
+            throw new Error("Function not implemented.");
+          } }         
         />
-        <InputWithCounter
-          value={contacts}
-          onChangeText={setContacts}
-          placeholder={"Оставьте контакты"}
-          maxLength={100}
-        />
+      </View>
     </View>
   );
 };
@@ -83,14 +101,13 @@ const styles = StyleSheet.create({
   },
   tabsWrapper: {
     marginHorizontal: -15,
-    marginBottom: 20,
     gap: 12
   },
   tabsContent: {
     paddingHorizontal: 15,
   },
   tabButton: {
-    height: 32,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,

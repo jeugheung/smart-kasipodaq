@@ -150,7 +150,6 @@ const styles = StyleSheet.create({
   },
   tabsWrapper: {
     marginHorizontal: -15,
-    marginBottom: 20,
   },
   tabsContent: {
     paddingHorizontal: 15,
