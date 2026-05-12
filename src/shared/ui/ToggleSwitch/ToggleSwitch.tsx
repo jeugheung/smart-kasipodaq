@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 
 type Props = {
-  label: string;
+  label?: string; // Сделали необязательным
   value: boolean;
   onChange: (value: boolean) => void;
 };
@@ -40,8 +40,13 @@ export const ToggleSwitch = ({ label, value, onChange }: Props) => {
   });
 
   return (
-    <Pressable style={styles.container} onPress={() => onChange(!value)}>
-      <Text style={styles.label}>{label}</Text>
+    <Pressable 
+      // Если label нет, добавляем стиль wrapContainer
+      style={[styles.container, !label && styles.wrapContainer]} 
+      onPress={() => onChange(!value)}
+    >
+      {/* Рендерим текст только если он есть */}
+      {!!label && <Text style={styles.label}>{label}</Text>}
 
       <Animated.View style={[styles.switch, { backgroundColor }]}>
         <Animated.View
@@ -63,8 +68,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 14,
-    // borderBottomWidth: 1,
-    // borderBottomColor: "rgb(209, 213, 219)"
+    width: '100%', // По умолчанию на всю ширину
+  },
+  wrapContainer: {
+    width: 'auto',         // Отменяем фиксированную ширину
+   
+    paddingVertical: 0,    // Убираем лишние отступы, если это просто иконка
   },
   label: {
     fontSize: 16,
@@ -82,8 +91,6 @@ const styles = StyleSheet.create({
     height: THUMB_SIZE,
     borderRadius: THUMB_SIZE / 2,
     backgroundColor: '#fff',
-
-    // чуть объёма
     shadowColor: '#000',
     shadowOpacity: 0.15,
     shadowRadius: 2,

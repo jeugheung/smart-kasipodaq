@@ -1,4 +1,5 @@
 import { colors } from "@shared/theme/colors";
+import { AppButton } from "@shared/ui/AppButton";
 import { InputWithCounter } from "@shared/ui/InputWithCounter";
 import { ToggleSwitch } from "@shared/ui/ToggleSwitch";
 import { DefaultLayout } from "@widgets/Layout/DefaultLayout";
@@ -11,6 +12,8 @@ export const RequestForm = ({ navigation }: any) => {
   const [problem, setProblem] = useState("");
   const [contacts, setContacts] = useState("");
   const [anonymous, setAnonymous] = useState(true);
+
+  const [loading, setLoading] = useState(false);
 
   type RequestType =
     | "ideas"
@@ -26,6 +29,10 @@ export const RequestForm = ({ navigation }: any) => {
     { key: "service", titleKey: "Социальные льготы" },
     { key: "service1", titleKey: "Предложение по коллективному договору" },
   ];
+
+  const submit = () => {
+
+  }
 
   return (
     <View style={styles.content}>
@@ -73,18 +80,25 @@ export const RequestForm = ({ navigation }: any) => {
         maxLength={100}
       />
 
-      <View>
+      <View style={styles.anonBlock}>
         <View>
-          <Text>Анонимное обращение</Text>
-          <Text>Скрыть мои данные</Text>
+          <Text style={styles.anonTitle}>Анонимное обращение</Text>
+          <Text style={styles.anonSubtitle}>Скрыть мои данные</Text>
         </View>
 
         <ToggleSwitch
-          value={anonymous} label={""} onChange={function (value: boolean): void {
+          value={anonymous} onChange={function (value: boolean): void {
             throw new Error("Function not implemented.");
           } }         
         />
       </View>
+
+      <AppButton
+        title={loading ? "ds" : "111"}
+        onPress={submit}
+        height={50}
+        disabled={loading || !problem.trim()}
+      />
     </View>
   );
 };
@@ -132,5 +146,23 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: 'rgba(0, 0, 0, 1)',
     paddingLeft: 15
+  },
+  anonBlock: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  anonTitle: {
+    fontSize: 14,
+    fontWeight: 800,
+    lineHeight: 24,
+    color: 'rgba(0, 0, 0, 1)',
+  },
+  anonSubtitle: {
+    fontSize: 10,
+    fontWeight: 500,
+    lineHeight: 24,
+    color: 'rgba(132, 132, 132, 1)',
   }
 });

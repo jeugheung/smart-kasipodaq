@@ -150,6 +150,7 @@ const styles = StyleSheet.create({
   },
   tabsWrapper: {
     marginHorizontal: -15,
+    marginBottom: 15
   },
   tabsContent: {
     paddingHorizontal: 15,
@@ -161,15 +162,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 24,
     marginRight: 8,
-    backgroundColor: '#F0F0F0', // Фон для неактивных табов
+    backgroundColor: 'rgb(211, 215, 221);', // Фон для неактивных табов
   },
   activeTab: {
-    backgroundColor: colors.primary || '#0054A6',
+    backgroundColor: 'rgba(37, 99, 235, 1)',
   },
   tabText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#333',
+    color: 'rgb(88, 88, 88)',
   },
   activeTabText: {
     color: '#fff',
