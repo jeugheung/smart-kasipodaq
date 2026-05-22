@@ -4,6 +4,7 @@ export type RootStackParamList = {
 
   // Экраны из HomeFlow
   EventsPage: undefined;
+  SurveyDetailPage: undefined;
 
   // Экраны из ProfileFlow
  

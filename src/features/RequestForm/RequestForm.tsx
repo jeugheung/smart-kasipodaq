@@ -34,6 +34,10 @@ export const RequestForm = ({ navigation }: any) => {
 
   }
 
+  const openSheet = () => {
+
+  }
+
   return (
     <View style={styles.content}>
       {/* 1. ТАБЫ (Горизонтальный список) */}
@@ -79,6 +83,10 @@ export const RequestForm = ({ navigation }: any) => {
         placeholder={"Оставьте контакты"}
         maxLength={100}
       />
+
+      <Pressable style={styles.uploadBtn} onPress={openSheet}>
+        <Text style={styles.uploadText}>📎 Прикрепить файлы</Text>
+      </Pressable>
 
       <View style={styles.anonBlock}>
         <View>
@@ -164,5 +172,15 @@ const styles = StyleSheet.create({
     fontWeight: 500,
     lineHeight: 24,
     color: 'rgba(132, 132, 132, 1)',
-  }
+  },
+  uploadBtn: {
+    height: 50,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "#079BC9",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F0F9FF",
+  },
+  uploadText: { color: "#079BC9", fontWeight: "700" },
 });

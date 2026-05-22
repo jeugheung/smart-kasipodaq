@@ -2,7 +2,7 @@ import React, { ReactNode } from 'react';
 import { StyleSheet, RefreshControl, View, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { DefaultHeader } from '@widgets/Header';
+import { BackHeader, DefaultHeader } from '@widgets/Header';
 
 type Props = {
   children: ReactNode;
@@ -43,7 +43,7 @@ export const DefaultLayout = ({
     <SafeAreaView style={styles.safeArea} edges={edges}>
       {/* {variant === 'main' && <MainHeader onRightPress={onRightPress} />} */}
       {variant === 'default' && <DefaultHeader title={title || ''} />}
-      {/* {variant === 'back' && <BackHeader title={title || ''} />} */}
+      {variant === 'back' && <BackHeader title={title || ''} />}
 
       <KeyboardAwareScrollView
         contentContainerStyle={styles.scrollContent}

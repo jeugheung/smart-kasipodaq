@@ -53,7 +53,7 @@ export const AppTabsNavigator = () => {
         name="MainTab"
         component={MainPage}
         options={{
-          tabBarLabel: 'Main',
+          tabBarLabel: 'Главная',
           tabBarIcon: ({ color }) => <HomeIcon color={color} />,
           // ДОБАВЛЯЕМ СЮДА НАШУ КНОПКУ:
           tabBarButton: (props) => <TabBounceButton {...props} />,
@@ -65,7 +65,7 @@ export const AppTabsNavigator = () => {
         name="RequestsTab"
         component={RequestPage}
         options={{
-          tabBarLabel: 'Request',
+          tabBarLabel: 'Заявка',
           tabBarIcon: ({ color }) => <RequestsIcon color={color} />,
           tabBarButton: (props) => <TabBounceButton {...props} />,
         }}

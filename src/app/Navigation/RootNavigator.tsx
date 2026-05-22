@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@shared/navigation/types';
 import { AppTabsNavigator } from './AppTabsNavitagor';
 import { EventsPage } from '@views/MainPageFlow';
+import { SurveyDetailPage } from '@views/SurveysFlow';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -16,6 +17,7 @@ export const RootNavigator = () => {
       <Stack.Group screenOptions={{ animation: 'slide_from_right' }}>
         {/* Home Flow Screens */}
          <Stack.Screen name="EventsPage" component={EventsPage} />
+         <Stack.Screen name="SurveyDetailPage" component={SurveyDetailPage} />
       </Stack.Group>
     </Stack.Navigator>
   );
