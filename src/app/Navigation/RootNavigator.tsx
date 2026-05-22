@@ -4,6 +4,7 @@ import { RootStackParamList } from '@shared/navigation/types';
 import { AppTabsNavigator } from './AppTabsNavitagor';
 import { EventsPage } from '@views/MainPageFlow';
 import { SurveyDetailPage } from '@views/SurveysFlow';
+import { LoginPage } from '@views/Authentication/LoginPage';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -18,6 +19,7 @@ export const RootNavigator = () => {
         {/* Home Flow Screens */}
          <Stack.Screen name="EventsPage" component={EventsPage} />
          <Stack.Screen name="SurveyDetailPage" component={SurveyDetailPage} />
+         <Stack.Screen name="LoginPage" component={LoginPage} />
       </Stack.Group>
     </Stack.Navigator>
   );

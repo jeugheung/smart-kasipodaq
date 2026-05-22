@@ -15,6 +15,7 @@ import { TabBounceButton } from '@shared/ui/TabBounceButton';
 import { MainPage } from '@views/MainPageFlow/MainPage';
 import { RequestPage } from '@views/RequestPageFlow/RequestPage';
 import { SurveyPage } from '@views/SurveysFlow';
+import { ProfilePage } from '@views/ProfileFlow/ProfilePage';
 
 const Tab = createBottomTabNavigator();
 
@@ -85,15 +86,15 @@ export const AppTabsNavigator = () => {
    
 
       {/* PROFILE */}
-      {/* <Tab.Screen
+      <Tab.Screen
         name="ProfileTab"
         component={ProfilePage}
         options={{
-          tabBarLabel: t('tabs.profile'),
+          tabBarLabel: 'Профиль',
           tabBarIcon: ({ color }) => <ProfileIcon color={color} />,
           tabBarButton: (props) => <TabBounceButton {...props} />,
         }}
-      /> */}
+      />
     </Tab.Navigator>
   );
 };
