@@ -2,7 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@shared/navigation/types';
 import { AppTabsNavigator } from './AppTabsNavitagor';
-import { EventsPage } from '@views/MainPageFlow';
+import { EventsPage, RequestsList } from '@views/MainPageFlow';
 import { SurveyDetailPage } from '@views/SurveysFlow';
 import { LoginPage } from '@views/Authentication/LoginPage';
 
@@ -20,6 +20,7 @@ export const RootNavigator = () => {
          <Stack.Screen name="EventsPage" component={EventsPage} />
          <Stack.Screen name="SurveyDetailPage" component={SurveyDetailPage} />
          <Stack.Screen name="LoginPage" component={LoginPage} />
+          <Stack.Screen name="RequestsList" component={RequestsList} />
       </Stack.Group>
     </Stack.Navigator>
   );
