@@ -1,4 +1,4 @@
-export const MAIN_DOMAIN = 'kasipodaq.competence.kz/';
+export const MAIN_DOMAIN = 'kasipodaq.competence.kz';
 // export const API_SOLUTION_SATBAYEV = 'api.solution.satbayev.university';
 // export const SATBAYEV_API = 'satbayev.university'
 

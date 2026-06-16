@@ -6,44 +6,74 @@ import { WelcomeCard } from "@widgets/WelcomeCard";
 import { NewsWidget } from "@widgets/NewsWidget";
 import { RequestsTabWidget } from "@widgets/RequestsTabWidget";
 
+import {
+  getNews,
 
-// Тот самый массив данных (можно импортировать)
-const MOCK_NEWS = [
-  {
-    id: '1',
-    title: 'Открытие нового филиала профсоюза в Астане',
-    img: 'https://picsum.photos/id/1/280/150',
-    date: '24.05.2024',
-    text: 'Текст новости...'
-  },
-  {
-    id: '2',
-    title: 'Летние путевки для членов профсоюза',
-    img: 'https://picsum.photos/id/10/280/150',
-    date: '20.05.2024',
-    text: 'Текст новости...'
-  },
-  {
-    id: '3',
-    title: 'Изменения в Трудовом кодексе РК 2024',
-    img: 'https://picsum.photos/id/20/280/150',
-    date: '15.05.2024',
-    text: 'Текст новости...'
-  },
-];
+} from "@shared/api/endpoints";
+import { NewsSkeleton } from "@widgets/NewsWidget/NewsSkeleton";
+import { useTranslation } from "react-i18next";
+
 
 export const MainPage = ({ navigation }: any) => {
+  const [loading, setLoading] = useState(true);
+  const [news, setNews] = useState<any[]>([]);
+  const { i18n } = useTranslation();
+  const lang = i18n.language;
+
+  useEffect(() => {
+    setLoading(true);
+
+    Promise.all([
+      getNews(),
+
+    ])
+      .then(
+        ([
+          newsResp,
+
+        ]) => {
+          setNews(newsResp);
+   
+        }
+      )
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
 
   return (
     <DefaultLayout variant="default" title="Smart Kasipodaq" onRightPress={() => alert("EN")}>
       <View style={styles.content}>
         <WelcomeCard />
 
-        {/* Секция с новостями */}
-        <NewsWidget 
-          news={MOCK_NEWS} 
-          onPressAll={() => navigation.navigate('NewsPage')} 
-        />
+        {loading ? (
+          <NewsSkeleton />
+        ) : (
+          <NewsWidget
+            news={news.map((item) => ({
+              id: item.id.toString(),
+              title:
+                lang === "kk"
+                  ? item.title_kz
+                  : lang === "en"
+                  ? item.title_en
+                  : item.title_ru,
+              date:
+                lang === "kk"
+                  ? item.date_kz
+                  : lang === "en"
+                  ? item.date_en
+                  : item.date_ru,
+              text:
+                lang === "kk"
+                  ? item.full_text_kz
+                  : lang === "en"
+                  ? item.full_text_en
+                  : item.full_text_ru,
+              img: `https://kasipodaq.competence.kz/uploads/news/${item.image}`,
+            }))}
+          />
+        )}
 
         {/* Здесь можно добавить другие блоки, например "Сервисы" */}
         <RequestsTabWidget />

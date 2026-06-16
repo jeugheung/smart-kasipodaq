@@ -6,6 +6,10 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { RootNavigator } from '@navigation/RootNavigator';
 import { ThemeProvider } from '@shared/theme/ThemeProvider';
 
+import { useTranslation } from 'react-i18next';
+import i18n from 'i18next'
+import '@shared/i18n';
+
 const MyTheme = {
   ...DefaultTheme,
   colors: {
