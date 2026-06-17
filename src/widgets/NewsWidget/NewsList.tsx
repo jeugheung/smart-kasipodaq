@@ -6,7 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 
 import { useTranslation } from 'react-i18next';
 import { SectionHeader } from '@shared/ui/SectionHeader';
-import { NewsCard, NewsItem } from '../../entitites/NewsCard';
+import { NewsCard, NewsItem } from '../../entities/NewsCard';
 
 type Props = {
   news: NewsItem[];

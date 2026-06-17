@@ -1,5 +1,6 @@
 module.exports = function (api) {
   api.cache(true);
+
   return {
     presets: ['babel-preset-expo'],
     plugins: [
@@ -8,8 +9,7 @@ module.exports = function (api) {
         {
           root: ['./'],
           alias: {
-            // Здесь указываем путь от корня проекта до папок
-            '@shared': './src/shared', 
+            '@shared': './src/shared',
             '@views': './src/views',
             '@entities': './src/entities',
             '@features': './src/features',
@@ -18,6 +18,9 @@ module.exports = function (api) {
           },
         },
       ],
+
+      // ОБЯЗАТЕЛЬНО ПОСЛЕДНИМ
+      'react-native-reanimated/plugin',
     ],
   };
 };

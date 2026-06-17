@@ -7,6 +7,8 @@ export type RootStackParamList = {
   SurveyDetailPage: undefined;
   LoginPage: undefined;
   RequestsList: undefined;
+  NewsDetailPage: undefined;
+  NewsPage: undefined;
   // Экраны из ProfileFlow
  
 
