@@ -10,15 +10,6 @@ import {
 import { useNavigation } from '@react-navigation/native';
 
 import { SectionHeader } from '../../shared/ui/SectionHeader';
-import { colors } from '../../shared/theme/colors';
-
-import ArrowIcon from '../../../assets/profile-icons/right-arrow.svg';
-
-import ViolationIcon from '../../../assets/main-icons/violation.svg';
-import WorkIcon from '../../../assets/main-icons/work.svg';
-import SalaryIcon from '../../../assets/main-icons/salary.svg';
-import SocialIcon from '../../../assets/main-icons/social.svg';
-import CollectiveIcon from '../../../assets/main-icons/collective.svg';
 
 import {
   getViolationSolutions,
@@ -41,7 +32,6 @@ type CardItem = {
   id: string;
   title: string;
   description: string;
-  icon: React.FC<{ width?: number; height?: number }>;
 };
 
 const TABS: { key: RequestType; title: string }[] = [
@@ -52,12 +42,12 @@ const TABS: { key: RequestType; title: string }[] = [
   { key: 'collective', title: 'Предложения по коллективному договору' },
 ];
 
-const ICONS = {
-  violation: ViolationIcon,
-  work: WorkIcon,
-  salary: SalaryIcon,
-  social: SocialIcon,
-  collective: CollectiveIcon,
+const TAB_ICONS: Record<RequestType, string> = {
+  violation: '⚠️',
+  work: '🛠️',
+  salary: '💰',
+  social: '🤝',
+  collective: '📄',
 };
 
 const TAB_COLORS: Record<RequestType, string> = {
@@ -115,13 +105,10 @@ export const RequestsTabWidget = () => {
         item.text_ru ||
         item.text ||
         '',
-      icon: ICONS[tab],
     }));
   };
 
   const loadTabData = (tab: RequestType) => {
-    if (data[tab].length > 0) return;
-
     setLoading(prev => ({ ...prev, [tab]: true }));
 
     API_CALLS[tab]()
@@ -131,7 +118,14 @@ export const RequestsTabWidget = () => {
           [tab]: mapResponse(resp, tab),
         }));
       })
-      .catch(console.error)
+      .catch(error => {
+        console.error(error);
+
+        setData(prev => ({
+          ...prev,
+          [tab]: [],
+        }));
+      })
       .finally(() => {
         setLoading(prev => ({ ...prev, [tab]: false }));
       });
@@ -147,8 +141,7 @@ export const RequestsTabWidget = () => {
   };
 
   const currentData = data[activeTab];
-  const currentTitle =
-    TABS.find(tab => tab.key === activeTab)?.title ?? '';
+  const currentTitle = TABS.find(tab => tab.key === activeTab)?.title ?? '';
 
   return (
     <View style={styles.container}>
@@ -194,58 +187,52 @@ export const RequestsTabWidget = () => {
           <RequestTabSkeleton />
         ) : currentData.length === 0 ? (
           <View style={styles.emptyState}>
-            <View style={styles.emptyIcon}>
-              <Text style={{ fontSize: 32 }}>📄</Text>
+            <View style={styles.emptyIconCircle}>
+              <Text style={styles.emptyIcon}>📭</Text>
             </View>
 
-            <Text style={styles.emptyTitle}>
-              Пока нет данных
-            </Text>
+            <Text style={styles.emptyTitle}>Пока нет данных</Text>
 
             <Text style={styles.emptyDescription}>
               В данном разделе пока отсутствуют обращения или публикации.
             </Text>
           </View>
         ) : (
-          currentData.map(card => {
-            const Icon = card.icon;
-
-            return (
-              <Pressable
-                key={card.id}
-                style={({ pressed }) => [
-                  styles.card,
-                  pressed && styles.cardPressed,
+          currentData.map(card => (
+            <Pressable
+              key={card.id}
+              style={({ pressed }) => [
+                styles.card,
+                pressed && styles.cardPressed,
+              ]}
+              onPress={() =>
+                navigation.navigate('RequestsList', {
+                  requestType: activeTab,
+                })
+              }
+            >
+              <View
+                style={[
+                  styles.iconCircle,
+                  { backgroundColor: TAB_COLORS[activeTab] },
                 ]}
-                onPress={() =>
-                  navigation.navigate('RequestsList', {
-                    requestType: activeTab,
-                  })
-                }
               >
-                <View
-                  style={[
-                    styles.iconCircle,
-                    { backgroundColor: TAB_COLORS[activeTab] },
-                  ]}
-                >
-                  <Icon width={22} height={22} />
-                </View>
+                <Text style={styles.cardIcon}>{TAB_ICONS[activeTab]}</Text>
+              </View>
 
-                <View style={styles.textContainer}>
-                  <Text style={styles.cardTitle} numberOfLines={1}>
-                    {card.title}
-                  </Text>
+              <View style={styles.textContainer}>
+                <Text style={styles.cardTitle} numberOfLines={1}>
+                  {card.title}
+                </Text>
 
-                  <Text style={styles.cardDescription} numberOfLines={2}>
-                    {card.description}
-                  </Text>
-                </View>
+                <Text style={styles.cardDescription} numberOfLines={2}>
+                  {card.description}
+                </Text>
+              </View>
 
-                <ArrowIcon width={14} height={14} />
-              </Pressable>
-            );
-          })
+              <Text style={styles.arrow}>›</Text>
+            </Pressable>
+          ))
         )}
       </ScrollView>
     </View>
@@ -312,6 +299,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
+  cardIcon: {
+    fontSize: 20,
+  },
   textContainer: {
     flex: 1,
     gap: 4,
@@ -327,13 +317,17 @@ const styles = StyleSheet.create({
     color: '#878787',
     lineHeight: 16,
   },
+  arrow: {
+    fontSize: 28,
+    color: '#A0AEC0',
+    fontWeight: '400',
+  },
   emptyState: {
     backgroundColor: '#fff',
     borderRadius: 24,
     paddingVertical: 40,
     paddingHorizontal: 24,
     alignItems: 'center',
-
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -343,18 +337,24 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-
-  emptyIcon: {
-    marginBottom: 12,
+  emptyIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#EBF4FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
   },
-
+  emptyIcon: {
+    fontSize: 30,
+  },
   emptyTitle: {
     fontSize: 16,
     fontWeight: '700',
     color: '#002F42',
     marginBottom: 8,
   },
-
   emptyDescription: {
     fontSize: 13,
     color: '#878787',
