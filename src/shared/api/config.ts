@@ -4,10 +4,7 @@ export const MAIN_DOMAIN = 'kasipodaq.competence.kz';
 
 export const API_CONFIG = {
   // Новости
-  // NEWS_API: `https://${MAIN_DOMAIN}/api/news?limit=10`,
-  // NEWS_API: `https://${SATBAYEV_API}/api/news?limit=20`,
   NEWS_API: `https://${MAIN_DOMAIN}/api/news`,
-  EVENTS_API: `https://${MAIN_DOMAIN}/api/events`,
 
   LIKE_DISLIKE_API: (category: string, targetType: string, uuid: string, solutionId: string | number, status: 'like' | 'dislike') =>
     `https://competence.kz/site/ajax-like?type=${category}&uuid=${uuid}&solution_id=${solutionId}&status=${status}&type=${targetType}`,
@@ -20,29 +17,35 @@ export const API_CONFIG = {
 
   CONTACTS_API: `https://${MAIN_DOMAIN}/api/contacts`,
 
-  // Идеи
-  IDEA_API_APPROVED: `https://${MAIN_DOMAIN}/site/apisolutions?type_name=idea&status=approved`,
-  IDEA_API_FINISHED: `https://${MAIN_DOMAIN}/site/apisolutions?type_name=idea&status=finished`,
-  IDEA_API: `https://${MAIN_DOMAIN}/api/last-solutions?type_name=idea`,
-  IDEA_COUNT_API: `https://${MAIN_DOMAIN}/api/solutions-stat?type_name=idea&status=approved`,
+  // Нарушение ТК
+  VIOLATION_API_APPROVED: `https://${MAIN_DOMAIN}/site/apisolutions?type_name=violation&status=approved`,
+  VIOLATION_API_FINISHED: `https://${MAIN_DOMAIN}/site/apisolutions?type_name=violation&status=finished`,
+  VIOLATION_API: `https://${MAIN_DOMAIN}/api/last-solutions?type_name=violation`,
+  VIOLATION_COUNT_API: `https://${MAIN_DOMAIN}/api/solutions-stat?type_name=violation&status=approved`,
 
-  // Management / count
-  MANAGEMENT_API_APPROVED: `https://${MAIN_DOMAIN}/site/apisolutions?type_name=org&status=approved`,
-  MANAGEMENT_API_FINISHED: `https://${MAIN_DOMAIN}/site/apisolutions?type_name=org&status=finished`,
-  MANAGEMENT_API: `https://${MAIN_DOMAIN}/api/last-solutions?type_name=org`,
-  MANAGEMENT_COUNT_API: `https://${MAIN_DOMAIN}/api/solutions-stat?type_name=org&status=approved`,
+  // 	Условия труда
+  WORK_API_APPROVED: `https://${MAIN_DOMAIN}/site/apisolutions?type_name=work&status=approved`,
+  WORK_API_FINISHED: `https://${MAIN_DOMAIN}/site/apisolutions?type_name=work&status=finished`,
+  WORK_API: `https://${MAIN_DOMAIN}/api/last-solutions?type_name=work`,
+  WORK_COUNT_API: `https://${MAIN_DOMAIN}/api/solutions-stat?type_name=work&status=approved`,
 
-  // Academic / count
-  ACADEMIC_API_APPROVED: `https://${MAIN_DOMAIN}/site/apisolutions?type_name=academic&status=approved`,
-  ACADEMIC_API_FINISHED: `https://${MAIN_DOMAIN}/site/apisolutions?type_name=academic&status=finished`,
-  ACADEMIC_API: `https://${MAIN_DOMAIN}/api/last-solutions?type_name=academic`,
-  ACADEMIC_COUNT_API: `https://${MAIN_DOMAIN}/api/solutions-stat?type_name=academic&status=approved`,
+  // 	Оплата труда
+  SALARY_API_APPROVED: `https://${MAIN_DOMAIN}/site/apisolutions?type_name=salary&status=approved`,
+  SALARY_API_FINISHED: `https://${MAIN_DOMAIN}/site/apisolutions?type_name=salary&status=finished`,
+  SALARY_API: `https://${MAIN_DOMAIN}/api/last-solutions?type_name=salary`,
+  SALARY_COUNT_API: `https://${MAIN_DOMAIN}/api/solutions-stat?type_name=salary&status=approved`,
 
-  // Service / count
-  SERVICE_API_APPROVED: `https://${MAIN_DOMAIN}/site/apisolutions?type_name=inf&status=approved`,
-  SERVICE_API_FINISHED: `https://${MAIN_DOMAIN}/site/apisolutions?type_name=inf&status=finished`,
-  SERVICE_API: `https://${MAIN_DOMAIN}/api/last-solutions?type_name=inf`,
-  SERVICE_COUNT_API: `https://${MAIN_DOMAIN}/api/solutions-stat?type_name=inf&status=approved`,
+  // Социальные льготы
+  SOCIAL_API_APPROVED: `https://${MAIN_DOMAIN}/site/apisolutions?type_name=social&status=approved`,
+  SOCIAL_API_FINISHED: `https://${MAIN_DOMAIN}/site/apisolutions?type_name=social&status=finished`,
+  SOCIAL_API: `https://${MAIN_DOMAIN}/api/last-solutions?type_name=social`,
+  SOCIAL_COUNT_API: `https://${MAIN_DOMAIN}/api/solutions-stat?type_name=social&status=approved`,
+
+   // 	Предложения по коллективному договору
+  COLLECTIVE_API_APPROVED: `https://${MAIN_DOMAIN}/site/apisolutions?type_name=collective&status=approved`,
+  COLLECTIVE_API_FINISHED: `https://${MAIN_DOMAIN}/site/apisolutions?type_name=collective&status=finished`,
+  COLLECTIVE_API: `https://${MAIN_DOMAIN}/api/last-solutions?type_name=collective`,
+  COLLECTIVE_COUNT_API: `https://${MAIN_DOMAIN}/api/solutions-stat?type_name=collective&status=approved`,
 
   // Справочник
   DIRECTORY_API: `https://${MAIN_DOMAIN}/api/dep`,

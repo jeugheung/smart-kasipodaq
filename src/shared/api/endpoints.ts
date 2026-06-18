@@ -54,3 +54,84 @@ export const addSolution = async (payload: AddSolutionPayload) => {
     body: JSON.stringify(payload),
   });
 };
+
+// Нарушение ТК
+export const getViolationSolutions = async (): Promise<any[]> => {
+  const response = await apiClient<any>(API_CONFIG.VIOLATION_API);
+  return Array.isArray(response.solutions) ? response.solutions : [];
+};
+
+export const getViolationApproved = async (): Promise<any[]> => {
+  const response = await apiClient<any>(API_CONFIG.VIOLATION_API_APPROVED);
+  return Array.isArray(response.data?.solutions) ? response.data.solutions : [];
+};
+
+export const getViolationFinished = async (): Promise<any[]> => {
+  const response = await apiClient<any>(API_CONFIG.VIOLATION_API_FINISHED);
+  return Array.isArray(response.data?.solutions) ? response.data.solutions : [];
+};
+
+// Условия труда
+export const getWorkSolutions = async (): Promise<any[]> => {
+  const response = await apiClient<any>(API_CONFIG.WORK_API);
+  return Array.isArray(response.solutions) ? response.solutions : [];
+};
+
+export const getWorkApproved = async (): Promise<any[]> => {
+  const response = await apiClient<any>(API_CONFIG.WORK_API_APPROVED);
+  return Array.isArray(response.data?.solutions) ? response.data.solutions : [];
+};
+
+export const getWorkFinished = async (): Promise<any[]> => {
+  const response = await apiClient<any>(API_CONFIG.WORK_API_FINISHED);
+  return Array.isArray(response.data?.solutions) ? response.data.solutions : [];
+};
+
+// Оплата труда
+export const getSalarySolutions = async (): Promise<any[]> => {
+  const response = await apiClient<any>(API_CONFIG.SALARY_API);
+  return Array.isArray(response.solutions) ? response.solutions : [];
+};
+
+export const getSalaryApproved = async (): Promise<any[]> => {
+  const response = await apiClient<any>(API_CONFIG.SALARY_API_APPROVED);
+  return Array.isArray(response.data?.solutions) ? response.data.solutions : [];
+};
+
+export const getSalaryFinished = async (): Promise<any[]> => {
+  const response = await apiClient<any>(API_CONFIG.SALARY_API_FINISHED);
+  return Array.isArray(response.data?.solutions) ? response.data.solutions : [];
+};
+
+// Социальные льготы
+export const getSocialSolutions = async (): Promise<any[]> => {
+  const response = await apiClient<any>(API_CONFIG.SOCIAL_API);
+  return Array.isArray(response.solutions) ? response.solutions : [];
+};
+
+export const getSocialApproved = async (): Promise<any[]> => {
+  const response = await apiClient<any>(API_CONFIG.SOCIAL_API_APPROVED);
+  return Array.isArray(response.data?.solutions) ? response.data.solutions : [];
+};
+
+export const getSocialFinished = async (): Promise<any[]> => {
+  const response = await apiClient<any>(API_CONFIG.SOCIAL_API_FINISHED);
+  return Array.isArray(response.data?.solutions) ? response.data.solutions : [];
+};
+
+// Предложения по коллективному договору
+export const getCollectiveSolutions = async (): Promise<any[]> => {
+  const response = await apiClient<any>(API_CONFIG.COLLECTIVE_API);
+  return Array.isArray(response.solutions) ? response.solutions : [];
+};
+
+export const getCollectiveApproved = async (): Promise<any[]> => {
+  const response = await apiClient<any>(API_CONFIG.COLLECTIVE_API_APPROVED);
+  return Array.isArray(response.data?.solutions) ? response.data.solutions : [];
+};
+
+export const getCollectiveFinished = async (): Promise<any[]> => {
+  const response = await apiClient<any>(API_CONFIG.COLLECTIVE_API_FINISHED);
+  return Array.isArray(response.data?.solutions) ? response.data.solutions : [];
+};
+
