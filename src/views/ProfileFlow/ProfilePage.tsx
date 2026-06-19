@@ -14,10 +14,10 @@ export const ProfilePage = ({ navigation }: any) => {
         {/* Аватар и информация пользователя */}
         <View style={styles.headerBlock}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>AK</Text>
+            <Text style={styles.avatarText}>TU</Text>
           </View>
-          <Text style={styles.userName}>Андрей Ким</Text>
-          <Text style={styles.userIin}>ИИН 00330055</Text>
+          <Text style={styles.userName}>Test User</Text>
+          <Text style={styles.userIin}>ИИН 00330055322</Text>
         </View>
 
         {/* Список пунктов меню */}
@@ -26,7 +26,7 @@ export const ProfilePage = ({ navigation }: any) => {
           <TouchableOpacity 
             style={styles.menuItem} 
             activeOpacity={0.7}
-            onPress={() => alert("История обращений")}
+            onPress={() => navigation.navigate('MyRequests')}
           >
             <View style={[styles.iconWrapper, { backgroundColor: "#E6F4FE" }]}>
               {/* Кастомная иконка сообщения */}
@@ -38,17 +38,20 @@ export const ProfilePage = ({ navigation }: any) => {
             <View style={styles.arrowRight} />
           </TouchableOpacity>
 
+          {/* История обращений */}
+         
+
           {/* Настройки */}
           <TouchableOpacity 
             style={styles.menuItem} 
             activeOpacity={0.7}
-            onPress={() => alert("Настройки")}
+            onPress={() => navigation.navigate('Favourite')}
           >
             <View style={[styles.iconWrapper, { backgroundColor: "#FFF9E6" }]}>
               {/* Кастомная иконка шестеренки */}
               <View style={styles.gearIcon} />
             </View>
-            <Text style={styles.menuItemText}>Настройки</Text>
+            <Text style={styles.menuItemText}>Избранное</Text>
             <View style={styles.arrowRight} />
           </TouchableOpacity>
 

@@ -9,15 +9,19 @@ export type RequestType =
 
 export type UserVote = 'like' | 'dislike' | null;
 
-export interface RequestItem {
-  id: string;
-  tag: string;
-  date: string;
-  problem: string;
+export type RequestItem = {
+  updated_at: any;
+  comment: any;
   solution: string;
-  comment?: string;
+  created_at: any;
+  id: string;
+  problem: string;
+  // description: string;
   status: RequestStatus;
-  likes: number;
-  dislikes: number;
-  userVote: UserVote;
-}
+  type: RequestType;
+  solution_likes: number
+  solution_dislikes: number
+  
+  comment_likes: number
+  comment_dislikes: number
+};

@@ -10,7 +10,8 @@ export type RootStackParamList = {
   NewsDetailPage: undefined;
   NewsPage: undefined;
   // Экраны из ProfileFlow
- 
+  MyRequests: undefined
+  Favourite: undefined
 
   // Экраны из NotificationsFlow
 

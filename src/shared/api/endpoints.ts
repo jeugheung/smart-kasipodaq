@@ -160,3 +160,119 @@ export const getCollectiveCount = async (): Promise<number> => {
   return typeof response.count === 'number' ? response.count : 0;
 };
 
+export const getAppVersion = async (): Promise<string> => {
+  const url = API_CONFIG.VERSION_API;
+  console.log("🔍 [VERSION-CHECK] Стучимся по адресу:", url);
+
+  try {
+    // Используем обычный fetch, чтобы прочитать ответ как ТЕКСТ
+    const response = await fetch(url);
+    const contentType = response.headers.get("content-type");
+    
+    console.log("📡 [VERSION-CHECK] Статус ответа:", response.status);
+    console.log("📄 [VERSION-CHECK] Тип контента:", contentType);
+
+    const rawText = await response.text();
+
+    // Если ответ начинается с < — это HTML (ошибка сервера)
+    if (rawText.trim().startsWith('<')) {
+      console.error("🛑 [CRITICAL] Сервер вернул HTML вместо JSON!");
+      console.log("📋 [HTML-CONTENT]:", rawText.substring(0, 500)); // Печатаем первые 500 символов ошибки
+      return '';
+    }
+
+    const data = JSON.parse(rawText);
+    console.log("✅ [VERSION-CHECK] Успешно получено:", data);
+    return data.version || '';
+    
+  } catch (e: any) {
+    console.error('❌ [VERSION-CHECK] Ошибка парсинга или сети:', e.message);
+    return ''; 
+  }
+};
+
+export const getMySolutions = async (uuid: string): Promise<any[]> => {
+  const response = await apiClient<any>(API_CONFIG.MY_SOLUTIONS(uuid));
+
+  // Проверяем, что есть data.solutions
+  if (response.success && Array.isArray(response.data?.solutions)) {
+    return response.data.solutions;
+  }
+
+  return [];
+};
+
+
+export const sendFavorites = async (favourites: number[] | string[]) => {
+  try {
+    const response = await apiClient(API_CONFIG.FAVORITE_API, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ favourites }),
+    });
+    return response;
+  } catch (e) {
+    console.error('Ошибка при отправке избранного', e);
+    throw e;
+  }
+}
+
+export const toggleFavoriteApi = async (uuid: string, solutionId: string | number) => {
+  try {
+    const url = API_CONFIG.FAVORITE_TOGGLE_API(uuid, solutionId);
+    const response = await apiClient<any>(url, {
+      method: 'GET',
+    });
+    return response;
+  } catch (e) {
+    console.error('Ошибка при добавлении в избранное API', e);
+    throw e;
+  }
+};
+
+export const getMyFavoritesList = async (uuid: string, lang: string): Promise<any[]> => {
+  try {
+    const url = API_CONFIG.MY_FAVORITES(uuid, lang);
+    const response = await apiClient<any>(url, { method: 'GET' });
+
+    // В зависимости от того, как именно бэк отдает JSON, 
+    // скорее всего это response.data.solutions (как в других твоих апишках)
+    if (response.success && Array.isArray(response.data?.solutions)) {
+      return response.data.solutions;
+    }
+    
+    // Фолбэк на случай, если массив лежит прямо в корне
+    if (Array.isArray(response)) {
+      return response;
+    }
+
+    return [];
+  } catch (error) {
+    console.error('Ошибка при загрузке списка избранного с сервера:', error);
+    return [];
+  }
+};
+
+export const sendLikeDislike = async (
+  category: string,   // 'idea', 'org', etc.
+  targetType: string, // 'solution', 'comment', etc.
+  uuid: string,
+  id: string | number,
+  status: 'like' | 'dislike'
+) => {
+  try {
+    const url = API_CONFIG.LIKE_DISLIKE_API(category, targetType, uuid, id, status);
+    
+    // Если бэкенд на PHP (Yii/Laravel), они часто используют GET для таких аяксов,
+    // но если перешли на POST — просто поменяй метод здесь.
+    const response = await apiClient<any>(url, {
+      method: 'POST', 
+    });
+    return response;
+  } catch (e) {
+    console.error(`❌ Ошибка при отправке ${status} для ${targetType}`, e);
+    throw e;
+  }
+};

@@ -20,7 +20,7 @@ module.exports = function (api) {
       ],
 
       // ОБЯЗАТЕЛЬНО ПОСЛЕДНИМ
-      'react-native-reanimated/plugin',
+      'react-native-worklets/plugin',
     ],
   };
 };

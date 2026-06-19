@@ -12,6 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { addSolution } from '@shared/api/endpoints';
+import { getOrCreateUUID } from '@shared/lib/uuid';
 
 type RequestType =
   | 'violation'
@@ -43,7 +44,7 @@ export const RequestForm = ({ navigation }: any) => {
       return;
     }
 
-    const uuid = anonymous ? '00000' : MOCK_USER_ID;
+    const uuid = await getOrCreateUUID();
 
     const payload = {
       type_name: activeTab,
