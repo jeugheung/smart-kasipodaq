@@ -1,176 +1,462 @@
-import { colors } from "@shared/theme/colors";
-import { DefaultLayout } from "@widgets/Layout/DefaultLayout";
-import React, { useState } from "react";
-import { View, StyleSheet, Text, TouchableOpacity, ScrollView } from "react-native";
+import { colors } from '@shared/theme/colors';
+import { DefaultLayout } from '@widgets/Layout/DefaultLayout';
+import React, { useState } from 'react';
+import {
+  View,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Modal,
+} from 'react-native';
 
-// Моковые данные для демонстрации списка опросов
+const SURVEY_TITLE =
+  'Отраслевое соглашение по условиям труда на 2024 год';
+
 const INITIAL_SURVEYS = [
   {
-    id: "1",
-    tag: "Оплата труда",
-    timeLeft: "4 дня осталось",
-    question: "Поддерживаете ли вы проект “Отраслевого соглашения” по условиям труда на 2024 год?",
-    options: ["Да", "Нет", "Возможно", "Затрудняюсь ответить"],
-    selectedOption: "Да", // Предзаполненный вариант из первого макета
+    id: '1',
+    question:
+      'Поддерживаете ли вы проект “Отраслевого соглашения” по условиям труда на 2024 год?',
+    options: ['Да', 'Нет', 'Возможно', 'Затрудняюсь ответить'],
+    selectedOption: '',
   },
   {
-    id: "2",
-    tag: "Оплата труда",
-    timeLeft: "1 день остался",
-    question: "Поддерживаете ли вы проект “Отраслевого соглашения” по условиям труда на 2024 год?",
-    options: ["Да", "Нет", "Возможно", "Затрудняюсь ответить"],
-    selectedOption: "Нет", // Предзаполненный вариант из второго макета
+    id: '2',
+    question:
+      'Считаете ли вы предложенные условия труда достаточными для работников?',
+    options: ['Да', 'Нет', 'Частично', 'Затрудняюсь ответить'],
+    selectedOption: '',
   },
 ];
 
 export const SurveyDetailPage = ({ navigation }: any) => {
-  // Состояние для хранения выбранных ответов по id опроса
   const [surveys, setSurveys] = useState(INITIAL_SURVEYS);
+  const [successModalVisible, setSuccessModalVisible] = useState(false);
+
+  const answeredCount = surveys.filter(item => item.selectedOption).length;
+  const totalCount = surveys.length;
+  const canSubmit = answeredCount === totalCount;
 
   const handleSelectOption = (surveyId: string, option: string) => {
-    setSurveys((prev) =>
-      prev.map((item) =>
+    setSurveys(prev =>
+      prev.map(item =>
         item.id === surveyId ? { ...item, selectedOption: option } : item
       )
     );
   };
 
-  return (
-    <DefaultLayout variant="back" title="Анкета 1231" onRightPress={() => alert("EN")}>
-      {/* Используем ScrollView, так как карточек много и они могут не поместиться на экран */}
-      <ScrollView 
-        style={styles.scrollView} 
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.pageTitle}>Голосования</Text>
+  const handleSubmit = () => {
+    if (!canSubmit) return;
+    setSuccessModalVisible(true);
+  };
 
-        {surveys.map((survey) => (
-          <View key={survey.id} style={styles.card}>
-            {/* Хедер карточки */}
-            <View style={styles.cardHeader}>
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{survey.tag}</Text>
-              </View>
-              <Text style={styles.timerText}>{survey.timeLeft}</Text>
+  const closeSuccessModal = () => {
+    setSuccessModalVisible(false);
+    navigation.goBack();
+  };
+
+  return (
+    <DefaultLayout
+      variant="back"
+      title="Анкета"
+      onRightPress={() => alert('EN')}
+    >
+      <View style={styles.screen}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.pageHeader}>
+            <View>
+              <Text style={styles.pageTitle}>Анкетирование</Text>
+           
             </View>
 
-            {/* Текст вопроса */}
-            <Text style={styles.cardTitle}>{survey.question}</Text>
-
-            {/* Список вариантов ответов */}
-            <View style={styles.optionsList}>
-              {survey.options.map((option) => {
-                const isSelected = survey.selectedOption === option;
-
-                return (
-                  <TouchableOpacity
-                    key={option}
-                    style={styles.optionRow}
-                    activeOpacity={0.7}
-                    onPress={() => handleSelectOption(survey.id, option)}
-                  >
-                    {/* Кастомный Чекбокс/Радиобатон */}
-                    <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
-                      {isSelected && <View style={styles.checkboxCheckmark} />}
-                    </View>
-                    
-                    {/* Текст варианта */}
-                    <Text style={styles.optionText}>{option}</Text>
-                  </TouchableOpacity>
-                );
-              })}
+            <View style={styles.progressBadge}>
+              <Text style={styles.progressValue}>
+                {answeredCount}/{totalCount}
+              </Text>
+              <Text style={styles.progressLabel}>ответов</Text>
             </View>
           </View>
-        ))}
-      </ScrollView>
+
+          <View style={styles.surveyHeader}>
+            <Text style={styles.surveyTitle}>{SURVEY_TITLE}</Text>
+
+            <Text style={styles.surveyDescription}>
+              Ознакомьтесь с вопросами и выберите наиболее подходящие варианты
+              ответов.
+            </Text>
+          </View>
+
+          {surveys.map((survey, index) => (
+            <View key={survey.id} style={styles.card}>
+              <View style={styles.questionHeader}>
+                <View style={styles.questionNumber}>
+                  <Text style={styles.questionNumberText}>{index + 1}</Text>
+                </View>
+
+                <Text style={styles.cardTitle}>{survey.question}</Text>
+              </View>
+
+              <View style={styles.optionsList}>
+                {survey.options.map(option => {
+                  const isSelected = survey.selectedOption === option;
+
+                  return (
+                    <TouchableOpacity
+                      key={option}
+                      style={[
+                        styles.optionRow,
+                        isSelected && styles.optionRowSelected,
+                      ]}
+                      activeOpacity={0.75}
+                      onPress={() => handleSelectOption(survey.id, option)}
+                    >
+                      <View
+                        style={[
+                          styles.checkbox,
+                          isSelected && styles.checkboxSelected,
+                        ]}
+                      >
+                        {isSelected && <View style={styles.checkboxDot} />}
+                      </View>
+
+                      <Text
+                        style={[
+                          styles.optionText,
+                          isSelected && styles.optionTextSelected,
+                        ]}
+                      >
+                        {option}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          ))}
+
+          <TouchableOpacity
+            style={[
+              styles.submitButton,
+              !canSubmit && styles.submitButtonDisabled,
+            ]}
+            activeOpacity={0.8}
+            disabled={!canSubmit}
+            onPress={handleSubmit}
+          >
+            <Text
+              style={[
+                styles.submitButtonText,
+                !canSubmit && styles.submitButtonTextDisabled,
+              ]}
+            >
+              {canSubmit
+                ? 'Отправить ответы'
+                : `Ответьте на все вопросы (${answeredCount}/${totalCount})`}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+
+        <Modal
+          visible={successModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={closeSuccessModal}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <View style={styles.modalIconCircle}>
+                <Text style={styles.modalIcon}>✅</Text>
+              </View>
+
+              <Text style={styles.modalTitle}>Анкета пройдена</Text>
+
+              <Text style={styles.modalDescription}>
+                Спасибо! Ваши ответы успешно сохранены и будут учтены в
+                голосовании.
+              </Text>
+
+              <TouchableOpacity
+                style={styles.modalButton}
+                activeOpacity={0.8}
+                onPress={closeSuccessModal}
+              >
+                <Text style={styles.modalButtonText}>Готово</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </View>
     </DefaultLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  scrollView: {
-    backgroundColor: colors.background || "#F5F7FA",
+  screen: {
+    flex: 1,
+    backgroundColor: colors.background || '#F5F7FA',
   },
+
+  scrollView: {
+    backgroundColor: colors.background || '#F5F7FA',
+  },
+
   content: {
     paddingHorizontal: 15,
     paddingTop: 20,
-    paddingBottom: 100,
+    paddingBottom: 120,
     gap: 16,
   },
-  pageTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#000000",
-    marginBottom: 4,
+
+  pageHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  card: {
-    backgroundColor: "#FFFFFF",
+
+  pageTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#002F42',
+  },
+
+  pageSubtitle: {
+    marginTop: 4,
+    fontSize: 13,
+    color: '#7A8494',
+    fontWeight: '500',
+  },
+
+  progressBadge: {
+    minWidth: 64,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: '#EBF4FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+  },
+
+  progressValue: {
+    fontSize: 17,
+    fontWeight: '900',
+    color: '#0057B8',
+    lineHeight: 20,
+  },
+
+  progressLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+
+  surveyHeader: {
+    backgroundColor: '#FFFFFF',
     borderRadius: 24,
-    borderWidth: 2,
-    borderColor: "#0F4C81",
+    padding: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+
+  surveyTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#002F42',
+    lineHeight: 24,
+  },
+
+  surveyDescription: {
+    marginTop: 8,
+    fontSize: 13,
+    lineHeight: 20,
+    color: '#64748B',
+  },
+
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
     padding: 16,
     gap: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+
+  questionHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
   },
-  badge: {
-    backgroundColor: "#CCE5FF",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 10,
+
+  questionNumber: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#EBF4FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
   },
-  badgeText: {
-    color: "#007AFF",
+
+  questionNumberText: {
     fontSize: 13,
-    fontWeight: "700",
+    fontWeight: '900',
+    color: '#0057B8',
   },
-  timerText: {
-    color: "#8E8E93",
-    fontSize: 12,
-  },
+
   cardTitle: {
+    flex: 1,
     fontSize: 16,
-    fontWeight: "700",
-    lineHeight: 22,
-    color: "#000000",
-    marginBottom: 4,
+    fontWeight: '800',
+    lineHeight: 23,
+    color: '#111827',
   },
+
   optionsList: {
-    gap: 12, // Отступы между строками вариантов
+    gap: 10,
   },
+
   optionRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    minHeight: 48,
+    borderRadius: 16,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
+
+  optionRowSelected: {
+    backgroundColor: '#EBF4FF',
+    borderColor: '#0057B8',
+  },
+
   checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: "#0F4C81", // Цвет круга из макета
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFFFFF",
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: '#94A3B8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
   },
+
   checkboxSelected: {
-    backgroundColor: "#FFFFFF", // Оставляем белым или меняй на брендовый, если нужно заполнение
+    borderColor: '#0057B8',
   },
-  checkboxCheckmark: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#0F4C81", // Точка/галочка внутри активного состояния
+
+  checkboxDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#0057B8',
   },
+
   optionText: {
+    flex: 1,
     fontSize: 15,
-    fontWeight: "700",
-    color: "#000000",
-    flexShrink: 1, // Чтобы длинный текст корректно переносился
+    fontWeight: '700',
+    color: '#334155',
+  },
+
+  optionTextSelected: {
+    color: '#002F42',
+  },
+
+  submitButton: {
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#0057B8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+
+  submitButtonDisabled: {
+    backgroundColor: '#E2E8F0',
+  },
+
+  submitButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+
+  submitButtonTextDisabled: {
+    color: '#94A3B8',
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+
+  modalCard: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 28,
+    padding: 24,
+    alignItems: 'center',
+  },
+
+  modalIconCircle: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#DCFCE7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+
+  modalIcon: {
+    fontSize: 34,
+  },
+
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#002F42',
+    marginBottom: 8,
+  },
+
+  modalDescription: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 22,
+  },
+
+  modalButton: {
+    width: '100%',
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#0057B8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  modalButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '800',
   },
 });
