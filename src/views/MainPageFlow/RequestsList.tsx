@@ -7,12 +7,17 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { colors } from '@shared/theme/colors';
 import { DefaultLayout } from '@widgets/Layout/DefaultLayout';
-
 import { SharedLoader } from '@shared/ui/SharedLoader/SharedLoader';
+
+import {
+  RequestItem,
+  RequestStatus,
+  PendingRequestCard,
+  ResolvedRequestCard,
+} from '@entities/RequestCard';
 
 import {
   getViolationApproved,
@@ -27,27 +32,12 @@ import {
   getCollectiveFinished,
 } from '@shared/api/endpoints';
 
-type RequestStatus = 'pending' | 'resolved';
-
 type RequestType =
   | 'violation'
   | 'work'
   | 'salary'
   | 'social'
   | 'collective';
-
-interface RequestItem {
-  id: string;
-  tag: string;
-  date: string;
-  problem: string;
-  solution: string;
-  comment?: string;
-  status: RequestStatus;
-  likes: number;
-  dislikes: number;
-  userVote: 'like' | 'dislike' | null;
-}
 
 const TITLE_MAP: Record<RequestType, string> = {
   violation: 'Нарушение ТК',
@@ -116,11 +106,7 @@ export const RequestsList = ({ route }: any) => {
     return {
       id: item.id?.toString() ?? Math.random().toString(),
       tag,
-      date:
-        item.created_at ||
-        item.updated_at ||
-        item.date ||
-        '',
+      date: item.created_at || item.updated_at || item.date || '',
       problem: item.problem || item.title || 'Без названия',
       solution: item.solution || item.description || '',
       comment: item.comment || '',
@@ -259,96 +245,23 @@ export const RequestsList = ({ route }: any) => {
           </View>
         ) : (
           <View style={styles.listContainer}>
-            {requests.map(item => (
-              <View key={item.id} style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <View style={styles.userInfo}>
-                    <View style={styles.avatarPlaceholder}>
-                      <Text style={styles.avatarEmoji}>👤</Text>
-                    </View>
-
-                    <View>
-                      <Text style={styles.userNameText}>Аноним</Text>
-                      <Text style={styles.dateText}>{item.date}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.tagLabel}>
-                    <Text style={styles.tagLabelText}>{item.tag}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.bodyBlock}>
-                  <Text style={styles.problemTitle}>{item.problem}</Text>
-
-                  <Text style={styles.bodyLabel}>
-                    Вариант решения проблемы:
-                  </Text>
-
-                  <Text style={styles.solutionText}>{item.solution}</Text>
-                </View>
-
-                {activeSegment === 'resolved' && item.comment ? (
-                  <View style={styles.commentBlock}>
-                    <Text style={styles.commentText}>{item.comment}</Text>
-                  </View>
-                ) : null}
-
-                <View style={styles.divider} />
-
-                <View style={styles.interactionsBar}>
-                  <TouchableOpacity
-                    style={styles.voteNode}
-                    activeOpacity={0.6}
-                    onPress={() => handleVote(item.id, 'like')}
-                  >
-                    <Text
-                      style={[
-                        styles.voteIcon,
-                        item.userVote === 'like' && styles.activeLikeText,
-                      ]}
-                    >
-                      {item.userVote === 'like' ? '❤️' : '🤍'}
-                    </Text>
-
-                    <Text
-                      style={[
-                        styles.voteCount,
-                        item.userVote === 'like' && styles.activeLikeText,
-                      ]}
-                    >
-                      {item.likes}
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.voteNode}
-                    activeOpacity={0.6}
-                    onPress={() => handleVote(item.id, 'dislike')}
-                  >
-                    <Text
-                      style={[
-                        styles.voteIcon,
-                        item.userVote === 'dislike' &&
-                          styles.activeDislikeText,
-                      ]}
-                    >
-                      💔
-                    </Text>
-
-                    <Text
-                      style={[
-                        styles.voteCount,
-                        item.userVote === 'dislike' &&
-                          styles.activeDislikeText,
-                      ]}
-                    >
-                      {item.dislikes}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))}
+            {requests.map(item =>
+              item.status === 'pending' ? (
+                <PendingRequestCard
+                  key={item.id}
+                  item={item}
+                  requestType={item.tag}
+                  onVote={handleVote}
+                />
+              ) : item.status === 'resolved' ? (
+                <ResolvedRequestCard
+                  key={item.id}
+                  item={item}
+                  requestType={item.tag}
+                  onVote={handleVote}
+                />
+              ) : null
+            )}
 
             {requests.length === 0 && (
               <View style={styles.emptyState}>
@@ -359,7 +272,8 @@ export const RequestsList = ({ route }: any) => {
                 <Text style={styles.emptyTitle}>Заявок пока нет</Text>
 
                 <Text style={styles.emptyDescription}>
-                  В этом разделе пока нет заявок. Когда они появятся, вы увидите их здесь.
+                  В этом разделе пока нет заявок. Когда они появятся, вы
+                  увидите их здесь.
                 </Text>
               </View>
             )}
@@ -374,12 +288,14 @@ const styles = StyleSheet.create({
   scrollView: {
     backgroundColor: colors.background,
   },
+
   content: {
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 100,
     gap: 16,
   },
+
   segmentedContainer: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
@@ -391,6 +307,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
+
   segmentButton: {
     flex: 1,
     paddingVertical: 12,
@@ -398,150 +315,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 10,
   },
+
   segmentButtonActive: {
     backgroundColor: '#003366',
   },
+
   segmentText: {
     fontSize: 14,
     fontWeight: '600',
     color: '#718096',
   },
+
   segmentTextActive: {
     color: '#FFFFFF',
   },
+
   listContainer: {
     gap: 14,
   },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 14,
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    flex: 1,
-  },
-  avatarPlaceholder: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#EDF2F7',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarEmoji: {
-    fontSize: 16,
-  },
-  userNameText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1A202C',
-  },
-  dateText: {
-    fontSize: 13,
-    color: '#A0AEC0',
-    fontWeight: '500',
-  },
-  tagLabel: {
-    backgroundColor: '#EBF8FF',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    maxWidth: 140,
-  },
-  tagLabelText: {
-    fontSize: 11,
-    color: '#2B6CB0',
-    fontWeight: '700',
-  },
-  bodyBlock: {
-    gap: 8,
-  },
-  problemTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1A202C',
-    lineHeight: 22,
-  },
-  bodyLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#2D3748',
-    marginTop: 4,
-  },
-  solutionText: {
-    fontSize: 14,
-    color: '#4A5568',
-    lineHeight: 20,
-    fontWeight: '400',
-  },
-  commentBlock: {
-    backgroundColor: '#F7FAFC',
-    padding: 12,
-    borderRadius: 12,
-    borderLeftWidth: 3,
-    borderColor: '#3182CE',
-    marginTop: 10,
-  },
-  commentText: {
-    fontSize: 13,
-    color: '#4A5568',
-    fontStyle: 'italic',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#EDF2F7',
-    marginVertical: 14,
-  },
-  interactionsBar: {
-    flexDirection: 'row',
-    gap: 20,
-  },
-  voteNode: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  voteIcon: {
-    fontSize: 16,
-  },
-  voteCount: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#718096',
-  },
-  activeLikeText: {
-    color: '#E53E3E',
-    fontWeight: '700',
-  },
-  activeDislikeText: {
-    color: '#4A5568',
-    fontWeight: '700',
-  },
+
   loader: {
     paddingVertical: 30,
     alignItems: 'center',
   },
-  emptyText: {
-    textAlign: 'center',
-    color: '#A0AEC0',
-    marginTop: 30,
-    fontSize: 14,
-    fontWeight: '500',
-  },
+
   emptyState: {
     backgroundColor: '#FFFFFF',
     borderRadius: 22,
