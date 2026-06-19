@@ -71,6 +71,11 @@ export const getViolationFinished = async (): Promise<any[]> => {
   return Array.isArray(response.data?.solutions) ? response.data.solutions : [];
 };
 
+export const getViolationCount = async (): Promise<number> => {
+  const response = await apiClient<any>(API_CONFIG.VIOLATION_COUNT_API);
+  return typeof response.count === 'number' ? response.count : 0;
+};
+
 // Условия труда
 export const getWorkSolutions = async (): Promise<any[]> => {
   const response = await apiClient<any>(API_CONFIG.WORK_API);
@@ -85,6 +90,11 @@ export const getWorkApproved = async (): Promise<any[]> => {
 export const getWorkFinished = async (): Promise<any[]> => {
   const response = await apiClient<any>(API_CONFIG.WORK_API_FINISHED);
   return Array.isArray(response.data?.solutions) ? response.data.solutions : [];
+};
+
+export const getWorkCount = async (): Promise<number> => {
+  const response = await apiClient<any>(API_CONFIG.WORK_COUNT_API);
+  return typeof response.count === 'number' ? response.count : 0;
 };
 
 // Оплата труда
@@ -103,6 +113,11 @@ export const getSalaryFinished = async (): Promise<any[]> => {
   return Array.isArray(response.data?.solutions) ? response.data.solutions : [];
 };
 
+export const getSalaryCount = async (): Promise<number> => {
+  const response = await apiClient<any>(API_CONFIG.SALARY_COUNT_API);
+  return typeof response.count === 'number' ? response.count : 0;
+};
+
 // Социальные льготы
 export const getSocialSolutions = async (): Promise<any[]> => {
   const response = await apiClient<any>(API_CONFIG.SOCIAL_API);
@@ -119,6 +134,11 @@ export const getSocialFinished = async (): Promise<any[]> => {
   return Array.isArray(response.data?.solutions) ? response.data.solutions : [];
 };
 
+export const getSocialCount = async (): Promise<number> => {
+  const response = await apiClient<any>(API_CONFIG.SOCIAL_COUNT_API);
+  return typeof response.count === 'number' ? response.count : 0;
+};
+
 // Предложения по коллективному договору
 export const getCollectiveSolutions = async (): Promise<any[]> => {
   const response = await apiClient<any>(API_CONFIG.COLLECTIVE_API);
@@ -133,5 +153,10 @@ export const getCollectiveApproved = async (): Promise<any[]> => {
 export const getCollectiveFinished = async (): Promise<any[]> => {
   const response = await apiClient<any>(API_CONFIG.COLLECTIVE_API_FINISHED);
   return Array.isArray(response.data?.solutions) ? response.data.solutions : [];
+};
+
+export const getCollectiveCount = async (): Promise<number> => {
+  const response = await apiClient<any>(API_CONFIG.COLLECTIVE_COUNT_API);
+  return typeof response.count === 'number' ? response.count : 0;
 };
 

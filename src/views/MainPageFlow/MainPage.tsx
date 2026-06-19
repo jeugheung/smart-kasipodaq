@@ -8,10 +8,16 @@ import { RequestsTabWidget } from "@widgets/RequestsTabWidget";
 
 import {
   getNews,
-
+  getViolationCount,
+  getWorkCount,
+  getSalaryCount,
+  getSocialCount,
+  getCollectiveCount
 } from "@shared/api/endpoints";
 import { NewsSkeleton } from "@widgets/NewsWidget/NewsSkeleton";
 import { useTranslation } from "react-i18next";
+import { StatisticsSkeleton } from "@widgets/StatisticsWidget/StatisticsSkeleton";
+import { StatisticsWidget } from "@widgets/StatisticsWidget";
 
 
 export const MainPage = ({ navigation }: any) => {
@@ -20,19 +26,39 @@ export const MainPage = ({ navigation }: any) => {
   const { i18n } = useTranslation();
   const lang = i18n.language;
 
+  const [violationCount, setViolationCount] = useState(0);
+  const [workCount, setWorkCount] = useState(0);
+  const [salaryCount, setSalaryCount] = useState(0);
+  const [socialCount, setSocialCount] = useState(0);
+  const [collectiveCount, setCollectiveCount] = useState(0);
+
   useEffect(() => {
     setLoading(true);
 
     Promise.all([
       getNews(),
-
+      getViolationCount(),
+      getWorkCount(),
+      getSalaryCount(),
+      getSocialCount(),
+      getCollectiveCount()
     ])
       .then(
         ([
           newsResp,
+          violationCountResp,
+          workCountResp,
+          salaryCountResp,
+          socialCountResp,
+          collectiveCountResp,
 
         ]) => {
           setNews(newsResp);
+          setViolationCount(Number(violationCountResp) || 0);
+          setWorkCount(Number(workCountResp) || 0);
+          setSalaryCount(Number(salaryCountResp) || 0);
+          setSocialCount(Number(socialCountResp) || 0);
+          setCollectiveCount(Number(collectiveCountResp) || 0);
    
         }
       )
@@ -72,6 +98,19 @@ export const MainPage = ({ navigation }: any) => {
                   : item.full_text_ru,
               img: `https://kasipodaq.competence.kz/uploads/news/${item.image}`,
             }))}
+          />
+        )}
+
+        {/* Статистика */}
+        {loading ? (
+          <StatisticsSkeleton />
+        ) : (
+          <StatisticsWidget
+            violation={violationCount}
+            work={workCount}
+            salary={salaryCount}
+            social={socialCount}
+            collective={collectiveCount}
           />
         )}
 
