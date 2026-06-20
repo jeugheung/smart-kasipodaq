@@ -11,6 +11,12 @@ import { useNavigation } from '@react-navigation/native';
 
 import { SectionHeader } from '../../shared/ui/SectionHeader';
 
+import ViolationIcon from '../../../assets/stat-icons/violation.svg';
+import WorkIcon from '../../../assets/stat-icons/work.svg';
+import SalaryIcon from '../../../assets/stat-icons/salary.svg';
+import SocialIcon from '../../../assets/stat-icons/social.svg';
+import CollectiveIcon from '../../../assets/stat-icons/collective.svg';
+
 import {
   getViolationSolutions,
   getWorkSolutions,
@@ -42,20 +48,28 @@ const TABS: { key: RequestType; title: string }[] = [
   { key: 'collective', title: 'Предложения по коллективному договору' },
 ];
 
-const TAB_ICONS: Record<RequestType, string> = {
-  violation: '⚠️',
-  work: '🛠️',
-  salary: '💰',
-  social: '🤝',
-  collective: '📄',
+const TAB_ICONS: Record<RequestType, React.FC<any>> = {
+  violation: ViolationIcon,
+  work: WorkIcon,
+  salary: SalaryIcon,
+  social: SocialIcon,
+  collective: CollectiveIcon,
 };
 
 const TAB_COLORS: Record<RequestType, string> = {
-  violation: '#C9F2FF',
-  work: '#FFF1B7',
-  salary: '#FFE9B1',
-  social: '#F4FFB5',
-  collective: '#E8DDFF',
+  violation: '#EAF3FF',
+  work: '#EAF3FF',
+  salary: '#EAF3FF',
+  social: '#EAF3FF',
+  collective: '#EAF3FF',
+};
+
+const TAB_ACCENT_COLORS: Record<RequestType, string> = {
+  violation: '#2563EB',
+  work: '#2563EB',
+  salary: '#2563EB',
+  social: '#2563EB',
+  collective: '#2563EB',
 };
 
 const API_CALLS: Record<RequestType, () => Promise<any[]>> = {
@@ -142,6 +156,7 @@ export const RequestsTabWidget = () => {
 
   const currentData = data[activeTab];
   const currentTitle = TABS.find(tab => tab.key === activeTab)?.title ?? '';
+  const ActiveIcon = TAB_ICONS[activeTab];
 
   return (
     <View style={styles.container}>
@@ -152,24 +167,30 @@ export const RequestsTabWidget = () => {
           showsHorizontalScrollIndicator={false}
           keyExtractor={item => item.key}
           contentContainerStyle={styles.tabsContent}
-          renderItem={({ item }) => (
-            <Pressable
-              style={[
-                styles.tabButton,
-                activeTab === item.key && styles.activeTab,
-              ]}
-              onPress={() => handleTabPress(item.key)}
-            >
-              <Text
+          renderItem={({ item }) => {
+            const isActive = activeTab === item.key;
+
+            return (
+              <Pressable
                 style={[
-                  styles.tabText,
-                  activeTab === item.key && styles.activeTabText,
+                  styles.tabButton,
+                  isActive && {
+                    backgroundColor: TAB_ACCENT_COLORS[item.key],
+                  },
                 ]}
+                onPress={() => handleTabPress(item.key)}
               >
-                {item.title}
-              </Text>
-            </Pressable>
-          )}
+                <Text
+                  style={[
+                    styles.tabText,
+                    isActive && styles.activeTabText,
+                  ]}
+                >
+                  {item.title}
+                </Text>
+              </Pressable>
+            );
+          }}
         />
       </View>
 
@@ -187,8 +208,13 @@ export const RequestsTabWidget = () => {
           <RequestTabSkeleton />
         ) : currentData.length === 0 ? (
           <View style={styles.emptyState}>
-            <View style={styles.emptyIconCircle}>
-              <Text style={styles.emptyIcon}>📭</Text>
+            <View
+              style={[
+                styles.emptyIconCircle,
+                { backgroundColor: TAB_COLORS[activeTab] },
+              ]}
+            >
+              <ActiveIcon width={30} height={30} />
             </View>
 
             <Text style={styles.emptyTitle}>Пока нет данных</Text>
@@ -198,41 +224,59 @@ export const RequestsTabWidget = () => {
             </Text>
           </View>
         ) : (
-          currentData.map(card => (
-            <Pressable
-              key={card.id}
-              style={({ pressed }) => [
-                styles.card,
-                pressed && styles.cardPressed,
-              ]}
-              onPress={() =>
-                navigation.navigate('RequestsList', {
-                  requestType: activeTab,
-                })
-              }
-            >
-              <View
-                style={[
-                  styles.iconCircle,
-                  { backgroundColor: TAB_COLORS[activeTab] },
+          currentData.map(card => {
+            const Icon = TAB_ICONS[activeTab];
+
+            return (
+              <Pressable
+                key={card.id}
+                style={({ pressed }) => [
+                  styles.card,
+                  pressed && styles.cardPressed,
                 ]}
+                onPress={() =>
+                  navigation.navigate('RequestsList', {
+                    requestType: activeTab,
+                  })
+                }
               >
-                <Text style={styles.cardIcon}>{TAB_ICONS[activeTab]}</Text>
-              </View>
+                <View
+                  style={[
+                    styles.iconCircle,
+                    { backgroundColor: TAB_COLORS[activeTab] },
+                  ]}
+                >
+                  <Icon width={24} height={24} />
+                </View>
 
-              <View style={styles.textContainer}>
-                <Text style={styles.cardTitle} numberOfLines={1}>
-                  {card.title}
-                </Text>
+                <View style={styles.textContainer}>
+                  <Text style={styles.cardTitle} numberOfLines={1}>
+                    {card.title}
+                  </Text>
 
-                <Text style={styles.cardDescription} numberOfLines={2}>
-                  {card.description}
-                </Text>
-              </View>
+                  <Text style={styles.cardDescription} numberOfLines={2}>
+                    {card.description}
+                  </Text>
+                </View>
 
-              <Text style={styles.arrow}>›</Text>
-            </Pressable>
-          ))
+                <View
+                  style={[
+                    styles.arrowCircle,
+                    { backgroundColor: TAB_COLORS[activeTab] },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.arrow,
+                      { color: TAB_ACCENT_COLORS[activeTab] },
+                    ]}
+                  >
+                    ›
+                  </Text>
+                </View>
+              </Pressable>
+            );
+          })
         )}
       </ScrollView>
     </View>
@@ -243,122 +287,145 @@ const styles = StyleSheet.create({
   container: {
     marginVertical: 20,
   },
+
   tabsWrapper: {
     marginHorizontal: -15,
     marginBottom: 15,
   },
+
   tabsContent: {
     paddingHorizontal: 15,
   },
+
   tabButton: {
-    height: 32,
+    minHeight: 34,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
-    borderRadius: 24,
+    borderRadius: 999,
     marginRight: 8,
-    backgroundColor: 'rgb(211, 215, 221)',
+    backgroundColor: '#EEF2F7',
   },
-  activeTab: {
-    backgroundColor: 'rgba(37, 99, 235, 1)',
-  },
+
   tabText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: 'rgb(88, 88, 88)',
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#64748B',
   },
+
   activeTabText: {
-    color: '#fff',
+    color: '#FFFFFF',
   },
+
   cardsContainer: {
     marginTop: 10,
   },
+
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    height: 90,
-    backgroundColor: '#fff',
-    borderRadius: 24,
+    minHeight: 92,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
     marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#EEF2F7',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 2,
   },
+
   cardPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.98 }],
+    opacity: 0.88,
+    transform: [{ scale: 0.985 }],
   },
+
   iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 50,
+    height: 50,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
-  cardIcon: {
-    fontSize: 20,
-  },
+
   textContainer: {
     flex: 1,
     gap: 4,
     marginRight: 10,
   },
+
   cardTitle: {
-    fontWeight: '700',
+    fontWeight: '800',
     fontSize: 14,
-    color: '#002F42',
+    color: '#0F172A',
   },
+
   cardDescription: {
     fontSize: 12,
-    color: '#878787',
-    lineHeight: 16,
+    color: '#64748B',
+    lineHeight: 17,
+    fontWeight: '500',
   },
+
+  arrowCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
   arrow: {
-    fontSize: 28,
-    color: '#A0AEC0',
-    fontWeight: '400',
+    fontSize: 24,
+    fontWeight: '700',
+    marginTop: -2,
   },
+
   emptyState: {
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
     borderRadius: 24,
-    paddingVertical: 40,
+    paddingVertical: 38,
     paddingHorizontal: 24,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#EEF2F7',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 3,
     },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 2,
   },
+
   emptyIconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#EBF4FF',
+    width: 66,
+    height: 66,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
   },
-  emptyIcon: {
-    fontSize: 30,
-  },
+
   emptyTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#002F42',
+    fontWeight: '800',
+    color: '#0F172A',
     marginBottom: 8,
   },
+
   emptyDescription: {
     fontSize: 13,
-    color: '#878787',
+    color: '#64748B',
     textAlign: 'center',
-    lineHeight: 18,
+    lineHeight: 19,
   },
 });
