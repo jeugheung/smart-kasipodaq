@@ -62,5 +62,12 @@ export const API_CONFIG = {
   MAPS_API: `https://${MAIN_DOMAIN}/api/buildings`,
 
   // Version
-  VERSION_API: `https://${MAIN_DOMAIN}/api/version`
+  VERSION_API: `https://${MAIN_DOMAIN}/api/version`,
+
+  // Auth
+  LOGIN_API: `https://${MAIN_DOMAIN}/api/login`,
+  ME_API: `https://${MAIN_DOMAIN}/api/me`,
+  REGISTER_API:
+  `https://${MAIN_DOMAIN}/api/register`,
+  PROFSOYUZ_LIST_API: `https://${MAIN_DOMAIN}/api/profsoyuz-list`,
 };

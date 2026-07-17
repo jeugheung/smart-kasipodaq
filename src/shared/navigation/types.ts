@@ -1,20 +1,33 @@
+import { NavigatorScreenParams } from "@react-navigation/native";
+
+export type AppTabsParamList = {
+  MainTab: undefined;
+  RequestsTab: undefined;
+  SurveysTab: undefined;
+  ProfileTab: undefined;
+};
+
 export type RootStackParamList = {
-  // Главная точка входа с табами
-  MainTabs: undefined;
+  MainTabs: NavigatorScreenParams<AppTabsParamList> | undefined;
 
-  // Экраны из HomeFlow
-  EventsPage: undefined;
+  LoginPage:
+    | {
+        redirectTab?: keyof AppTabsParamList;
+      }
+    | undefined;
+
+  RegisterPage:
+  | {
+      redirectTab?: keyof AppTabsParamList;
+    }
+  | undefined;
+
   SurveyDetailPage: undefined;
-  LoginPage: undefined;
   RequestsList: undefined;
-  NewsDetailPage: undefined;
+  NewsDetailPage: {
+    id?: number | string;
+  };
   NewsPage: undefined;
-  // Экраны из ProfileFlow
-  MyRequests: undefined
-  Favourite: undefined
-
-  // Экраны из NotificationsFlow
-
-  // Экраны из RequestsFlow
-
+  MyRequests: undefined;
+  Favourite: undefined;
 };
