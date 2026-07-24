@@ -1,9 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { API_CONFIG } from "@shared/api/config";
-import { colors } from "@shared/theme/colors";
 import { DefaultLayout } from "@widgets/Layout/DefaultLayout";
 import React, { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
@@ -43,6 +43,8 @@ type MeResponse = {
 };
 
 export const ProfilePage = ({ navigation }: any) => {
+  const { t } = useTranslation();
+
   const [user, setUser] = useState<CurrentClient | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -100,6 +102,7 @@ export const ProfilePage = ({ navigation }: any) => {
       if (!accessToken) {
         setUser(null);
         redirectToLogin();
+
         return;
       }
 
@@ -114,26 +117,28 @@ export const ProfilePage = ({ navigation }: any) => {
       const data = await parseResponse<MeResponse>(response);
 
       if (!response.ok) {
-        if (response.status === 401) {
+        if (response.status === 401 || response.status === 403) {
           await AsyncStorage.removeItem("access_token");
+
           setUser(null);
           redirectToLogin();
+
           return;
         }
 
         throw new Error(
           typeof data?.msg === "string"
             ? data.msg
-            : "Не удалось загрузить профиль",
+            : t("profilePage.errors.loadProfile"),
         );
       }
 
       if (!data) {
-        throw new Error("Сервер вернул пустой ответ");
+        throw new Error(t("profilePage.errors.emptyResponse"));
       }
 
       if (typeof data.result === "number" && data.result !== 1) {
-        throw new Error(data.msg || "Не удалось загрузить профиль");
+        throw new Error(data.msg || t("profilePage.errors.loadProfile"));
       }
 
       const currentUser: CurrentClient | null =
@@ -151,7 +156,7 @@ export const ProfilePage = ({ navigation }: any) => {
           : null);
 
       if (!currentUser) {
-        throw new Error("Сервер не вернул данные пользователя");
+        throw new Error(t("profilePage.errors.noUserData"));
       }
 
       setUser(currentUser);
@@ -159,13 +164,15 @@ export const ProfilePage = ({ navigation }: any) => {
       console.error("Ошибка загрузки профиля:", error);
 
       const message =
-        error instanceof Error ? error.message : "Не удалось загрузить профиль";
+        error instanceof Error
+          ? error.message
+          : t("profilePage.errors.loadProfile");
 
-      Alert.alert("Ошибка", message);
+      Alert.alert(t("profilePage.errors.title"), message);
     } finally {
       setIsLoading(false);
     }
-  }, [redirectToLogin]);
+  }, [redirectToLogin, t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -173,57 +180,64 @@ export const ProfilePage = ({ navigation }: any) => {
     }, [loadCurrentUser]),
   );
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     if (isLoggingOut) {
       return;
     }
 
-    Alert.alert("Выход", "Вы действительно хотите выйти из аккаунта?", [
-      {
-        text: "Отмена",
-        style: "cancel",
-      },
-      {
-        text: "Выйти",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            setIsLoggingOut(true);
-
-            await AsyncStorage.removeItem("access_token");
-
-            setUser(null);
-
-            const rootNavigation = navigation.getParent();
-
-            if (rootNavigation) {
-              rootNavigation.reset({
-                index: 0,
-                routes: [
-                  {
-                    name: "MainTabs",
-                    params: {
-                      screen: "MainTab",
-                    },
-                  },
-                ],
-              });
-
-              return;
-            }
-
-            navigation.navigate("MainTab");
-          } catch (error) {
-            console.error("Ошибка выхода:", error);
-
-            Alert.alert("Ошибка", "Не удалось выполнить выход");
-          } finally {
-            setIsLoggingOut(false);
-          }
+    Alert.alert(
+      t("profilePage.logoutModal.title"),
+      t("profilePage.logoutModal.message"),
+      [
+        {
+          text: t("profilePage.logoutModal.cancel"),
+          style: "cancel",
         },
-      },
-    ]);
-  };
+        {
+          text: t("profilePage.logoutModal.confirm"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setIsLoggingOut(true);
+
+              await AsyncStorage.removeItem("access_token");
+
+              setUser(null);
+
+              const rootNavigation = navigation.getParent();
+
+              if (rootNavigation) {
+                rootNavigation.reset({
+                  index: 0,
+                  routes: [
+                    {
+                      name: "MainTabs",
+                      params: {
+                        screen: "MainTab",
+                      },
+                    },
+                  ],
+                });
+
+                return;
+              }
+
+              navigation.navigate("MainTab");
+            } catch (error) {
+              console.error("Ошибка выхода:", error);
+
+              Alert.alert(
+                t("profilePage.errors.title"),
+                t("profilePage.errors.logout"),
+              );
+            } finally {
+              setIsLoggingOut(false);
+            }
+          },
+        },
+      ],
+    );
+  }, [isLoggingOut, navigation, t]);
 
   const getUserName = (): string => {
     if (user?.full_name?.trim()) {
@@ -243,7 +257,7 @@ export const ProfilePage = ({ navigation }: any) => {
       return nameParts.join(" ");
     }
 
-    return "Пользователь";
+    return t("profilePage.defaultUserName");
   };
 
   const getInitials = (): string => {
@@ -256,31 +270,30 @@ export const ProfilePage = ({ navigation }: any) => {
       .map((part) => part.charAt(0).toUpperCase())
       .join("");
 
-    return initials || "П";
+    return initials || t("profilePage.defaultUserInitial");
+  };
+
+  const handleOpenContacts = () => {
+    Alert.alert(
+      t("profilePage.contactsModal.title"),
+      t("profilePage.contactsModal.message"),
+    );
   };
 
   if (isLoading) {
     return (
-      <DefaultLayout
-        variant="default"
-        title="Smart Kasipodaq"
-        onRightPress={() => Alert.alert("Язык", "Переключение языка")}
-      >
+      <DefaultLayout variant="default" title="Smart Kasipodaq">
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color="#004B87" />
 
-          <Text style={styles.loaderText}>Загружаем профиль...</Text>
+          <Text style={styles.loaderText}>{t("profilePage.loading")}</Text>
         </View>
       </DefaultLayout>
     );
   }
 
   return (
-    <DefaultLayout
-      variant="default"
-      title="Smart Kasipodaq"
-      onRightPress={() => Alert.alert("Язык", "Переключение языка")}
-    >
+    <DefaultLayout variant="default" title="Smart Kasipodaq">
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -293,7 +306,9 @@ export const ProfilePage = ({ navigation }: any) => {
 
           <Text style={styles.userName}>{getUserName()}</Text>
 
-          <Text style={styles.userIin}>ИИН {user?.iin || "не указан"}</Text>
+          <Text style={styles.userIin}>
+            {t("profilePage.iin")} {user?.iin || t("profilePage.notSpecified")}
+          </Text>
         </View>
 
         <View style={styles.menuList}>
@@ -315,7 +330,9 @@ export const ProfilePage = ({ navigation }: any) => {
               </View>
             </View>
 
-            <Text style={styles.menuItemText}>История обращений</Text>
+            <Text style={styles.menuItemText}>
+              {t("profilePage.menu.requests")}
+            </Text>
 
             <View style={styles.arrowRight} />
           </TouchableOpacity>
@@ -336,7 +353,9 @@ export const ProfilePage = ({ navigation }: any) => {
               <View style={styles.gearIcon} />
             </View>
 
-            <Text style={styles.menuItemText}>Избранное</Text>
+            <Text style={styles.menuItemText}>
+              {t("profilePage.menu.favourites")}
+            </Text>
 
             <View style={styles.arrowRight} />
           </TouchableOpacity>
@@ -344,9 +363,7 @@ export const ProfilePage = ({ navigation }: any) => {
           <TouchableOpacity
             style={styles.menuItem}
             activeOpacity={0.7}
-            onPress={() =>
-              Alert.alert("Контакты", "Страница контактов ещё не подключена")
-            }
+            onPress={handleOpenContacts}
           >
             <View
               style={[
@@ -359,7 +376,9 @@ export const ProfilePage = ({ navigation }: any) => {
               <View style={styles.contactsIcon} />
             </View>
 
-            <Text style={styles.menuItemText}>Контакты</Text>
+            <Text style={styles.menuItemText}>
+              {t("profilePage.menu.contacts")}
+            </Text>
 
             <View style={styles.arrowRight} />
           </TouchableOpacity>
@@ -377,7 +396,9 @@ export const ProfilePage = ({ navigation }: any) => {
           {isLoggingOut ? (
             <ActivityIndicator size="small" color="#E40E0E" />
           ) : (
-            <Text style={styles.logoutButtonText}>Выйти</Text>
+            <Text style={styles.logoutButtonText}>
+              {t("profilePage.logoutButton")}
+            </Text>
           )}
         </TouchableOpacity>
       </ScrollView>
@@ -386,165 +407,153 @@ export const ProfilePage = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-    backgroundColor: colors.background || "#F5F7FA",
-  },
-
-  content: {
-    flexGrow: 1,
-    paddingHorizontal: 15,
-    paddingTop: 30,
-    paddingBottom: 100,
-    alignItems: "center",
-  },
-
   loaderContainer: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.background || "#F5F7FA",
-    gap: 12,
+    backgroundColor: "#F5F7FA",
   },
 
   loaderText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#8E8E93",
+    marginTop: 14,
+    fontSize: 15,
+    color: "#667085",
+  },
+
+  scrollView: {
+    flex: 1,
+    backgroundColor: "#F5F7FA",
+  },
+
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: 16,
+    paddingTop: 30,
+    paddingBottom: 120,
   },
 
   headerBlock: {
     alignItems: "center",
-    marginBottom: 30,
+    marginBottom: 32,
   },
 
   avatar: {
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    backgroundColor: "#004B87",
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 16,
+    backgroundColor: "#004B87",
   },
 
   avatarText: {
-    color: "#FFFFFF",
-    fontSize: 42,
+    fontSize: 30,
     fontWeight: "700",
+    color: "#FFFFFF",
   },
 
   userName: {
+    marginTop: 16,
     paddingHorizontal: 20,
-    fontSize: 22,
+    fontSize: 21,
+    lineHeight: 28,
     fontWeight: "700",
-    color: "#1C2530",
-    marginBottom: 6,
+    color: "#111827",
     textAlign: "center",
   },
 
   userIin: {
+    marginTop: 7,
     fontSize: 14,
-    color: "#8E8E93",
-    fontWeight: "500",
+    lineHeight: 20,
+    color: "#667085",
   },
 
   menuList: {
-    width: "100%",
-    gap: 12,
-    marginBottom: 40,
+    overflow: "hidden",
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
   },
 
   menuItem: {
-    width: "100%",
+    minHeight: 76,
+    paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 16,
-
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    borderBottomWidth: 1,
+    borderBottomColor: "#EEF0F3",
   },
 
   iconWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 14,
+    borderRadius: 14,
   },
 
   menuItemText: {
     flex: 1,
-    fontSize: 15,
+    marginLeft: 14,
+    fontSize: 16,
+    lineHeight: 22,
     fontWeight: "600",
-    color: "#0F3049",
+    color: "#1F2937",
   },
 
   arrowRight: {
-    width: 8,
-    height: 8,
+    width: 9,
+    height: 9,
+    marginRight: 4,
     borderTopWidth: 2,
     borderRightWidth: 2,
-    borderColor: "#0F3049",
-    transform: [
-      {
-        rotate: "45deg",
-      },
-    ],
-    marginRight: 4,
+    borderColor: "#98A2B3",
+    transform: [{ rotate: "45deg" }],
   },
 
   msgIcon: {
-    width: 18,
-    height: 14,
-    borderRadius: 3,
+    width: 22,
+    height: 18,
     borderWidth: 2,
-    borderColor: "#007AFF",
-    justifyContent: "center",
-    alignItems: "center",
+    borderColor: "#168ACD",
+    borderRadius: 5,
   },
 
   msgIconDot: {
-    width: 6,
-    height: 2,
-    backgroundColor: "#007AFF",
+    position: "absolute",
+    right: -3,
+    bottom: -3,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: "#168ACD",
   },
 
   gearIcon: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    width: 21,
+    height: 21,
     borderWidth: 3,
-    borderColor: "#FFB300",
+    borderColor: "#E3AA00",
+    borderRadius: 11,
   },
 
   contactsIcon: {
-    width: 14,
-    height: 16,
-    borderRadius: 3,
+    width: 21,
+    height: 21,
     borderWidth: 2,
-    borderColor: "#84CC16",
+    borderColor: "#62A52F",
+    borderRadius: 11,
   },
 
   logoutButton: {
-    width: "100%",
-    minHeight: 52,
-    backgroundColor: "rgba(255, 153, 153, 1)",
-    paddingVertical: 15,
-    borderRadius: 24,
+    minHeight: 54,
+    marginTop: 28,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: "auto",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+    borderRadius: 16,
+    backgroundColor: "#FFF5F5",
   },
 
   logoutButtonDisabled: {
@@ -552,8 +561,9 @@ const styles = StyleSheet.create({
   },
 
   logoutButtonText: {
-    color: "#E40E0E",
     fontSize: 16,
+    lineHeight: 22,
     fontWeight: "700",
+    color: "#E40E0E",
   },
 });

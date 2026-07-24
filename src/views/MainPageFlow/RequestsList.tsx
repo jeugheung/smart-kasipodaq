@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   StyleSheet,
@@ -6,18 +6,19 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
-} from 'react-native';
+} from "react-native";
+import { useTranslation } from "react-i18next";
 
-import { colors } from '@shared/theme/colors';
-import { DefaultLayout } from '@widgets/Layout/DefaultLayout';
-import { SharedLoader } from '@shared/ui/SharedLoader/SharedLoader';
+import { colors } from "@shared/theme/colors";
+import { DefaultLayout } from "@widgets/Layout/DefaultLayout";
+import { SharedLoader } from "@shared/ui/SharedLoader/SharedLoader";
 
 import {
   RequestItem,
   RequestStatus,
   PendingRequestCard,
   ResolvedRequestCard,
-} from '@entities/RequestCard';
+} from "@entities/RequestCard";
 
 import {
   getViolationApproved,
@@ -30,22 +31,9 @@ import {
   getSocialFinished,
   getCollectiveApproved,
   getCollectiveFinished,
-} from '@shared/api/endpoints';
+} from "@shared/api/endpoints";
 
-type RequestType =
-  | 'violation'
-  | 'work'
-  | 'salary'
-  | 'social'
-  | 'collective';
-
-const TITLE_MAP: Record<RequestType, string> = {
-  violation: 'Нарушение ТК',
-  work: 'Условия труда',
-  salary: 'Оплата труда',
-  social: 'Социальные льготы',
-  collective: 'Предложения по коллективному договору',
-};
+type RequestType = "violation" | "work" | "salary" | "social" | "collective";
 
 const apiMap: Record<
   RequestType,
@@ -76,46 +64,160 @@ const apiMap: Record<
   },
 };
 
-export const RequestsList = ({ route }: any) => {
-  const { requestType } = route.params as { requestType: RequestType };
+const getLanguageCode = (language: string) => {
+  if (language.startsWith("kk")) return "kk";
+  if (language.startsWith("en")) return "en";
 
-  const [activeSegment, setActiveSegment] = useState<RequestStatus>('pending');
+  return "ru";
+};
+
+const getLocalizedField = (
+  item: any,
+  field: "problem" | "solution" | "comment",
+  language: string,
+) => {
+  const lang = getLanguageCode(language);
+
+  if (field === "problem") {
+    if (lang === "kk") {
+      return (
+        item.problem_kz ||
+        item.problem_kk ||
+        item.title_kz ||
+        item.title_kk ||
+        item.problem ||
+        item.title ||
+        ""
+      );
+    }
+
+    if (lang === "en") {
+      return (
+        item.problem_en || item.title_en || item.problem || item.title || ""
+      );
+    }
+
+    return item.problem_ru || item.title_ru || item.problem || item.title || "";
+  }
+
+  if (field === "solution") {
+    if (lang === "kk") {
+      return (
+        item.solution_kz ||
+        item.solution_kk ||
+        item.description_kz ||
+        item.description_kk ||
+        item.solution ||
+        item.description ||
+        ""
+      );
+    }
+
+    if (lang === "en") {
+      return (
+        item.solution_en ||
+        item.description_en ||
+        item.solution ||
+        item.description ||
+        ""
+      );
+    }
+
+    return (
+      item.solution_ru ||
+      item.description_ru ||
+      item.solution ||
+      item.description ||
+      ""
+    );
+  }
+
+  if (lang === "kk") {
+    return item.comment_kz || item.comment_kk || item.comment || "";
+  }
+
+  if (lang === "en") {
+    return item.comment_en || item.comment || "";
+  }
+
+  return item.comment_ru || item.comment || "";
+};
+
+export const RequestsList = ({ route }: any) => {
+  const { requestType } = route.params as {
+    requestType: RequestType;
+  };
+
+  const { t, i18n } = useTranslation();
+
+  const language = i18n.resolvedLanguage ?? i18n.language ?? "ru";
+
+  const [activeSegment, setActiveSegment] = useState<RequestStatus>("pending");
+
   const [requests, setRequests] = useState<RequestItem[]>([]);
+
   const [loading, setLoading] = useState(false);
+
+  const getRequestTypeTitle = useCallback(
+    (type: RequestType) => {
+      return t(`requestsList.types.${type}`);
+    },
+    [t],
+  );
 
   const fetchWithTimeout = async <T,>(
     promise: Promise<T>,
-    timeoutMs = 10000
+    timeoutMs = 10000,
   ): Promise<T> => {
     return Promise.race([
       promise,
       new Promise<T>((_, reject) =>
-        setTimeout(() => reject(new Error('timeout')), timeoutMs)
+        setTimeout(() => reject(new Error("timeout")), timeoutMs),
       ),
     ]);
   };
 
-  const mapRequest = (
-    item: any,
-    segment: RequestStatus,
-    fallbackType: RequestType
-  ): RequestItem => {
-    const typeKey = (item.type_name || fallbackType) as RequestType;
-    const tag = TITLE_MAP[typeKey] || TITLE_MAP[fallbackType];
+  const mapRequest = useCallback(
+    (
+      item: any,
+      segment: RequestStatus,
+      fallbackType: RequestType,
+    ): RequestItem => {
+      const rawType = item.type_name || fallbackType;
 
-    return {
-      id: item.id?.toString() ?? Math.random().toString(),
-      tag,
-      date: item.created_at || item.updated_at || item.date || '',
-      problem: item.problem || item.title || 'Без названия',
-      solution: item.solution || item.description || '',
-      comment: item.comment || '',
-      status: segment,
-      likes: Number(item.solution_likes || item.likes || 0),
-      dislikes: Number(item.solution_dislikes || item.dislikes || 0),
-      userVote: null,
-    };
-  };
+      const typeKey: RequestType =
+        rawType in apiMap ? (rawType as RequestType) : fallbackType;
+
+      const tag = getRequestTypeTitle(typeKey);
+
+      return {
+        id:
+          item.id?.toString() ??
+          `${fallbackType}-${Date.now()}-${Math.random()}`,
+
+        tag,
+
+        date: item.created_at || item.updated_at || item.date || "",
+
+        problem:
+          getLocalizedField(item, "problem", language) ||
+          t("requestsList.untitled"),
+
+        solution: getLocalizedField(item, "solution", language),
+
+        comment: getLocalizedField(item, "comment", language),
+
+        status: segment,
+
+        likes: Number(item.solution_likes || item.likes || 0),
+
+        dislikes: Number(item.solution_dislikes || item.dislikes || 0),
+
+        userVote: null,
+      };
+    },
+    [getRequestTypeTitle, language, t],
+  );
 
   const loadRequests = useCallback(
     async (segment: RequestStatus) => {
@@ -123,42 +225,46 @@ export const RequestsList = ({ route }: any) => {
 
       try {
         const fetcher = apiMap[requestType][segment];
+
         const data = await fetchWithTimeout(fetcher(), 10000);
 
-        const mapped = data.map(item =>
-          mapRequest(item, segment, requestType)
+        const safeData = Array.isArray(data) ? data : [];
+
+        const mapped = safeData.map((item) =>
+          mapRequest(item, segment, requestType),
         );
 
         setRequests(mapped);
-      } catch (e: any) {
-        console.error(e);
+      } catch (error: any) {
+        console.error("Ошибка загрузки заявок:", error);
 
-        if (e.message === 'timeout') {
+        if (error?.message === "timeout") {
           Alert.alert(
-            'Ошибка сети',
-            'Сервер слишком долго отвечает. Попробуйте позже.'
+            t("requestsList.errors.networkTitle"),
+            t("requestsList.errors.timeout"),
           );
         } else {
-          Alert.alert('Ошибка', 'Не удалось загрузить данные');
+          Alert.alert(
+            t("requestsList.errors.title"),
+            t("requestsList.errors.loadFailed"),
+          );
         }
 
         setRequests([]);
       } finally {
-        setTimeout(() => {
-          setLoading(false);
-        }, 500);
+        setLoading(false);
       }
     },
-    [requestType]
+    [mapRequest, requestType, t],
   );
 
   useEffect(() => {
     loadRequests(activeSegment);
-  }, [activeSegment, loadRequests]);
+  }, [activeSegment, loadRequests, language]);
 
-  const handleVote = (id: string, type: 'like' | 'dislike') => {
-    setRequests(prev =>
-      prev.map(item => {
+  const handleVote = (id: string, type: "like" | "dislike") => {
+    setRequests((prev) =>
+      prev.map((item) => {
         if (item.id !== id) return item;
 
         let newLikes = item.likes;
@@ -168,18 +274,23 @@ export const RequestsList = ({ route }: any) => {
         if (item.userVote === type) {
           newVote = null;
 
-          if (type === 'like') {
-            newLikes--;
+          if (type === "like") {
+            newLikes = Math.max(0, newLikes - 1);
           } else {
-            newDislikes--;
+            newDislikes = Math.max(0, newDislikes - 1);
           }
         } else {
-          if (item.userVote === 'like') newLikes--;
-          if (item.userVote === 'dislike') newDislikes--;
+          if (item.userVote === "like") {
+            newLikes = Math.max(0, newLikes - 1);
+          }
+
+          if (item.userVote === "dislike") {
+            newDislikes = Math.max(0, newDislikes - 1);
+          }
 
           newVote = type;
 
-          if (type === 'like') {
+          if (type === "like") {
             newLikes++;
           } else {
             newDislikes++;
@@ -192,12 +303,12 @@ export const RequestsList = ({ route }: any) => {
           dislikes: newDislikes,
           userVote: newVote,
         };
-      })
+      }),
     );
   };
 
   return (
-    <DefaultLayout variant="back" title={TITLE_MAP[requestType]}>
+    <DefaultLayout variant="back" title={getRequestTypeTitle(requestType)}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -207,34 +318,34 @@ export const RequestsList = ({ route }: any) => {
           <TouchableOpacity
             style={[
               styles.segmentButton,
-              activeSegment === 'pending' && styles.segmentButtonActive,
+              activeSegment === "pending" && styles.segmentButtonActive,
             ]}
-            onPress={() => setActiveSegment('pending')}
+            onPress={() => setActiveSegment("pending")}
           >
             <Text
               style={[
                 styles.segmentText,
-                activeSegment === 'pending' && styles.segmentTextActive,
+                activeSegment === "pending" && styles.segmentTextActive,
               ]}
             >
-              На рассмотрении
+              {t("requestsList.segments.pending")}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[
               styles.segmentButton,
-              activeSegment === 'resolved' && styles.segmentButtonActive,
+              activeSegment === "resolved" && styles.segmentButtonActive,
             ]}
-            onPress={() => setActiveSegment('resolved')}
+            onPress={() => setActiveSegment("resolved")}
           >
             <Text
               style={[
                 styles.segmentText,
-                activeSegment === 'resolved' && styles.segmentTextActive,
+                activeSegment === "resolved" && styles.segmentTextActive,
               ]}
             >
-              Решённые вопросы
+              {t("requestsList.segments.resolved")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -245,22 +356,22 @@ export const RequestsList = ({ route }: any) => {
           </View>
         ) : (
           <View style={styles.listContainer}>
-            {requests.map(item =>
-              item.status === 'pending' ? (
+            {requests.map((item) =>
+              item.status === "pending" ? (
                 <PendingRequestCard
                   key={item.id}
                   item={item}
                   requestType={item.tag}
                   onVote={handleVote}
                 />
-              ) : item.status === 'resolved' ? (
+              ) : item.status === "resolved" ? (
                 <ResolvedRequestCard
                   key={item.id}
                   item={item}
                   requestType={item.tag}
                   onVote={handleVote}
                 />
-              ) : null
+              ) : null,
             )}
 
             {requests.length === 0 && (
@@ -269,11 +380,12 @@ export const RequestsList = ({ route }: any) => {
                   <Text style={styles.emptyIcon}>📭</Text>
                 </View>
 
-                <Text style={styles.emptyTitle}>Заявок пока нет</Text>
+                <Text style={styles.emptyTitle}>
+                  {t("requestsList.empty.title")}
+                </Text>
 
                 <Text style={styles.emptyDescription}>
-                  В этом разделе пока нет заявок. Когда они появятся, вы
-                  увидите их здесь.
+                  {t("requestsList.empty.description")}
                 </Text>
               </View>
             )}
@@ -297,12 +409,15 @@ const styles = StyleSheet.create({
   },
 
   segmentedContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    flexDirection: "row",
+    backgroundColor: "#FFFFFF",
     borderRadius: 14,
     padding: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 2,
@@ -311,23 +426,25 @@ const styles = StyleSheet.create({
   segmentButton: {
     flex: 1,
     paddingVertical: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingHorizontal: 6,
+    alignItems: "center",
+    justifyContent: "center",
     borderRadius: 10,
   },
 
   segmentButtonActive: {
-    backgroundColor: '#003366',
+    backgroundColor: "#003366",
   },
 
   segmentText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#718096',
+    fontWeight: "600",
+    color: "#718096",
+    textAlign: "center",
   },
 
   segmentTextActive: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
   },
 
   listContainer: {
@@ -336,17 +453,20 @@ const styles = StyleSheet.create({
 
   loader: {
     paddingVertical: 30,
-    alignItems: 'center',
+    alignItems: "center",
   },
 
   emptyState: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 22,
     paddingVertical: 34,
     paddingHorizontal: 22,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
     shadowOpacity: 0.04,
     shadowRadius: 10,
     elevation: 2,
@@ -356,9 +476,9 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#EBF4FF',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#EBF4FF",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 14,
   },
 
@@ -368,15 +488,15 @@ const styles = StyleSheet.create({
 
   emptyTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#1A202C',
+    fontWeight: "700",
+    color: "#1A202C",
     marginBottom: 8,
   },
 
   emptyDescription: {
     fontSize: 13,
-    color: '#718096',
-    textAlign: 'center',
+    color: "#718096",
+    textAlign: "center",
     lineHeight: 19,
   },
 });

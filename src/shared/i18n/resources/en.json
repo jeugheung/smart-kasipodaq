@@ -4,5 +4,206 @@
     "submit": "Submit",
     "more": "More",
     "readMore": "Read more"
+  },
+  "welcomeCard": {
+    "welcome": "Welcome",
+    "user": "User",
+    "organization": "Organization",
+    "organizationNotSpecified": "Organization not specified",
+    "status": "Status:",
+    "statusActive": "Active",
+    "statusInactive": "Inactive",
+    "statusUnauthorized": "Not authorized",
+    "loadingProfile": "Loading profile..."
+  },
+  "news": {
+    "title": "News"
+  },
+  "statistics": {
+    "title": "Statistics",
+    "totalRequests": "Total requests: {{count}}",
+    "submit": "Submit",
+    "violation": "Labor Code",
+    "work": "Conditions",
+    "salary": "Payment",
+    "social": "Benefits",
+    "collective": "Agreement"
+  },
+  "requestsWidget": {
+    "tabs": {
+      "violation": "Labor Code violations",
+      "work": "Working conditions",
+      "salary": "Wages and payment",
+      "social": "Social benefits",
+      "collective": "Collective agreement proposals"
+    },
+    "untitled": "Untitled",
+    "empty": {
+      "title": "No data yet",
+      "description": "There are currently no requests or publications in this section."
+    }
+  },
+  "requestsList": {
+    "types": {
+      "violation": "Labor Code violations",
+      "work": "Working conditions",
+      "salary": "Wages and payment",
+      "social": "Social benefits",
+      "collective": "Collective agreement proposals"
+    },
+    "segments": {
+      "pending": "Under review",
+      "resolved": "Resolved issues"
+    },
+    "untitled": "Untitled",
+    "empty": {
+      "title": "No requests yet",
+      "description": "There are no requests in this section yet. When they appear, you will see them here."
+    },
+    "errors": {
+      "title": "Error",
+      "networkTitle": "Network error",
+      "timeout": "The server is taking too long to respond. Please try again later.",
+      "loadFailed": "Failed to load the data."
+    }
+  },
+  "pendingRequestCard": {
+    "anonymous": "Anonymous",
+    "solutionOption": "Proposed solution",
+    "more": "...more",
+    "addFavorite": "Add to favorites",
+    "removeFavorite": "Remove from favorites",
+    "like": "Like",
+    "dislike": "Dislike"
+  },
+  "resolvedRequestCard": {
+    "anonymous": "Anonymous",
+    "solutionAuthor": "SU Solution",
+    "more": "...more",
+    "addFavorite": "Add to favorites",
+    "removeFavorite": "Remove from favorites",
+    "likeQuestion": "Like this solution",
+    "dislikeQuestion": "Dislike this solution",
+    "likeAnswer": "Like this response",
+    "dislikeAnswer": "Dislike this response"
+  },
+  "requestForm": {
+    "selectTopic": "Select the request topic",
+    "tabs": {
+      "violation": "Labor Code violation",
+      "work": "Working conditions",
+      "salary": "Wages and payment",
+      "social": "Social benefits",
+      "collective": "Collective agreement proposal"
+    },
+    "placeholders": {
+      "problem": "Describe the problem",
+      "contacts": "Leave your contact details"
+    },
+    "attachFiles": "📎 Attach files",
+    "anonymous": {
+      "title": "Anonymous request",
+      "subtitle": "Hide my personal information"
+    },
+    "buttons": {
+      "submit": "Submit",
+      "sending": "Submitting..."
+    },
+    "alerts": {
+      "errorTitle": "Error",
+      "successTitle": "Success",
+      "problemRequired": "Please describe the problem",
+      "successMessage": "Your request has been submitted",
+      "submitFailed": "Failed to submit the request"
+    }
+  },
+  "surveyPage": {
+    "layoutTitle": "Smart Kasipodaq",
+    "pageTitle": "Surveys",
+    "pageSubtitle": "Take part in important trade union decisions",
+
+    "activeCount": {
+      "one": "active",
+      "many": "active"
+    },
+
+    "loading": "Loading surveys...",
+
+    "empty": {
+      "title": "No surveys available",
+      "description": "There are currently no active surveys. New surveys will appear on this page.",
+      "refreshButton": "Refresh"
+    },
+
+    "card": {
+      "answeredBadge": "Survey completed",
+      "availableBadge": "Available to complete",
+      "answeredStatus": "Your answers have already been submitted",
+      "availableStatus": "Tap to take the survey",
+      "answeredButton": "Already completed",
+      "openButton": "Take survey"
+    },
+
+    "errors": {
+      "unknown": "An unknown error occurred",
+
+      "authRequired": {
+        "title": "Authorization required",
+        "message": "You need to sign in to view the surveys."
+      },
+
+      "sessionExpired": {
+        "title": "Session expired",
+        "message": "Your authorization session has expired. Please sign in again."
+      },
+
+      "loadError": {
+        "title": "Loading error",
+        "defaultMessage": "Failed to load surveys. Please check your internet connection.",
+        "statusMessage": "Failed to load surveys. Error code: {{status}}",
+        "invalidResponse": "The server did not return a survey list"
+      },
+
+      "alreadyAnswered": {
+        "title": "Survey already completed",
+        "message": "You have already submitted answers to this survey. It cannot be completed again."
+      }
+    },
+
+    "modal": {
+      "loginButton": "Go to sign in",
+      "closeButton": "Got it"
+    }
+  },
+   "profilePage": {
+    "loading": "Loading profile...",
+    "defaultUserName": "User",
+    "defaultUserInitial": "U",
+    "iin": "IIN",
+    "notSpecified": "not specified",
+    "logoutButton": "Log out",
+    "menu": {
+      "requests": "Request history",
+      "favourites": "Favourites",
+      "contacts": "Contacts"
+    },
+    "logoutModal": {
+      "title": "Log out",
+      "message": "Are you sure you want to log out of your account?",
+      "cancel": "Cancel",
+      "confirm": "Log out"
+    },
+    "contactsModal": {
+      "title": "Contacts",
+      "message": "The contacts page is not connected yet"
+    },
+    "errors": {
+      "title": "Error",
+      "loadProfile": "Failed to load profile",
+      "emptyResponse": "The server returned an empty response",
+      "noUserData": "The server did not return user data",
+      "logout": "Failed to log out"
+    }
   }
+
 }

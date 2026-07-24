@@ -2,8 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-
-import { AppButton } from "@shared/ui/AppButton";
+import { useTranslation } from "react-i18next";
 
 import ViolationIcon from "../../../assets/stat-icons/violation.svg";
 import WorkIcon from "../../../assets/stat-icons/work.svg";
@@ -39,6 +38,7 @@ export const StatisticsWidget = ({
   collective,
 }: Props) => {
   const navigation = useNavigation<NavigationProp>();
+  const { t } = useTranslation();
 
   const total =
     Number(violation) +
@@ -47,20 +47,53 @@ export const StatisticsWidget = ({
     Number(social) +
     Number(collective);
 
-  const cards = [
-    { value: violation, label: "ТК", Icon: ViolationIcon, type: "violation" },
-    { value: work, label: "Условия", Icon: WorkIcon, type: "work" },
-    { value: salary, label: "Оплата", Icon: SalaryIcon, type: "salary" },
-    { value: social, label: "Льготы", Icon: SocialIcon, type: "social" },
-    { value: collective, label: "Договор", Icon: CollectiveIcon, type: "collective" },
-  ] as const;
+  const cards: {
+    value: number | string;
+    label: string;
+    Icon: React.FC<any>;
+    type: RequestType;
+  }[] = [
+    {
+      value: violation,
+      label: t("statistics.violation"),
+      Icon: ViolationIcon,
+      type: "violation",
+    },
+    {
+      value: work,
+      label: t("statistics.work"),
+      Icon: WorkIcon,
+      type: "work",
+    },
+    {
+      value: salary,
+      label: t("statistics.salary"),
+      Icon: SalaryIcon,
+      type: "salary",
+    },
+    {
+      value: social,
+      label: t("statistics.social"),
+      Icon: SocialIcon,
+      type: "social",
+    },
+    {
+      value: collective,
+      label: t("statistics.collective"),
+      Icon: CollectiveIcon,
+      type: "collective",
+    },
+  ];
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerTitle}>Статистика</Text>
-          <Text style={styles.headerSubtitle}>Всего заявок: {total}</Text>
+          <Text style={styles.headerTitle}>{t("statistics.title")}</Text>
+
+          <Text style={styles.headerSubtitle}>
+            {t("statistics.totalRequests", { count: total })}
+          </Text>
         </View>
 
         <Pressable
@@ -71,12 +104,12 @@ export const StatisticsWidget = ({
             })
           }
         >
-          <Text style={styles.headerButtonText}>Подать</Text>
+          <Text style={styles.headerButtonText}>{t("statistics.submit")}</Text>
         </Pressable>
       </View>
 
       <View style={styles.content}>
-        {cards.map(item => (
+        {cards.map((item) => (
           <StatCard
             key={item.type}
             value={item.value}
@@ -118,6 +151,7 @@ const StatCard = ({ value, label, Icon, type }: StatCardProps) => {
       </View>
 
       <Text style={styles.cardValue}>{value}</Text>
+
       <Text style={styles.cardLabel} numberOfLines={1}>
         {label}
       </Text>

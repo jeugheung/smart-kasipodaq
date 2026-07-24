@@ -4,5 +4,206 @@
     "submit": "Отправить",
     "more": "Еще",
     "readMore": "Подробнее"
+  },
+   "welcomeCard": {
+    "welcome": "Добро пожаловать",
+    "user": "Пользователь",
+    "organization": "Организация",
+    "organizationNotSpecified": "Организация не указана",
+    "status": "Статус:",
+    "statusActive": "Активен",
+    "statusInactive": "Неактивен",
+    "statusUnauthorized": "Не авторизован",
+    "loadingProfile": "Загрузка профиля..."
+  },
+   "news": {
+    "title": "Новости"
+  },
+  "statistics": {
+    "title": "Статистика",
+    "totalRequests": "Всего заявок: {{count}}",
+    "submit": "Подать",
+    "violation": "ТК",
+    "work": "Условия",
+    "salary": "Оплата",
+    "social": "Льготы",
+    "collective": "Договор"
+  },
+  "requestsWidget": {
+    "tabs": {
+      "violation": "Нарушение ТК",
+      "work": "Условия труда",
+      "salary": "Оплата труда",
+      "social": "Социальные льготы",
+      "collective": "Предложения по коллективному договору"
+    },
+    "untitled": "Без названия",
+    "empty": {
+      "title": "Пока нет данных",
+      "description": "В данном разделе пока отсутствуют обращения или публикации."
+    }
+  },
+  "requestsList": {
+    "types": {
+      "violation": "Нарушение ТК",
+      "work": "Условия труда",
+      "salary": "Оплата труда",
+      "social": "Социальные льготы",
+      "collective": "Предложения по коллективному договору"
+    },
+    "segments": {
+      "pending": "На рассмотрении",
+      "resolved": "Решённые вопросы"
+    },
+    "untitled": "Без названия",
+    "empty": {
+      "title": "Заявок пока нет",
+      "description": "В этом разделе пока нет заявок. Когда они появятся, вы увидите их здесь."
+    },
+    "errors": {
+      "title": "Ошибка",
+      "networkTitle": "Ошибка сети",
+      "timeout": "Сервер слишком долго отвечает. Попробуйте позже.",
+      "loadFailed": "Не удалось загрузить данные."
+    }
+  },
+  "pendingRequestCard": {
+    "anonymous": "Аноним",
+    "solutionOption": "Вариант решения",
+    "more": "...ещё",
+    "addFavorite": "Добавить в избранное",
+    "removeFavorite": "Удалить из избранного",
+    "like": "Нравится",
+    "dislike": "Не нравится"
+  },
+  "resolvedRequestCard": {
+    "anonymous": "Аноним",
+    "solutionAuthor": "Решение SU",
+    "more": "...ещё",
+    "addFavorite": "Добавить в избранное",
+    "removeFavorite": "Удалить из избранного",
+    "likeQuestion": "Поставить отметку «Нравится» решению",
+    "dislikeQuestion": "Поставить отметку «Не нравится» решению",
+    "likeAnswer": "Поставить отметку «Нравится» ответу",
+    "dislikeAnswer": "Поставить отметку «Не нравится» ответу"
+  },
+  "requestForm": {
+    "selectTopic": "Выберите тему обращения",
+    "tabs": {
+      "violation": "Нарушение ТК",
+      "work": "Условия труда",
+      "salary": "Оплата труда",
+      "social": "Социальные льготы",
+      "collective": "Предложение по коллективному договору"
+    },
+    "placeholders": {
+      "problem": "Опишите проблему",
+      "contacts": "Оставьте контакты"
+    },
+    "attachFiles": "📎 Прикрепить файлы",
+    "anonymous": {
+      "title": "Анонимное обращение",
+      "subtitle": "Скрыть мои данные"
+    },
+    "buttons": {
+      "submit": "Отправить",
+      "sending": "Отправка..."
+    },
+    "alerts": {
+      "errorTitle": "Ошибка",
+      "successTitle": "Успешно",
+      "problemRequired": "Опишите проблему",
+      "successMessage": "Обращение отправлено",
+      "submitFailed": "Не удалось отправить обращение"
+    }
+  },
+  "surveyPage": {
+    "layoutTitle": "Smart Kasipodaq",
+    "pageTitle": "Анкетирование",
+    "pageSubtitle": "Участвуйте в важных решениях профсоюза",
+
+    "activeCount": {
+      "one": "активна",
+      "many": "активно"
+    },
+
+    "loading": "Загружаем анкеты...",
+
+    "empty": {
+      "title": "Нет доступных анкет",
+      "description": "Сейчас активных анкет нет. Новые опросы появятся на этой странице.",
+      "refreshButton": "Обновить"
+    },
+
+    "card": {
+      "answeredBadge": "Анкета пройдена",
+      "availableBadge": "Доступна для заполнения",
+      "answeredStatus": "Ответы уже отправлены",
+      "availableStatus": "Нажмите, чтобы пройти опрос",
+      "answeredButton": "Уже пройдено",
+      "openButton": "Пройти анкету"
+    },
+
+    "errors": {
+      "unknown": "Произошла неизвестная ошибка",
+
+      "authRequired": {
+        "title": "Требуется авторизация",
+        "message": "Для просмотра анкет необходимо войти в аккаунт."
+      },
+
+      "sessionExpired": {
+        "title": "Сессия завершена",
+        "message": "Срок действия авторизации истёк. Войдите в аккаунт повторно."
+      },
+
+      "loadError": {
+        "title": "Ошибка загрузки",
+        "defaultMessage": "Не удалось загрузить анкеты. Проверьте подключение к интернету.",
+        "statusMessage": "Не удалось загрузить анкеты. Код ошибки: {{status}}",
+        "invalidResponse": "Сервер не вернул список анкет"
+      },
+
+      "alreadyAnswered": {
+        "title": "Анкета уже пройдена",
+        "message": "Вы уже отправляли ответы на эту анкету. Повторное прохождение недоступно."
+      }
+    },
+
+    "modal": {
+      "loginButton": "Перейти ко входу",
+      "closeButton": "Понятно"
+    }
+  },
+   "profilePage": {
+    "loading": "Загружаем профиль...",
+    "defaultUserName": "Пользователь",
+    "defaultUserInitial": "П",
+    "iin": "ИИН",
+    "notSpecified": "не указан",
+    "logoutButton": "Выйти",
+    "menu": {
+      "requests": "История обращений",
+      "favourites": "Избранное",
+      "contacts": "Контакты"
+    },
+    "logoutModal": {
+      "title": "Выход",
+      "message": "Вы действительно хотите выйти из аккаунта?",
+      "cancel": "Отмена",
+      "confirm": "Выйти"
+    },
+    "contactsModal": {
+      "title": "Контакты",
+      "message": "Страница контактов ещё не подключена"
+    },
+    "errors": {
+      "title": "Ошибка",
+      "loadProfile": "Не удалось загрузить профиль",
+      "emptyResponse": "Сервер вернул пустой ответ",
+      "noUserData": "Сервер не вернул данные пользователя",
+      "logout": "Не удалось выполнить выход"
+    }
   }
+
 }

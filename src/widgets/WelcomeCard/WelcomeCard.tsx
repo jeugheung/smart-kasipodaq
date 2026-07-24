@@ -1,32 +1,112 @@
-import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import React from "react";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useTranslation } from "react-i18next";
 
-export const WelcomeCard = () => {
+interface WelcomeCardProps {
+  firstName?: string | null;
+  middleName?: string | null;
+  profsoyuzName?: string | null;
+  status?: number | null;
+  loading?: boolean;
+}
+
+export const WelcomeCard = ({
+  firstName,
+  middleName,
+  profsoyuzName,
+  status,
+  loading = false,
+}: WelcomeCardProps) => {
+  const { t } = useTranslation();
+
+  const userName = [firstName, middleName]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
+  const getStatusText = () => {
+    if (status === 1) {
+      return t("welcomeCard.statusActive");
+    }
+
+    if (status === 0) {
+      return t("welcomeCard.statusInactive");
+    }
+
+    return t("welcomeCard.statusUnauthorized");
+  };
+
+  if (loading) {
+    return (
+      <LinearGradient
+        colors={["#0054A6", "#003d7a"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.card, styles.loadingCard]}
+      >
+        <ActivityIndicator size="large" color="#FFFFFF" />
+
+        <Text style={styles.loadingText}>
+          {t("welcomeCard.loadingProfile")}
+        </Text>
+      </LinearGradient>
+    );
+  }
+
   return (
     <LinearGradient
-      colors={['#0054A6', '#003d7a']}
+      colors={["#0054A6", "#003d7a"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.card}
     >
       <View style={styles.content}>
-        <View>
-          <Text style={styles.littleTitle}>Добро пожаловать</Text>
-          <Text style={styles.nameValue}>Пользователь</Text>
+        <View style={styles.infoBlock}>
+          <Text style={styles.littleTitle}>
+            {t("welcomeCard.welcome")}
+          </Text>
+
+          <Text
+            style={styles.nameValue}
+            numberOfLines={2}
+          >
+            {userName || t("welcomeCard.user")}
+          </Text>
         </View>
 
-        <View>
-          <Text style={styles.littleTitle}>Организация</Text>
-          <Text style={styles.organizationTitle}>
-            Профсоюз “Парасат”
+        <View style={styles.infoBlock}>
+          <Text style={styles.littleTitle}>
+            {t("welcomeCard.organization")}
+          </Text>
+
+          <Text
+            style={styles.organizationTitle}
+            numberOfLines={2}
+          >
+            {profsoyuzName || t("welcomeCard.organizationNotSpecified")}
           </Text>
         </View>
       </View>
 
       <View style={styles.statusCard}>
-        <Text style={styles.statusTitle}>Статус:</Text>
-        <Text style={styles.statusValue}>Активен</Text>
+        <Text style={styles.statusTitle}>
+          {t("welcomeCard.status")}
+        </Text>
+
+        <Text
+          style={[
+            styles.statusValue,
+            status === 0 && styles.inactiveStatus,
+          ]}
+        >
+          {getStatusText()}
+        </Text>
       </View>
     </LinearGradient>
   );
@@ -34,13 +114,14 @@ export const WelcomeCard = () => {
 
 const styles = StyleSheet.create({
   card: {
-    width: '100%',
-    minHeight: 160,
+    position: "relative",
+    width: "100%",
+    minHeight: 180,
     borderRadius: 24,
     padding: 18,
-    overflow: 'hidden',
+    overflow: "hidden",
 
-    shadowColor: '#0054A6',
+    shadowColor: "#0054A6",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -50,57 +131,84 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
 
+  loadingCard: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+
+  loadingText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
   content: {
     flex: 1,
-    justifyContent: 'space-between',
-    paddingRight: 120,
+    justifyContent: "space-between",
+    paddingRight: 115,
+  },
+
+  infoBlock: {
+    maxWidth: "100%",
   },
 
   littleTitle: {
+    marginBottom: 3,
+    color: "#FFFFFF",
     fontSize: 14,
-    fontWeight: '500',
-    color: '#fff',
-    marginBottom: 2,
+    fontWeight: "500",
+    opacity: 0.9,
   },
 
   nameValue: {
+    color: "#FFFFFF",
     fontSize: 22,
-    fontWeight: '800',
-    color: '#fff',
+    fontWeight: "800",
+    lineHeight: 27,
   },
 
   organizationTitle: {
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: '800',
-    color: '#fff',
+    fontWeight: "800",
+    lineHeight: 21,
   },
 
   statusCard: {
-    position: 'absolute',
+    position: "absolute",
+    top: 60,
     right: 18,
-    top: 56,
 
     width: 105,
-    height: 56,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.35)',
-    borderRadius: 16,
+    minHeight: 60,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
 
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: "rgba(255,255,255,0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.35)",
+    borderRadius: 16,
   },
 
   statusTitle: {
-    fontWeight: '800',
+    color: "#FFFFFF",
     fontSize: 13,
-    color: '#fff',
+    fontWeight: "700",
   },
 
   statusValue: {
-    fontWeight: '800',
+    marginTop: 3,
+    color: "#FFFFFF",
     fontSize: 13,
-    color: '#fff',
-    marginTop: 2,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+
+  inactiveStatus: {
+    opacity: 0.75,
   },
 });

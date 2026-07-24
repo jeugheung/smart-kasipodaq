@@ -4,5 +4,205 @@
     "submit": "Жіберу",
     "more": "Тағы",
     "readMore": "Толығырақ"
+  },
+  "welcomeCard": {
+    "welcome": "Қош келдіңіз",
+    "user": "Пайдаланушы",
+    "organization": "Ұйым",
+    "organizationNotSpecified": "Ұйым көрсетілмеген",
+    "status": "Мәртебесі:",
+    "statusActive": "Белсенді",
+    "statusInactive": "Белсенді емес",
+    "statusUnauthorized": "Авторизациядан өтпеген",
+    "loadingProfile": "Профиль жүктелуде..."
+  },
+  "news": {
+    "title": "Жаңалықтар"
+  },
+  "statistics": {
+    "title": "Статистика",
+    "totalRequests": "Барлық өтініштер: {{count}}",
+    "submit": "Өтініш беру",
+    "violation": "ЕК",
+    "work": "Шарттар",
+    "salary": "Төлем",
+    "social": "Жеңілдіктер",
+    "collective": "Шарт"
+  },
+  "requestsWidget": {
+    "tabs": {
+      "violation": "Еңбек кодексін бұзу",
+      "work": "Еңбек жағдайлары",
+      "salary": "Еңбекақы төлеу",
+      "social": "Әлеуметтік жеңілдіктер",
+      "collective": "Ұжымдық шарт бойынша ұсыныстар"
+    },
+    "untitled": "Атауы жоқ",
+    "empty": {
+      "title": "Әзірге деректер жоқ",
+      "description": "Бұл бөлімде әзірге өтініштер немесе жарияланымдар жоқ."
+    }
+  },
+  "requestsList": {
+    "types": {
+      "violation": "Еңбек кодексін бұзу",
+      "work": "Еңбек жағдайлары",
+      "salary": "Еңбекақы төлеу",
+      "social": "Әлеуметтік жеңілдіктер",
+      "collective": "Ұжымдық шарт бойынша ұсыныстар"
+    },
+    "segments": {
+      "pending": "Қаралуда",
+      "resolved": "Шешілген мәселелер"
+    },
+    "untitled": "Атауы жоқ",
+    "empty": {
+      "title": "Әзірге өтініштер жоқ",
+      "description": "Бұл бөлімде әзірге өтініштер жоқ. Олар пайда болған кезде осы жерден көре аласыз."
+    },
+    "errors": {
+      "title": "Қате",
+      "networkTitle": "Желі қатесі",
+      "timeout": "Сервер тым ұзақ жауап беруде. Кейінірек қайталап көріңіз.",
+      "loadFailed": "Деректерді жүктеу мүмкін болмады."
+    }
+  },
+  "pendingRequestCard": {
+    "anonymous": "Аноним",
+    "solutionOption": "Шешім нұсқасы",
+    "more": "...толығырақ",
+    "addFavorite": "Таңдаулыларға қосу",
+    "removeFavorite": "Таңдаулылардан алып тастау",
+    "like": "Ұнайды",
+    "dislike": "Ұнамайды"
+  },
+  "resolvedRequestCard": {
+    "anonymous": "Аноним",
+    "solutionAuthor": "SU шешімі",
+    "more": "...толығырақ",
+    "addFavorite": "Таңдаулыларға қосу",
+    "removeFavorite": "Таңдаулылардан алып тастау",
+    "likeQuestion": "Шешімге «Ұнайды» белгісін қою",
+    "dislikeQuestion": "Шешімге «Ұнамайды» белгісін қою",
+    "likeAnswer": "Жауапқа «Ұнайды» белгісін қою",
+    "dislikeAnswer": "Жауапқа «Ұнамайды» белгісін қою"
+  },
+  "requestForm": {
+    "selectTopic": "Өтініш тақырыбын таңдаңыз",
+    "tabs": {
+      "violation": "Еңбек кодексін бұзу",
+      "work": "Еңбек жағдайлары",
+      "salary": "Еңбекақы төлеу",
+      "social": "Әлеуметтік жеңілдіктер",
+      "collective": "Ұжымдық шарт бойынша ұсыныс"
+    },
+    "placeholders": {
+      "problem": "Мәселені сипаттаңыз",
+      "contacts": "Байланыс деректерін қалдырыңыз"
+    },
+    "attachFiles": "📎 Файлдарды тіркеу",
+    "anonymous": {
+      "title": "Анонимді өтініш",
+      "subtitle": "Менің деректерімді жасыру"
+    },
+    "buttons": {
+      "submit": "Жіберу",
+      "sending": "Жіберілуде..."
+    },
+    "alerts": {
+      "errorTitle": "Қате",
+      "successTitle": "Сәтті",
+      "problemRequired": "Мәселені сипаттаңыз",
+      "successMessage": "Өтініш жіберілді",
+      "submitFailed": "Өтінішті жіберу мүмкін болмады"
+    }
+  },
+   "surveyPage": {
+    "layoutTitle": "Smart Kasipodaq",
+    "pageTitle": "Сауалнама",
+    "pageSubtitle": "Кәсіподақтың маңызды шешімдеріне қатысыңыз",
+
+    "activeCount": {
+      "one": "белсенді",
+      "many": "белсенді"
+    },
+
+    "loading": "Сауалнамалар жүктелуде...",
+
+    "empty": {
+      "title": "Қолжетімді сауалнамалар жоқ",
+      "description": "Қазіргі уақытта белсенді сауалнамалар жоқ. Жаңа сауалнамалар осы бетте пайда болады.",
+      "refreshButton": "Жаңарту"
+    },
+
+    "card": {
+      "answeredBadge": "Сауалнама толтырылды",
+      "availableBadge": "Толтыруға қолжетімді",
+      "answeredStatus": "Жауаптар жіберілді",
+      "availableStatus": "Сауалнамадан өту үшін басыңыз",
+      "answeredButton": "Өтіп қойдыңыз",
+      "openButton": "Сауалнамадан өту"
+    },
+
+    "errors": {
+      "unknown": "Белгісіз қате орын алды",
+
+      "authRequired": {
+        "title": "Авторизация қажет",
+        "message": "Сауалнамаларды көру үшін аккаунтқа кіру қажет."
+      },
+
+      "sessionExpired": {
+        "title": "Сессия аяқталды",
+        "message": "Авторизация мерзімі аяқталды. Аккаунтқа қайта кіріңіз."
+      },
+
+      "loadError": {
+        "title": "Жүктеу қатесі",
+        "defaultMessage": "Сауалнамаларды жүктеу мүмкін болмады. Интернет байланысын тексеріңіз.",
+        "statusMessage": "Сауалнамаларды жүктеу мүмкін болмады. Қате коды: {{status}}",
+        "invalidResponse": "Сервер сауалнамалар тізімін қайтармады"
+      },
+
+      "alreadyAnswered": {
+        "title": "Сауалнама толтырылып қойған",
+        "message": "Сіз бұл сауалнамаға жауаптарыңызды жіберіп қойдыңыз. Сауалнамадан қайта өту мүмкін емес."
+      }
+    },
+
+    "modal": {
+      "loginButton": "Кіру бетіне өту",
+      "closeButton": "Түсінікті"
+    }
+  },
+  "profilePage": {
+    "loading": "Профиль жүктелуде...",
+    "defaultUserName": "Пайдаланушы",
+    "defaultUserInitial": "П",
+    "iin": "ЖСН",
+    "notSpecified": "көрсетілмеген",
+    "logoutButton": "Шығу",
+    "menu": {
+      "requests": "Өтініштер тарихы",
+      "favourites": "Таңдаулылар",
+      "contacts": "Байланыстар"
+    },
+    "logoutModal": {
+      "title": "Шығу",
+      "message": "Аккаунттан шынымен шыққыңыз келе ме?",
+      "cancel": "Бас тарту",
+      "confirm": "Шығу"
+    },
+    "contactsModal": {
+      "title": "Байланыстар",
+      "message": "Байланыстар беті әлі қосылмаған"
+    },
+    "errors": {
+      "title": "Қате",
+      "loadProfile": "Профильді жүктеу мүмкін болмады",
+      "emptyResponse": "Сервер бос жауап қайтарды",
+      "noUserData": "Сервер пайдаланушы деректерін қайтармады",
+      "logout": "Аккаунттан шығу мүмкін болмады"
+    }
   }
 }
