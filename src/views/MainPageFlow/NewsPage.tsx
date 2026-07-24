@@ -1,322 +1,292 @@
- import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
-import { StyleSheet, FlatList, View, Text, Animated, Easing, TouchableOpacity, Alert } from "react-native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-// ВАЖНО: Импортируем TouchableOpacity из bottom-sheet для работы кнопок внутри модалки!
-import BottomSheet, { 
-  BottomSheetView, 
-  BottomSheetBackdrop, 
-  TouchableOpacity as BottomSheetTouchableOpacity 
-} from '@gorhom/bottom-sheet';
-import { Calendar, LocaleConfig } from 'react-native-calendars';
-// Если используешь Expo, замени на: import { Feather as Icon } from '@expo/vector-icons';
-import { Feather as Icon } from '@expo/vector-icons'
-
-// import { HomeFlowStackParamList } from "../HomeFlowNavigator";
-
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  Easing,
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { useTranslation } from "react-i18next";
 
 import { colors } from "@shared/theme/colors";
-
 import { getNews } from "@shared/api/endpoints";
-
-import { useTranslation } from "react-i18next";
 import { DefaultLayout } from "@widgets/Layout/DefaultLayout";
 import { NewsItem } from "@entities/NewsCard";
 import { NewsItemCard } from "@entities/NewsItemCard";
 import { SharedLoader } from "@shared/ui/SharedLoader/SharedLoader";
 
-// import { NewsItem } from "@entities/NewsCard";
+const PAGE_SIZE = 15;
 
-// --- Настройка русской локали для Календаря ---
-LocaleConfig.locales['ru'] = {
-  monthNames: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'],
-  monthNamesShort: ['Янв.', 'Фев.', 'Март', 'Апр.', 'Май', 'Июнь', 'Июль', 'Авг.', 'Сент.', 'Окт.', 'Нояб.', 'Дек.'],
-  dayNames: ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'],
-  dayNamesShort: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
-  today: 'Сегодня'
-};
-LocaleConfig.defaultLocale = 'ru';
-
-// type Props = NativeStackScreenProps<HomeFlowStackParamList, "NewsPage">;
-
-// --- Лоадер для конца списка ---
 const NewsLoader = () => {
   const rotate = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
-    Animated.loop(
-      Animated.timing(rotate, { toValue: 1, duration: 900, easing: Easing.linear, useNativeDriver: true })
-    ).start();
+    const animation = Animated.loop(
+      Animated.timing(rotate, {
+        toValue: 1,
+        duration: 900,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    );
+
+    animation.start();
+
+    return () => {
+      animation.stop();
+    };
   }, [rotate]);
 
-  const spin = rotate.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+  const spin = rotate.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  });
+
   return (
     <View style={styles.footerLoaderWrapper}>
       <View style={styles.loaderBox}>
-        <Animated.View style={[styles.customSpinner, { transform: [{ rotate: spin }] }]} />
+        <Animated.View
+          style={[
+            styles.customSpinner,
+            {
+              transform: [{ rotate: spin }],
+            },
+          ]}
+        />
       </View>
     </View>
   );
 };
 
-export const NewsPage = ({ navigation }: any) => {
+export const NewsPage = () => {
+  const { i18n, t } = useTranslation();
+
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // --- Стейты для BottomSheet ---
-  const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ['90%'], []); 
-  const [activeTab, setActiveTab] = useState<'from' | 'to'>('from');
-  
-  // Утвержденные даты для фильтрации
-  const [startDate, setStartDate] = useState<string | null>(null);
-  const [endDate, setEndDate] = useState<string | null>(null);
-
-  // Временные даты (при выборе в календаре)
-  const [tempStart, setTempStart] = useState<string | null>(null);
-  const [tempEnd, setTempEnd] = useState<string | null>(null);
-
-  const { i18n, t } = useTranslation();
-  const lang = i18n.language;
   const isFetching = useRef(false);
 
-  const mapNews = useCallback((data: any[]) => {
-    return data.map((item: any) => ({
-      id: item.id.toString(),
-      title: lang === "kk" ? item.title_kz : lang === "en" ? item.title_en : item.title_ru,
-      date: lang === "kk" ? item.date_kz : lang === "en" ? item.date_en : item.date_ru,
-      text: lang === "kk" ? item.full_text_kz : lang === "en" ? item.full_text_en : item.full_text_ru,
-      img: `https://satbayev.university${item.image}`,
-    }));
-  }, [lang]);
+  const lang = i18n.language;
 
-  const loadNews = async (pageNumber: number, isRefresh = false) => {
-    if (isFetching.current) return;
-    if (!hasMore && !isRefresh) return;
+  const mapNews = useCallback(
+    (data: any[]): NewsItem[] => {
+      return data.map((item: any) => ({
+        id: String(item.id),
 
-    isFetching.current = true;
-    if (pageNumber > 1) setLoadingMore(true);
+        title:
+          lang === "kk" || lang === "kz"
+            ? item.title_kz
+            : lang === "en"
+              ? item.title_en
+              : item.title_ru,
 
-    try {
-      // Здесь потом можно добавить: await getNews(pageNumber, startDate, endDate)
-      const response = await getNews(pageNumber); 
-      const mapped = mapNews(response);
+        date:
+          lang === "kk" || lang === "kz"
+            ? item.date_kz
+            : lang === "en"
+              ? item.date_en
+              : item.date_ru,
 
-      if (pageNumber > 1) await new Promise(resolve => setTimeout(resolve, 300));
+        text:
+          lang === "kk" || lang === "kz"
+            ? item.full_text_kz
+            : lang === "en"
+              ? item.full_text_en
+              : item.full_text_ru,
 
-      if (isRefresh || pageNumber === 1) {
-        setNews(mapped);
-        setPage(1);
-        setHasMore(response.length >= 15);
-      } else {
-        setNews((prev) => {
-          const existingIds = new Set(prev.map((item) => item.id));
-          const unique = mapped.filter((item) => !existingIds.has(item.id));
-          return [...prev, ...unique];
-        });
-        setPage(pageNumber);
-        setHasMore(response.length >= 15);
+        img: item.image ? `https://kasipodaq.competence.kz/uploads/news/${item.image}` : "",
+      }));
+    },
+    [lang],
+  );
+
+  const loadNews = useCallback(
+    async (pageNumber: number, isRefresh = false) => {
+      if (isFetching.current) {
+        return;
       }
-    } catch (e) {
-      console.log("❌ ERROR:", e);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-      setTimeout(() => { isFetching.current = false; }, 200);
-    }
-  };
+
+      if (!hasMore && !isRefresh) {
+        return;
+      }
+
+      isFetching.current = true;
+      setError(null);
+
+      if (isRefresh) {
+        setRefreshing(true);
+      } else if (pageNumber > 1) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+      }
+
+      try {
+        const response = await getNews(pageNumber);
+
+        const responseItems = Array.isArray(response) ? response : [];
+
+        const mappedNews = mapNews(responseItems);
+
+        if (isRefresh || pageNumber === 1) {
+          setNews(mappedNews);
+          setPage(1);
+        } else {
+          setNews((previousNews) => {
+            const existingIds = new Set(previousNews.map((item) => item.id));
+
+            const uniqueItems = mappedNews.filter(
+              (item) => !existingIds.has(item.id),
+            );
+
+            return [...previousNews, ...uniqueItems];
+          });
+
+          setPage(pageNumber);
+        }
+
+        setHasMore(responseItems.length >= PAGE_SIZE);
+      } catch (loadError) {
+        console.error("Ошибка загрузки новостей:", loadError);
+
+        setError(
+          t("news.loadError", {
+            defaultValue: "Не удалось загрузить новости",
+          }),
+        );
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+        setRefreshing(false);
+
+        setTimeout(() => {
+          isFetching.current = false;
+        }, 200);
+      }
+    },
+    [hasMore, mapNews, t],
+  );
 
   useEffect(() => {
-    setLoading(true);
+    setNews([]);
+    setPage(1);
     setHasMore(true);
-    loadNews(1, true);
-  }, [lang, startDate, endDate]);
+
+    void loadNews(1, true);
+  }, [lang]);
+
+  const handleRefresh = () => {
+    setHasMore(true);
+    void loadNews(1, true);
+  };
 
   const handleLoadMore = () => {
-    if (isFetching.current || !hasMore || loading) return;
-    loadNews(page + 1);
+    if (isFetching.current || loading || loadingMore || !hasMore) {
+      return;
+    }
+
+    void loadNews(page + 1);
   };
 
   const renderFooter = () => {
+    if (loadingMore) {
+      return <NewsLoader />;
+    }
+
     if (!hasMore && news.length > 0) {
-      return <Text style={styles.endText}>{t("news.allCaughtUp") || "Это все новости"}</Text>;
-    }
-    if (!loadingMore) return <View style={{ height: 60 }} />;
-
-    return <NewsLoader />;
-  };
-
-  // --- Обработчики Фильтра ---
-  const handleOpenFilter = () => {
-    setTempStart(startDate);
-    setTempEnd(endDate);
-    setActiveTab('from');
-    bottomSheetRef.current?.expand();
-  };
-
-  const handleCloseFilter = () => {
-    bottomSheetRef.current?.close();
-  };
-
-  const handleApplyFilter = () => {
-    if (!tempStart || !tempEnd) {
-      Alert.alert("Внимание", "Пожалуйста, выберите обе даты: начало (С) и конец (По) периода.");
-      return;
+      return (
+        <Text style={styles.endText}>
+          {t("news.allCaughtUp", {
+            defaultValue: "Это все новости",
+          })}
+        </Text>
+      );
     }
 
-    if (new Date(tempStart) > new Date(tempEnd)) {
-      Alert.alert("Ошибка", "Дата 'По' не может быть раньше даты 'С'.");
-      return;
+    return <View style={styles.footerSpace} />;
+  };
+
+  const renderEmpty = () => {
+    if (loading) {
+      return null;
     }
 
-    setStartDate(tempStart);
-    setEndDate(tempEnd);
-  
-    
-    console.log("🔥 Установлен период дат:", { startDate: tempStart, endDate: tempEnd });
-    bottomSheetRef.current?.close();
-  };
+    if (error) {
+      return (
+        <View style={styles.emptyContainer}>
+          <View style={styles.emptyIconCircle}>
+            <Text style={styles.emptyIcon}>!</Text>
+          </View>
 
-  const handleResetFilter = () => {
-    setStartDate(null);
-    setEndDate(null);
-    setTempStart(null);
-    setTempEnd(null);
-    console.log("♻️ Фильтр сброшен");
-  };
+          <Text style={styles.emptyTitle}>
+            {t("news.errorTitle", {
+              defaultValue: "Ошибка загрузки",
+            })}
+          </Text>
 
-  const onDayPress = (day: any) => {
-    if (activeTab === 'from') {
-      setTempStart(day.dateString);
-      setActiveTab('to'); 
-    } else {
-      setTempEnd(day.dateString);
+          <Text style={styles.emptyDescription}>{error}</Text>
+
+          <Text style={styles.retryText} onPress={handleRefresh}>
+            {t("news.retry", {
+              defaultValue: "Повторить",
+            })}
+          </Text>
+        </View>
+      );
     }
-  };
 
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return '...';
-    const [year, month, day] = dateStr.split('-');
-    return `${day}.${month}.${year}`;
-  };
-
-  const markedDates: any = {};
-  if (tempStart) markedDates[tempStart] = { startingDay: true, color: '#002F42', textColor: 'white' };
-  if (tempEnd) markedDates[tempEnd] = { endingDay: true, color: '#002F42', textColor: 'white' };
-
-  const renderBackdrop = useCallback(
-    (props: any) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />,
-    []
-  );
-
-  return (
-    <DefaultLayout variant="back" title={t("news.title")} scrollEnabled={false}>
-      <View style={{ flex: 1 }}>
-        
-        {/* КРАСИВЫЙ ФИЛЬТР ХЕДЕР С ИКОНКАМИ */}
-        <View style={styles.filterHeader}>
-          <TouchableOpacity 
-            style={[styles.filterButton, startDate && styles.filterButtonActive]} 
-            onPress={handleOpenFilter}
-          >
-            <View style={styles.filterButtonContent}>
-              <Icon 
-                name="calendar" 
-                size={18} 
-                color={startDate ? '#FFFFFF' : '#002F42'} 
-              />
-              <Text style={[styles.filterButtonText, startDate && styles.filterButtonTextActive]}>
-                {startDate && endDate 
-                  ? `${formatDate(startDate)}  —  ${formatDate(endDate)}` 
-                  : "Выбрать период"
-                }
-              </Text>
-            </View>
-          </TouchableOpacity>
-          
-          {startDate && endDate && (
-            <TouchableOpacity style={styles.resetIcon} onPress={handleResetFilter}>
-              <Icon name="x" size={20} color="#EF4444" />
-            </TouchableOpacity>
-          )}
+    return (
+      <View style={styles.emptyContainer}>
+        <View style={styles.emptyIconCircle}>
+          <Text style={styles.emptyIcon}>📰</Text>
         </View>
 
-        <FlatList
-          data={news}
-          keyExtractor={(item, index) => `${item.id}-${index}`}
-          renderItem={({ item }) => <NewsItemCard news={item} />}
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.1}
-          ListFooterComponent={renderFooter}
-          refreshing={false}
-          onRefresh={() => {
-            setHasMore(true);
-            loadNews(1, true);
-          }}
-        />
+        <Text style={styles.emptyTitle}>
+          {t("news.emptyTitle", {
+            defaultValue: "Новостей пока нет",
+          })}
+        </Text>
+
+        <Text style={styles.emptyDescription}>
+          {t("news.emptyDescription", {
+            defaultValue: "Новые публикации появятся на этой странице.",
+          })}
+        </Text>
       </View>
-      
+    );
+  };
+
+  return (
+    <DefaultLayout
+      variant="back"
+      title={t("news.title", {
+        defaultValue: "Новости",
+      })}
+    >
+      <FlatList
+        data={news}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => <NewsItemCard news={item} />}
+        contentContainerStyle={[
+          styles.content,
+          news.length === 0 && styles.emptyContent,
+        ]}
+        showsVerticalScrollIndicator={false}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.2}
+        ListFooterComponent={renderFooter}
+        ListEmptyComponent={renderEmpty}
+        refreshing={refreshing}
+        onRefresh={handleRefresh}
+      />
+
       <SharedLoader visible={loading && news.length === 0} />
-
-      <BottomSheet
-        ref={bottomSheetRef}
-        index={-1}
-        snapPoints={snapPoints}
-        enablePanDownToClose
-        backdropComponent={renderBackdrop}
-      >
-        <BottomSheetView style={styles.sheetContainer}>
-          <Text style={styles.sheetTitle}>Период новостей</Text>
-
-          {/* Используем BottomSheetTouchableOpacity внутри модалки! */}
-          <View style={styles.segmentContainer}>
-            <BottomSheetTouchableOpacity 
-              style={[styles.segmentButton, activeTab === 'from' && styles.segmentActive]}
-              onPress={() => setActiveTab('from')}
-            >
-              <Text style={[styles.segmentText, activeTab === 'from' && styles.segmentTextActive]}>
-                С: {formatDate(tempStart)}
-              </Text>
-            </BottomSheetTouchableOpacity>
-            <BottomSheetTouchableOpacity 
-              style={[styles.segmentButton, activeTab === 'to' && styles.segmentActive]}
-              onPress={() => setActiveTab('to')}
-            >
-              <Text style={[styles.segmentText, activeTab === 'to' && styles.segmentTextActive]}>
-                По: {formatDate(tempEnd)}
-              </Text>
-            </BottomSheetTouchableOpacity>
-          </View>
-
-          <View style={styles.calendarContainer}>
-            <Calendar
-              style={styles.calendar}
-              onDayPress={onDayPress}
-              markedDates={markedDates}
-              markingType={'period'} 
-              theme={{
-                selectedDayBackgroundColor: '#002F42',
-                todayTextColor: '#002F42',
-                arrowColor: '#002F42',
-              }}
-            />
-          </View>
-
-          {/* Кнопки Установить / Отмена тоже переведены на BottomSheetTouchableOpacity */}
-          <View style={styles.actionButtons}>
-            <BottomSheetTouchableOpacity style={styles.cancelButton} onPress={handleCloseFilter}>
-              <Text style={styles.cancelButtonText}>Отмена</Text>
-            </BottomSheetTouchableOpacity>
-            <BottomSheetTouchableOpacity style={styles.applyButton} onPress={handleApplyFilter}>
-              <Text style={styles.applyButtonText}>Установить</Text>
-            </BottomSheetTouchableOpacity>
-          </View>
-
-        </BottomSheetView>
-      </BottomSheet>
     </DefaultLayout>
   );
 };
@@ -324,174 +294,113 @@ export const NewsPage = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 15,
-    paddingTop: 10,
-    paddingBottom: 20,
-    gap: 20,
+    paddingTop: 14,
+    paddingBottom: 24,
     backgroundColor: colors.background,
   },
-  
-  // --- СТИЛИ ХЕДЕРА ---
-  filterHeader: {
-    flexDirection: 'row',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    backgroundColor: colors.background,
+
+  emptyContent: {
+    flexGrow: 1,
   },
-  filterButton: {
-    flex: 1,
-    backgroundColor: '#fff',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  filterButtonActive: {
-    backgroundColor: '#002F42',
-    marginRight: 10,
-  },
-  filterButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-  },
-  filterButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#002F42',
-  },
-  filterButtonTextActive: {
-    color: '#FFFFFF',
-    letterSpacing: 0.5,
-  },
-  resetIcon: {
-    backgroundColor: '#FEE2E2',
-    width: 50,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  
-  // --- Стили Bottom Sheet ---
-  sheetContainer: {
-    flex: 1,
-    padding: 20,
-  },
-  sheetTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#002F42',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  segmentContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#F1F5F9',
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 10,
-  },
-  segmentButton: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  segmentActive: {
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  segmentText: {
-    fontSize: 15,
-    color: '#64748B',
-    fontWeight: '500',
-  },
-  segmentTextActive: {
-    color: '#002F42',
-    fontWeight: '700',
-  },
-  calendarContainer: {
-    flex: 1,
-    marginTop: 10,
-  },
-  calendar: {
-    height: 380, 
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    gap: 12,
-    paddingBottom: 20,
-    marginTop: 20,
-  },
-  cancelButton: {
-    flex: 1,
-    paddingVertical: 14,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: '#64748B',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  applyButton: {
-    flex: 1,
-    paddingVertical: 14,
-    backgroundColor: '#002F42',
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  applyButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+
   footerLoaderWrapper: {
-    paddingVertical: 30,
+    width: "100%",
+    paddingVertical: 28,
     alignItems: "center",
     justifyContent: "center",
-    width: "100%",
   },
+
   loaderBox: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
+    width: 58,
+    height: 58,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+
+    shadowColor: "#0F172A",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
     elevation: 3,
   },
+
   customSpinner: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 28,
+    height: 28,
     borderWidth: 3,
-    borderColor: '#F1F5F9',
-    borderTopColor: '#002F42',
+    borderColor: "#E7EDF4",
+    borderTopColor: "#002F42",
+    borderRadius: 14,
   },
+
+  footerSpace: {
+    height: 45,
+  },
+
   endText: {
+    marginVertical: 28,
+    color: "#8A94A3",
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "500",
     textAlign: "center",
-    color: "#888",
-    marginVertical: 30,
-    fontSize: 12,
+  },
+
+  emptyContainer: {
+    flex: 1,
+    minHeight: 420,
+    paddingHorizontal: 28,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  emptyIconCircle: {
+    width: 72,
+    height: 72,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 36,
+    backgroundColor: "#EAF2FA",
+  },
+
+  emptyIcon: {
+    color: "#0057B8",
+    fontSize: 30,
+    fontWeight: "800",
+  },
+
+  emptyTitle: {
+    marginTop: 18,
+    color: "#172033",
+    fontSize: 20,
+    lineHeight: 27,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+
+  emptyDescription: {
+    maxWidth: 290,
+    marginTop: 8,
+    color: "#6D788A",
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: "400",
+    textAlign: "center",
+  },
+
+  retryText: {
+    marginTop: 18,
+    paddingHorizontal: 22,
+    paddingVertical: 12,
+    overflow: "hidden",
+    borderRadius: 13,
+    backgroundColor: "#0057B8",
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
   },
 });

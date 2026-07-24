@@ -14,6 +14,7 @@ type Props = {
 export const NewsItemCard = ({ news }: Props) => {
   const navigation = useNavigation<any>();
   const { t } = useTranslation();
+  console.log('nEWS', news)
 
   return (
     <Pressable

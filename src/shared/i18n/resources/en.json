@@ -17,7 +17,8 @@
     "loadingProfile": "Loading profile..."
   },
   "news": {
-    "title": "News"
+    "title": "News",
+      "single": "News Article"
   },
   "statistics": {
     "title": "Statistics",
@@ -204,6 +205,137 @@
       "noUserData": "The server did not return user data",
       "logout": "Failed to log out"
     }
+  },
+  "navigation": {
+    "tabs": {
+      "main": "Home",
+      "request": "Request",
+      "surveys": "Surveys",
+      "profile": "Profile"
+    }
+  },
+  "loginPage": {
+    "title": "Sign in",
+    "subtitle": "Sign in to access tools that help protect your employment rights",
+    "loginButton": "Sign in",
+    "loggingIn": "Signing in...",
+    "forgotPassword": "Forgot your password?",
+    "noAccount": "Don't have an account?",
+    "registration": "Create account",
+
+    "fields": {
+      "iinLabel": "IIN",
+      "iinPlaceholder": "000000000000",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "showPassword": "Show",
+      "hidePassword": "Hide"
+    },
+
+    "validation": {
+      "iinRequired": "Enter your IIN",
+      "iinLength": "The IIN must contain exactly 12 digits",
+      "remainingDigits": "Enter {{count}} more digits",
+      "passwordRequired": "Enter your password",
+      "passwordLength": "The password must contain at least 8 characters",
+      "passwordShort": "At least 8 characters"
+    },
+
+    "alerts": {
+      "errorTitle": "Error",
+      "authErrorTitle": "Authorization error"
+    },
+
+    "errors": {
+      "invalidCredentials": "Incorrect IIN or password",
+      "loginFailed": "Unable to sign in",
+      "emptyResponse": "The server returned an empty response",
+      "tokenMissing": "The server did not return an authorization token",
+      "invalidSession": "The authorization session is invalid",
+      "userLoad": "Unable to load user data",
+      "connection": "Unable to connect to the server"
+    },
+
+    "forgotPasswordModal": {
+      "title": "Password recovery",
+      "message": "The password recovery screen is not connected yet"
+    },
+
+    "language": {
+      "title": "Language",
+      "message": "Select a language from the application menu"
+    }
+  },
+  "registerPage": {
+    "layoutTitle": "Registration",
+    "title": "Create an account",
+    "subtitle": "Enter your details to access all Smart Kasipodaq services",
+    "registerButton": "Create account",
+    "registering": "Creating account...",
+    "alreadyHaveAccount": "Already have an account?",
+    "loginButton": "Sign in",
+
+    "fields": {
+      "lastNameLabel": "Last name",
+      "lastNamePlaceholder": "Enter your last name",
+      "firstNameLabel": "First name",
+      "firstNamePlaceholder": "Enter your first name",
+      "middleNameLabel": "Middle name",
+      "middleNamePlaceholder": "Enter your middle name",
+      "iinLabel": "IIN",
+      "emailLabel": "Email",
+      "phoneLabel": "Phone number",
+      "profsoyuzLabel": "Trade union",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "At least 8 characters",
+      "confirmPasswordLabel": "Confirm password",
+      "confirmPasswordPlaceholder": "Enter your password again",
+      "showPassword": "Show",
+      "hidePassword": "Hide"
+    },
+
+    "validation": {
+      "lastNameRequired": "Enter your last name",
+      "firstNameRequired": "Enter your first name",
+      "middleNameRequired": "Enter your middle name",
+      "iinLength": "The IIN must contain exactly 12 digits",
+      "remainingDigits": "Enter {{count}} more digits",
+      "emailRequired": "Enter your email address",
+      "emailInvalid": "Enter a valid email address",
+      "phoneInvalid": "The phone number must be in the format +77001234567",
+      "passwordLength": "The password must contain at least 8 characters",
+      "passwordShort": "At least 8 characters",
+      "passwordMismatch": "The passwords do not match",
+      "profsoyuzRequired": "Select a trade union"
+    },
+
+    "profsoyuz": {
+      "loading": "Loading trade unions...",
+      "placeholder": "Select a trade union",
+      "retry": "Try loading again",
+      "modalTitle": "Select a trade union",
+      "empty": "The trade union list is empty",
+      "reload": "Refresh"
+    },
+
+    "alerts": {
+      "errorTitle": "Error"
+    },
+
+    "errors": {
+      "profsoyuzLoad": "Failed to load the trade union list",
+      "registrationFailed": "Failed to create the account",
+      "emptyResponse": "The server returned an empty response",
+      "userLoad": "Failed to load user data",
+      "connection": "Failed to connect to the server"
+    },
+
+    "success": {
+      "title": "Done",
+      "message": "Registration is complete. You can now sign in.",
+      "loginButton": "Sign in"
+    }
   }
+
 
 }

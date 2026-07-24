@@ -14,7 +14,7 @@ type Props = {
 };
 
 export const NewsCard = ({ news }: Props) => {
-
+ console.log('NEWS WIDGET121', news.img)
   return (
     <View style={styles.cardContainer}>
       {/* 1. Используем обычный Image на фоне */}

@@ -17,7 +17,9 @@
     "loadingProfile": "Загрузка профиля..."
   },
    "news": {
-    "title": "Новости"
+    "title": "Новости",
+     "single": "Новость"
+    
   },
   "statistics": {
     "title": "Статистика",
@@ -204,6 +206,138 @@
       "noUserData": "Сервер не вернул данные пользователя",
       "logout": "Не удалось выполнить выход"
     }
+  },
+  "navigation": {
+    "tabs": {
+      "main": "Главная",
+      "request": "Заявка",
+      "surveys": "Опросы",
+      "profile": "Профиль"
+    }
+  },
+  "loginPage": {
+    "title": "Вход в аккаунт",
+    "subtitle": "Войдите в систему, чтобы получить доступ к защите ваших трудовых прав",
+    "loginButton": "Войти",
+    "loggingIn": "Выполняется вход...",
+    "forgotPassword": "Забыли пароль?",
+    "noAccount": "Нет аккаунта?",
+    "registration": "Зарегистрироваться",
+
+    "fields": {
+      "iinLabel": "ИИН",
+      "iinPlaceholder": "000000000000",
+      "passwordLabel": "Пароль",
+      "passwordPlaceholder": "Введите пароль",
+      "showPassword": "Показать",
+      "hidePassword": "Скрыть"
+    },
+
+    "validation": {
+      "iinRequired": "Введите ИИН",
+      "iinLength": "ИИН должен состоять ровно из 12 цифр",
+      "remainingDigits": "Введите ещё {{count}} цифр",
+      "passwordRequired": "Введите пароль",
+      "passwordLength": "Пароль должен содержать минимум 8 символов",
+      "passwordShort": "Минимум 8 символов"
+    },
+
+    "alerts": {
+      "errorTitle": "Ошибка",
+      "authErrorTitle": "Ошибка авторизации"
+    },
+
+    "errors": {
+      "invalidCredentials": "Неверный ИИН или пароль",
+      "loginFailed": "Не удалось выполнить вход",
+      "emptyResponse": "Сервер вернул пустой ответ",
+      "tokenMissing": "Сервер не вернул токен авторизации",
+      "invalidSession": "Сессия авторизации недействительна",
+      "userLoad": "Не удалось получить данные пользователя",
+      "connection": "Не удалось подключиться к серверу"
+    },
+
+    "forgotPasswordModal": {
+      "title": "Восстановление пароля",
+      "message": "Экран восстановления пароля ещё не подключён"
+    },
+
+    "language": {
+      "title": "Язык",
+      "message": "Выберите язык в меню приложения"
+    }
+  },
+  "registerPage": {
+    "layoutTitle": "Регистрация",
+    "title": "Создание аккаунта",
+    "subtitle": "Заполните данные, чтобы получить доступ ко всем сервисам Smart Kasipodaq",
+    "registerButton": "Зарегистрироваться",
+    "registering": "Регистрация...",
+    "alreadyHaveAccount": "Уже есть аккаунт?",
+    "loginButton": "Войти",
+
+    "fields": {
+      "lastNameLabel": "Фамилия",
+      "lastNamePlaceholder": "Введите фамилию",
+      "firstNameLabel": "Имя",
+      "firstNamePlaceholder": "Введите имя",
+      "middleNameLabel": "Отчество",
+      "middleNamePlaceholder": "Введите отчество",
+      "iinLabel": "ИИН",
+      "emailLabel": "Электронная почта",
+      "phoneLabel": "Телефон",
+      "profsoyuzLabel": "Профсоюз",
+      "passwordLabel": "Пароль",
+      "passwordPlaceholder": "Минимум 8 символов",
+      "confirmPasswordLabel": "Подтвердите пароль",
+      "confirmPasswordPlaceholder": "Введите пароль ещё раз",
+      "showPassword": "Показать",
+      "hidePassword": "Скрыть"
+    },
+
+    "validation": {
+      "lastNameRequired": "Введите фамилию",
+      "firstNameRequired": "Введите имя",
+      "middleNameRequired": "Введите отчество",
+      "iinLength": "ИИН должен состоять ровно из 12 цифр",
+      "remainingDigits": "Введите ещё {{count}} цифр",
+      "emailRequired": "Введите электронную почту",
+      "emailInvalid": "Введите корректную электронную почту",
+      "phoneInvalid": "Телефон должен быть в формате +77001234567",
+      "passwordLength": "Пароль должен содержать минимум 8 символов",
+      "passwordShort": "Минимум 8 символов",
+      "passwordMismatch": "Пароли не совпадают",
+      "profsoyuzRequired": "Выберите профсоюз"
+    },
+
+    "profsoyuz": {
+      "loading": "Загрузка профсоюзов...",
+      "placeholder": "Выберите профсоюз",
+      "retry": "Повторить загрузку",
+      "modalTitle": "Выберите профсоюз",
+      "empty": "Список профсоюзов пуст",
+      "reload": "Обновить"
+    },
+
+    "alerts": {
+      "errorTitle": "Ошибка"
+    },
+
+    "errors": {
+      "profsoyuzLoad": "Не удалось загрузить список профсоюзов",
+      "registrationFailed": "Не удалось выполнить регистрацию",
+      "emptyResponse": "Сервер вернул пустой ответ",
+      "userLoad": "Не удалось получить данные пользователя",
+      "connection": "Не удалось подключиться к серверу"
+    },
+
+    "success": {
+      "title": "Готово",
+      "message": "Регистрация завершена. Теперь войдите в аккаунт.",
+      "loginButton": "Войти"
+    }
   }
+
+
 
 }

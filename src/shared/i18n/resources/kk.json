@@ -17,7 +17,8 @@
     "loadingProfile": "Профиль жүктелуде..."
   },
   "news": {
-    "title": "Жаңалықтар"
+    "title": "Жаңалықтар",
+      "single": "Жаңалық"
   },
   "statistics": {
     "title": "Статистика",
@@ -204,5 +205,137 @@
       "noUserData": "Сервер пайдаланушы деректерін қайтармады",
       "logout": "Аккаунттан шығу мүмкін болмады"
     }
+  },
+  "navigation": {
+    "tabs": {
+      "main": "Басты бет",
+      "request": "Өтініш",
+      "surveys": "Сауалнамалар",
+      "profile": "Профиль"
+    }
+  },
+  "loginPage": {
+    "title": "Аккаунтқа кіру",
+    "subtitle": "Еңбек құқықтарыңызды қорғау мүмкіндіктеріне қол жеткізу үшін жүйеге кіріңіз",
+    "loginButton": "Кіру",
+    "loggingIn": "Жүйеге кіру...",
+    "forgotPassword": "Құпиясөзді ұмыттыңыз ба?",
+    "noAccount": "Аккаунтыңыз жоқ па?",
+    "registration": "Тіркелу",
+
+    "fields": {
+      "iinLabel": "ЖСН",
+      "iinPlaceholder": "000000000000",
+      "passwordLabel": "Құпиясөз",
+      "passwordPlaceholder": "Құпиясөзді енгізіңіз",
+      "showPassword": "Көрсету",
+      "hidePassword": "Жасыру"
+    },
+
+    "validation": {
+      "iinRequired": "ЖСН енгізіңіз",
+      "iinLength": "ЖСН дәл 12 саннан тұруы керек",
+      "remainingDigits": "Тағы {{count}} сан енгізіңіз",
+      "passwordRequired": "Құпиясөзді енгізіңіз",
+      "passwordLength": "Құпиясөз кемінде 8 таңбадан тұруы керек",
+      "passwordShort": "Кемінде 8 таңба"
+    },
+
+    "alerts": {
+      "errorTitle": "Қате",
+      "authErrorTitle": "Авторизация қатесі"
+    },
+
+    "errors": {
+      "invalidCredentials": "ЖСН немесе құпиясөз қате",
+      "loginFailed": "Жүйеге кіру мүмкін болмады",
+      "emptyResponse": "Сервер бос жауап қайтарды",
+      "tokenMissing": "Сервер авторизация токенін қайтармады",
+      "invalidSession": "Авторизация сессиясы жарамсыз",
+      "userLoad": "Пайдаланушы деректерін алу мүмкін болмады",
+      "connection": "Серверге қосылу мүмкін болмады"
+    },
+
+    "forgotPasswordModal": {
+      "title": "Құпиясөзді қалпына келтіру",
+      "message": "Құпиясөзді қалпына келтіру беті әлі қосылмаған"
+    },
+
+    "language": {
+      "title": "Тіл",
+      "message": "Қолданба мәзірінен тілді таңдаңыз"
+    }
+  },
+  "registerPage": {
+    "layoutTitle": "Тіркелу",
+    "title": "Аккаунт құру",
+    "subtitle": "Smart Kasipodaq қызметтерінің барлығына қол жеткізу үшін деректеріңізді толтырыңыз",
+    "registerButton": "Тіркелу",
+    "registering": "Тіркелу орындалуда...",
+    "alreadyHaveAccount": "Аккаунтыңыз бар ма?",
+    "loginButton": "Кіру",
+
+    "fields": {
+      "lastNameLabel": "Тегі",
+      "lastNamePlaceholder": "Тегіңізді енгізіңіз",
+      "firstNameLabel": "Аты",
+      "firstNamePlaceholder": "Атыңызды енгізіңіз",
+      "middleNameLabel": "Әкесінің аты",
+      "middleNamePlaceholder": "Әкеңіздің атын енгізіңіз",
+      "iinLabel": "ЖСН",
+      "emailLabel": "Электрондық пошта",
+      "phoneLabel": "Телефон",
+      "profsoyuzLabel": "Кәсіподақ",
+      "passwordLabel": "Құпиясөз",
+      "passwordPlaceholder": "Кемінде 8 таңба",
+      "confirmPasswordLabel": "Құпиясөзді растаңыз",
+      "confirmPasswordPlaceholder": "Құпиясөзді қайта енгізіңіз",
+      "showPassword": "Көрсету",
+      "hidePassword": "Жасыру"
+    },
+
+    "validation": {
+      "lastNameRequired": "Тегіңізді енгізіңіз",
+      "firstNameRequired": "Атыңызды енгізіңіз",
+      "middleNameRequired": "Әкеңіздің атын енгізіңіз",
+      "iinLength": "ЖСН дәл 12 саннан тұруы керек",
+      "remainingDigits": "Тағы {{count}} сан енгізіңіз",
+      "emailRequired": "Электрондық поштаны енгізіңіз",
+      "emailInvalid": "Дұрыс электрондық поштаны енгізіңіз",
+      "phoneInvalid": "Телефон +77001234567 форматында болуы керек",
+      "passwordLength": "Құпиясөз кемінде 8 таңбадан тұруы керек",
+      "passwordShort": "Кемінде 8 таңба",
+      "passwordMismatch": "Құпиясөздер сәйкес келмейді",
+      "profsoyuzRequired": "Кәсіподақты таңдаңыз"
+    },
+
+    "profsoyuz": {
+      "loading": "Кәсіподақтар жүктелуде...",
+      "placeholder": "Кәсіподақты таңдаңыз",
+      "retry": "Қайта жүктеу",
+      "modalTitle": "Кәсіподақты таңдаңыз",
+      "empty": "Кәсіподақтар тізімі бос",
+      "reload": "Жаңарту"
+    },
+
+    "alerts": {
+      "errorTitle": "Қате"
+    },
+
+    "errors": {
+      "profsoyuzLoad": "Кәсіподақтар тізімін жүктеу мүмкін болмады",
+      "registrationFailed": "Тіркелу мүмкін болмады",
+      "emptyResponse": "Сервер бос жауап қайтарды",
+      "userLoad": "Пайдаланушы деректерін алу мүмкін болмады",
+      "connection": "Серверге қосылу мүмкін болмады"
+    },
+
+    "success": {
+      "title": "Дайын",
+      "message": "Тіркелу аяқталды. Енді аккаунтқа кіріңіз.",
+      "loginButton": "Кіру"
+    }
   }
+
+
 }

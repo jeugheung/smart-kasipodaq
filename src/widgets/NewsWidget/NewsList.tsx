@@ -19,6 +19,7 @@ type Props = {
 export const NewsWidget = ({ news, onPressAll }: Props) => {
   const navigation = useNavigation<any>();
   const { t } = useTranslation();
+  console.log('NEWS WIDGET', news)
 
   const handlePressAll = () => {
     if (onPressAll) {

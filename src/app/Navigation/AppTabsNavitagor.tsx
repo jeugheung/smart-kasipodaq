@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 
 import {
   HomeIcon,
@@ -19,33 +20,28 @@ import { AppTabsParamList } from "@shared/navigation/types";
 
 const Tab = createBottomTabNavigator<AppTabsParamList>();
 
-type ProtectedTabName =
-  | "RequestsTab"
-  | "SurveysTab"
-  | "ProfileTab";
+type ProtectedTabName = "RequestsTab" | "SurveysTab" | "ProfileTab";
 
 export const AppTabsNavigator = () => {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   const TAB_HEIGHT = 56;
 
   /**
    * Проверяет токен перед переходом на закрытый таб.
    *
-   * e.preventDefault() вызываем сразу, чтобы React Navigation
+   * event.preventDefault() вызываем сразу, чтобы React Navigation
    * самостоятельно не открыл закрытую страницу до проверки токена.
    */
-  const createProtectedTabListener = (
-    targetTab: ProtectedTabName
-  ) => {
+  const createProtectedTabListener = (targetTab: ProtectedTabName) => {
     return ({ navigation }: any) => ({
       tabPress: (event: any) => {
         event.preventDefault();
 
         void (async () => {
           try {
-            const token =
-              await AsyncStorage.getItem("access_token");
+            const token = await AsyncStorage.getItem("access_token");
 
             if (token) {
               navigation.navigate(targetTab);
@@ -60,10 +56,7 @@ export const AppTabsNavigator = () => {
               redirectTab: targetTab,
             });
           } catch (error) {
-            console.error(
-              "Ошибка проверки авторизации:",
-              error
-            );
+            console.error("Ошибка проверки авторизации:", error);
 
             navigation.getParent()?.navigate("LoginPage", {
               redirectTab: targetTab,
@@ -109,13 +102,9 @@ export const AppTabsNavigator = () => {
         name="MainTab"
         component={MainPage}
         options={{
-          tabBarLabel: "Главная",
-          tabBarIcon: ({ color }) => (
-            <HomeIcon color={color} />
-          ),
-          tabBarButton: (props) => (
-            <TabBounceButton {...props} />
-          ),
+          tabBarLabel: t("navigation.tabs.main"),
+          tabBarIcon: ({ color }) => <HomeIcon color={color} />,
+          tabBarButton: (props) => <TabBounceButton {...props} />,
         }}
       />
 
@@ -125,13 +114,9 @@ export const AppTabsNavigator = () => {
         component={RequestPage}
         listeners={createProtectedTabListener("RequestsTab")}
         options={{
-          tabBarLabel: "Заявка",
-          tabBarIcon: ({ color }) => (
-            <RequestsIcon color={color} />
-          ),
-          tabBarButton: (props) => (
-            <TabBounceButton {...props} />
-          ),
+          tabBarLabel: t("navigation.tabs.request"),
+          tabBarIcon: ({ color }) => <RequestsIcon color={color} />,
+          tabBarButton: (props) => <TabBounceButton {...props} />,
         }}
       />
 
@@ -141,13 +126,9 @@ export const AppTabsNavigator = () => {
         component={SurveyPage}
         listeners={createProtectedTabListener("SurveysTab")}
         options={{
-          tabBarLabel: "Опросы",
-          tabBarIcon: ({ color }) => (
-            <RequestsIcon color={color} />
-          ),
-          tabBarButton: (props) => (
-            <TabBounceButton {...props} />
-          ),
+          tabBarLabel: t("navigation.tabs.surveys"),
+          tabBarIcon: ({ color }) => <RequestsIcon color={color} />,
+          tabBarButton: (props) => <TabBounceButton {...props} />,
         }}
       />
 
@@ -157,13 +138,9 @@ export const AppTabsNavigator = () => {
         component={ProfilePage}
         listeners={createProtectedTabListener("ProfileTab")}
         options={{
-          tabBarLabel: "Профиль",
-          tabBarIcon: ({ color }) => (
-            <ProfileIcon color={color} />
-          ),
-          tabBarButton: (props) => (
-            <TabBounceButton {...props} />
-          ),
+          tabBarLabel: t("navigation.tabs.profile"),
+          tabBarIcon: ({ color }) => <ProfileIcon color={color} />,
+          tabBarButton: (props) => <TabBounceButton {...props} />,
         }}
       />
     </Tab.Navigator>

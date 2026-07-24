@@ -5,9 +5,11 @@ import { RootStackParamList } from "@shared/navigation/types";
 import { colors } from "@shared/theme/colors";
 import { DefaultLayout } from "@widgets/Layout/DefaultLayout";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -46,34 +48,66 @@ type MeResponse = {
 
 type LoginPageProps = NativeStackScreenProps<RootStackParamList, "LoginPage">;
 
+/**
+ * Если assets находится рядом с LoginPage.tsx:
+ */
+const LOGIN_LOGO = require("../../../assets/splash-icon.png");
+
+/**
+ * Если assets находится в корне проекта,
+ * замени путь, например:
+ *
+ * const LOGIN_LOGO = require("../../../assets/splash-icon.png");
+ */
+
 export const LoginPage = ({ navigation, route }: LoginPageProps) => {
+  const { t } = useTranslation();
+
   const [iin, setIin] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const handleIinChange = (value: string) => {
     const onlyNumbers = value.replace(/\D/g, "");
+
     setIin(onlyNumbers.slice(0, 12));
   };
 
   const validateForm = (): boolean => {
     if (!iin) {
-      Alert.alert("Ошибка", "Введите ИИН");
+      Alert.alert(
+        t("loginPage.alerts.errorTitle"),
+        t("loginPage.validation.iinRequired"),
+      );
+
       return false;
     }
 
     if (!/^\d{12}$/.test(iin)) {
-      Alert.alert("Ошибка", "ИИН должен состоять ровно из 12 цифр");
+      Alert.alert(
+        t("loginPage.alerts.errorTitle"),
+        t("loginPage.validation.iinLength"),
+      );
+
       return false;
     }
 
     if (!password.trim()) {
-      Alert.alert("Ошибка", "Введите пароль");
+      Alert.alert(
+        t("loginPage.alerts.errorTitle"),
+        t("loginPage.validation.passwordRequired"),
+      );
+
       return false;
     }
 
     if (password.trim().length < 8) {
-      Alert.alert("Ошибка", "Пароль должен содержать минимум 8 символов");
+      Alert.alert(
+        t("loginPage.alerts.errorTitle"),
+        t("loginPage.validation.passwordLength"),
+      );
+
       return false;
     }
 
@@ -91,6 +125,7 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
       return JSON.parse(responseText) as T;
     } catch {
       console.error("Сервер вернул некорректный JSON:", responseText);
+
       return null;
     }
   };
@@ -114,19 +149,19 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
         data,
       });
 
-      if (response.status === 401) {
-        throw new Error("Сессия авторизации недействительна");
+      if (response.status === 401 || response.status === 403) {
+        throw new Error(t("loginPage.errors.invalidSession"));
       }
 
       throw new Error(
         typeof data?.msg === "string"
           ? data.msg
-          : "Не удалось получить данные пользователя",
+          : t("loginPage.errors.userLoad"),
       );
     }
 
     if (data?.result !== 1) {
-      throw new Error(data?.msg || "Не удалось получить данные пользователя");
+      throw new Error(data?.msg || t("loginPage.errors.userLoad"));
     }
 
     return data;
@@ -173,28 +208,38 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
       if (!response.ok) {
         const errorMessage =
           response.status === 401
-            ? "Неверный ИИН или пароль"
-            : data?.msg || "Не удалось выполнить вход";
+            ? t("loginPage.errors.invalidCredentials")
+            : data?.msg || t("loginPage.errors.loginFailed");
 
-        Alert.alert("Ошибка авторизации", errorMessage);
+        Alert.alert(t("loginPage.alerts.authErrorTitle"), errorMessage);
+
         return;
       }
 
       if (!data) {
-        Alert.alert("Ошибка", "Сервер вернул пустой ответ");
+        Alert.alert(
+          t("loginPage.alerts.errorTitle"),
+          t("loginPage.errors.emptyResponse"),
+        );
+
         return;
       }
 
       if (data.result !== 1) {
         Alert.alert(
-          "Ошибка авторизации",
-          data.msg || "Не удалось выполнить вход",
+          t("loginPage.alerts.authErrorTitle"),
+          data.msg || t("loginPage.errors.loginFailed"),
         );
+
         return;
       }
 
       if (!data.access_token) {
-        Alert.alert("Ошибка", "Сервер не вернул токен авторизации");
+        Alert.alert(
+          t("loginPage.alerts.errorTitle"),
+          t("loginPage.errors.tokenMissing"),
+        );
+
         return;
       }
 
@@ -219,24 +264,39 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
       const message =
         error instanceof Error
           ? error.message
-          : "Не удалось подключиться к серверу";
+          : t("loginPage.errors.connection");
 
-      Alert.alert("Ошибка", message);
+      Alert.alert(t("loginPage.alerts.errorTitle"), message);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleForgotPassword = () => {
+    Alert.alert(
+      t("loginPage.forgotPasswordModal.title"),
+      t("loginPage.forgotPasswordModal.message"),
+    );
+  };
+
   const isSubmitDisabled =
     isLoading || iin.length !== 12 || password.trim().length < 8;
+
+  const remainingIinDigits = 12 - iin.length;
 
   return (
     <DefaultLayout
       variant="back"
-      onRightPress={() => Alert.alert("Язык", "Переключение языка")}
+      onRightPress={() =>
+        Alert.alert(
+          t("loginPage.language.title"),
+          t("loginPage.language.message"),
+        )
+      }
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
         style={styles.container}
       >
         <ScrollView
@@ -245,59 +305,108 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.headerBlock}>
-            <View style={styles.logoPlaceholder} />
+            <View style={styles.logoContainer}>
+              <Image
+                source={LOGIN_LOGO}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            </View>
 
-            <Text style={styles.brandTitle}>Smart{"\n"}Kasipodaq</Text>
+            <Text style={styles.brandTitle}>Smart Kasipodaq</Text>
 
-            <Text style={styles.brandSubtitle}>
-              Войдите в систему, чтобы получить доступ к защите ваших прав
-            </Text>
+            <Text style={styles.pageTitle}>{t("loginPage.title")}</Text>
+
+            <Text style={styles.brandSubtitle}>{t("loginPage.subtitle")}</Text>
           </View>
 
-          <View style={styles.form}>
+          <View style={styles.formCard}>
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>ИИН</Text>
+              <Text style={styles.inputLabel}>
+                {t("loginPage.fields.iinLabel")}
+              </Text>
 
-              <TextInput
-                style={styles.input}
-                placeholder="000000000000"
-                placeholderTextColor="#AFAFAF"
-                value={iin}
-                onChangeText={handleIinChange}
-                keyboardType="number-pad"
-                maxLength={12}
-                autoCapitalize="none"
-                autoCorrect={false}
-                editable={!isLoading}
-                returnKeyType="next"
-              />
+              <View
+                style={[
+                  styles.inputWrapper,
+                  iin.length > 0 && iin.length < 12 && styles.inputWrapperError,
+                ]}
+              >
+                <TextInput
+                  style={styles.input}
+                  placeholder={t("loginPage.fields.iinPlaceholder")}
+                  placeholderTextColor="#A7B0C0"
+                  value={iin}
+                  onChangeText={handleIinChange}
+                  keyboardType="number-pad"
+                  maxLength={12}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!isLoading}
+                  returnKeyType="next"
+                  selectionColor="#0057B8"
+                />
+
+                <Text style={styles.inputCounter}>{iin.length}/12</Text>
+              </View>
 
               {iin.length > 0 && iin.length < 12 && (
                 <Text style={styles.validationText}>
-                  Введите ещё {12 - iin.length} цифр
+                  {t("loginPage.validation.remainingDigits", {
+                    count: remainingIinDigits,
+                  })}
                 </Text>
               )}
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Пароль</Text>
+              <Text style={styles.inputLabel}>
+                {t("loginPage.fields.passwordLabel")}
+              </Text>
 
-              <TextInput
-                style={styles.input}
-                placeholder="Введите пароль"
-                placeholderTextColor="#AFAFAF"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                editable={!isLoading}
-                returnKeyType="done"
-                onSubmitEditing={handleLogin}
-              />
+              <View
+                style={[
+                  styles.inputWrapper,
+                  password.length > 0 &&
+                    password.length < 8 &&
+                    styles.inputWrapperError,
+                ]}
+              >
+                <TextInput
+                  style={styles.input}
+                  placeholder={t("loginPage.fields.passwordPlaceholder")}
+                  placeholderTextColor="#A7B0C0"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!isPasswordVisible}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!isLoading}
+                  returnKeyType="done"
+                  selectionColor="#0057B8"
+                  onSubmitEditing={handleLogin}
+                />
+
+                <TouchableOpacity
+                  style={styles.passwordButton}
+                  activeOpacity={0.7}
+                  disabled={isLoading}
+                  onPress={() =>
+                    setIsPasswordVisible((currentValue) => !currentValue)
+                  }
+                >
+                  <Text style={styles.passwordButtonText}>
+                    {isPasswordVisible
+                      ? t("loginPage.fields.hidePassword")
+                      : t("loginPage.fields.showPassword")}
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
               {password.length > 0 && password.length < 8 && (
-                <Text style={styles.validationText}>Минимум 8 символов</Text>
+                <Text style={styles.validationText}>
+                  {t("loginPage.validation.passwordShort")}
+                </Text>
               )}
             </View>
 
@@ -306,19 +415,41 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
                 styles.submitButton,
                 isSubmitDisabled && styles.submitButtonDisabled,
               ]}
-              activeOpacity={0.8}
+              activeOpacity={0.85}
               onPress={handleLogin}
               disabled={isSubmitDisabled}
             >
               {isLoading ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
+                <View style={styles.loadingButtonContent}>
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+
+                  <Text style={styles.submitButtonText}>
+                    {t("loginPage.loggingIn")}
+                  </Text>
+                </View>
               ) : (
-                <Text style={styles.submitButtonText}>Войти</Text>
+                <Text style={styles.submitButtonText}>
+                  {t("loginPage.loginButton")}
+                </Text>
               )}
             </TouchableOpacity>
+
+            {/* <TouchableOpacity
+              activeOpacity={0.7}
+              disabled={isLoading}
+              onPress={handleForgotPassword}
+            >
+              <Text style={styles.forgotPasswordText}>
+                {t("loginPage.forgotPassword")}
+              </Text>
+            </TouchableOpacity> */}
           </View>
 
-          <View style={styles.footerLinks}>
+          <View style={styles.registrationBlock}>
+            <Text style={styles.registrationDescription}>
+              {t("loginPage.noAccount")}
+            </Text>
+
             <TouchableOpacity
               activeOpacity={0.7}
               disabled={isLoading}
@@ -328,20 +459,9 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
                 })
               }
             >
-              <Text style={styles.linkText}>Регистрация</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.7}
-              disabled={isLoading}
-              onPress={() =>
-                Alert.alert(
-                  "Восстановление пароля",
-                  "Экран восстановления пароля ещё не подключён",
-                )
-              }
-            >
-              <Text style={styles.linkText}>Забыли пароль?</Text>
+              <Text style={styles.registrationLink}>
+                {t("loginPage.registration")}
+              </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -353,115 +473,229 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background || "#F5F7FA",
+    backgroundColor: colors.background || "#F4F7FB",
   },
 
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 40,
-    paddingBottom: 40,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 42,
     justifyContent: "center",
   },
 
   headerBlock: {
-    marginBottom: 32,
+    alignItems: "center",
+    marginBottom: 28,
   },
 
-  logoPlaceholder: {
-    width: 80,
-    height: 80,
-    borderRadius: 24,
-    backgroundColor: "#D9D9D9",
-    marginBottom: 20,
+  logoContainer: {
+    width: 92,
+    height: 92,
+    marginBottom: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 28,
+    backgroundColor: "#0867CD",
+
+    shadowColor: "#0867CD",
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.24,
+    shadowRadius: 17,
+    elevation: 8,
+  },
+
+  logo: {
+    width: 68,
+    height: 68,
   },
 
   brandTitle: {
-    fontSize: 36,
-    fontWeight: "700",
-    color: "#8E8E93",
-    lineHeight: 42,
-    marginBottom: 16,
+    color: "#111827",
+    fontSize: 27,
+    lineHeight: 34,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+
+  pageTitle: {
+    marginTop: 14,
+    color: "#172033",
+    fontSize: 21,
+    lineHeight: 28,
+    fontWeight: "800",
+    textAlign: "center",
   },
 
   brandSubtitle: {
-    maxWidth: "90%",
+    maxWidth: 320,
+    marginTop: 7,
+    color: "#687386",
     fontSize: 14,
-    lineHeight: 20,
-    fontWeight: "500",
-    color: "#A5A5A5",
+    lineHeight: 21,
+    fontWeight: "400",
+    textAlign: "center",
   },
 
-  form: {
-    gap: 20,
-    marginBottom: 24,
+  formCard: {
+    paddingHorizontal: 18,
+    paddingVertical: 22,
+    borderWidth: 1,
+    borderColor: "#E3EAF3",
+    borderRadius: 24,
+    backgroundColor: "#FFFFFF",
+
+    shadowColor: "#11233E",
+    shadowOffset: {
+      width: 0,
+      height: 7,
+    },
+    shadowOpacity: 0.07,
+    shadowRadius: 18,
+    elevation: 4,
   },
 
   inputContainer: {
-    gap: 8,
+    marginBottom: 17,
   },
 
   inputLabel: {
-    paddingLeft: 4,
+    marginBottom: 8,
+    paddingLeft: 3,
+    color: "#344054",
     fontSize: 14,
-    fontWeight: "600",
-    color: "#A5A5A5",
+    lineHeight: 19,
+    fontWeight: "700",
+  },
+
+  inputWrapper: {
+    minHeight: 56,
+    paddingLeft: 16,
+    paddingRight: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#D9E1EC",
+    borderRadius: 15,
+    backgroundColor: "#F9FBFD",
+  },
+
+  inputWrapperError: {
+    borderColor: "#E96A6A",
+    backgroundColor: "#FFF9F9",
   },
 
   input: {
-    height: 56,
-    paddingHorizontal: 16,
-    borderRadius: 14,
-    backgroundColor: "#FFFFFF",
+    flex: 1,
+    minWidth: 0,
+    minHeight: 54,
+    paddingVertical: 12,
+    color: "#172033",
     fontSize: 15,
+    lineHeight: 20,
     fontWeight: "500",
-    color: "#1C2530",
+  },
 
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.03,
-    shadowRadius: 2,
-    elevation: 1,
+  inputCounter: {
+    marginLeft: 10,
+    color: "#98A2B3",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
+  passwordButton: {
+    minHeight: 40,
+    paddingHorizontal: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  passwordButtonText: {
+    color: "#0057B8",
+    fontSize: 12,
+    fontWeight: "700",
   },
 
   validationText: {
-    paddingLeft: 4,
-    fontSize: 12,
-    fontWeight: "500",
+    marginTop: 6,
+    paddingLeft: 3,
     color: "#D14343",
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "500",
   },
 
   submitButton: {
-    height: 56,
-    marginTop: 12,
-    borderRadius: 28,
+    minHeight: 56,
+    marginTop: 5,
+    paddingHorizontal: 20,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#004B87",
+    borderRadius: 16,
+    backgroundColor: "#0057B8",
+
+    shadowColor: "#0057B8",
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 5,
   },
 
   submitButtonDisabled: {
-    opacity: 0.5,
+    backgroundColor: "#AEBFD4",
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+
+  loadingButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   submitButtonText: {
-    fontSize: 16,
-    fontWeight: "700",
+    marginLeft: 8,
     color: "#FFFFFF",
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: "800",
   },
 
-  footerLinks: {
-    alignItems: "center",
-    gap: 12,
-    marginTop: 8,
-  },
-
-  linkText: {
+  forgotPasswordText: {
+    marginTop: 18,
+    color: "#0057B8",
     fontSize: 14,
-    fontWeight: "600",
-    color: "#999999",
+    lineHeight: 20,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+
+  registrationBlock: {
+    marginTop: 24,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  registrationDescription: {
+    color: "#7A8494",
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "500",
+  },
+
+  registrationLink: {
+    marginLeft: 5,
+    color: "#0057B8",
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "800",
   },
 });
