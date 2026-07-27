@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import {
   HomeIcon,
   RequestsIcon,
+  SurveyIcon,
   ProfileIcon,
 } from "@shared/ui/TabIcons/TabIcons";
 
@@ -127,7 +128,9 @@ export const AppTabsNavigator = () => {
         listeners={createProtectedTabListener("SurveysTab")}
         options={{
           tabBarLabel: t("navigation.tabs.surveys"),
-          tabBarIcon: ({ color }) => <RequestsIcon color={color} />,
+          tabBarIcon: ({ color }) => (
+            <SurveyIcon color={color} width={20} height={20} />
+          ),
           tabBarButton: (props) => <TabBounceButton {...props} />,
         }}
       />

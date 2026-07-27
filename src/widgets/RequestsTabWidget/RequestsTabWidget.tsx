@@ -215,10 +215,14 @@ export const RequestsTabWidget = () => {
     loadTabData("violation");
   }, []);
 
-  const handleTabPress = (tab: RequestType) => {
-    setActiveTab(tab);
-    loadTabData(tab);
-  };
+ const handleTabPress = (tab: RequestType) => {
+  console.log("🔵 Нажали таб:", tab);
+
+  setActiveTab(tab);
+
+  // true — принудительно заново запрашиваем данные
+  loadTabData(tab, true);
+};
 
   const currentData = useMemo(
     () => mapResponse(rawData[activeTab], activeTab, t),

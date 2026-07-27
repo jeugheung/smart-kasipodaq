@@ -14,18 +14,40 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.jeugheung.smart-kasipodaq"
+      "bundleIdentifier": "com.jeugheung.smart-kasipodaq",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Приложению требуется доступ к галерее, чтобы вы могли прикрепить фото к вашей заявке.",
+        "NSCameraUsageDescription": "Приложению требуется доступ к камере для создания снимков к заявке.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocalNetworkUsageDescription": "This app needs access to the network to sync data with our servers."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#016BED"
       },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.jeugheung.smartkasipodaq"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Разрешите доступ к вашим фотографиям, чтобы прикреплять их к обращениям."
+        }
+      ],
+      "expo-document-picker"
+    ]
   }
 }

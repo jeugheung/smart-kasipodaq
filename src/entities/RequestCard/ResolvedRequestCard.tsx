@@ -13,22 +13,15 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { RequestItem, RequestType } from "./RequestCard.types";
 
 import AnonIcon from "../../../assets/request-card/anon.svg";
-import SolutionIcon from "../../../assets/request-card/solution.svg";
+import SolutionIcon from "../../../assets/request-card/solution1.svg";
 import StarIcon from "../../../assets/request-card/start.svg";
 import StarFilledIcon from "../../../assets/request-card/star-filled.svg";
 import LikeIcon from "../../../assets/request-card/like.svg";
 import DislikeIcon from "../../../assets/request-card/dislike.svg";
 
-import {
-  toggleFavorite,
-  getFavorites,
-} from "../../shared/lib/favourites";
+import { toggleFavorite, getFavorites } from "../../shared/lib/favourites";
 import { getOrCreateUUID } from "../../shared/lib/uuid";
-
-import {
-  sendLikeDislike,
-  toggleFavoriteApi,
-} from "../../shared/api/endpoints";
+import { sendLikeDislike, toggleFavoriteApi } from "../../shared/api/endpoints";
 
 type Props = {
   item: RequestItem;
@@ -42,11 +35,19 @@ type VoteSuffix = "_Q" | "_A";
 const VOTES_STORAGE_KEY = "@user_resolved_votes";
 
 const TYPE_COLOR: Record<RequestType, string> = {
-  violation: "#C9F2FF",
-  work: "#FFF1B7",
-  salary: "#FFE9B1",
-  social: "#F4FFB5",
-  collective: "#E8DDFF",
+  violation: "#EAF3FF",
+  work: "#FFF6D8",
+  salary: "#FFF0DF",
+  social: "#ECFDF3",
+  collective: "#F2EAFE",
+};
+
+const TYPE_ACCENT: Record<RequestType, string> = {
+  violation: "#2563EB",
+  work: "#D97706",
+  salary: "#EA580C",
+  social: "#16A34A",
+  collective: "#7C3AED",
 };
 
 const getDateLocale = (language: string) => {
@@ -68,92 +69,55 @@ export const ResolvedRequestCard = ({
 }: Props) => {
   const { t, i18n } = useTranslation();
 
-  const language =
-    i18n.resolvedLanguage ??
-    i18n.language ??
-    "ru";
+  const language = i18n.resolvedLanguage ?? i18n.language ?? "ru";
 
   const [expandedQ, setExpandedQ] = useState(false);
   const [expandedA, setExpandedA] = useState(false);
 
-  const [isStarred, setIsStarred] =
-    useState(isFavorite);
+  const [isStarred, setIsStarred] = useState(isFavorite);
+  const [isStarring, setIsStarring] = useState(false);
 
-  const [isStarring, setIsStarring] =
-    useState(false);
-
-  const [qLikes, setQLikes] = useState(
-    Number(item.solution_likes) || 0
-  );
-
+  const [qLikes, setQLikes] = useState(Number(item.solution_likes) || 0);
   const [qDislikes, setQDislikes] = useState(
-    Number(item.solution_dislikes) || 0
+    Number(item.solution_dislikes) || 0,
   );
+  const [userVoteQ, setUserVoteQ] = useState<VoteType | null>(null);
+  const [isVotingQ, setIsVotingQ] = useState(false);
 
-  const [userVoteQ, setUserVoteQ] =
-    useState<VoteType | null>(null);
-
-  const [isVotingQ, setIsVotingQ] =
-    useState(false);
-
-  const [aLikes, setALikes] = useState(
-    Number(item.comment_likes) || 0
-  );
-
+  const [aLikes, setALikes] = useState(Number(item.comment_likes) || 0);
   const [aDislikes, setADislikes] = useState(
-    Number(item.comment_dislikes) || 0
+    Number(item.comment_dislikes) || 0,
   );
-
-  const [userVoteA, setUserVoteA] =
-    useState<VoteType | null>(null);
-
-  const [isVotingA, setIsVotingA] =
-    useState(false);
+  const [userVoteA, setUserVoteA] = useState<VoteType | null>(null);
+  const [isVotingA, setIsVotingA] = useState(false);
 
   useEffect(() => {
+    
     const loadPersistedData = async () => {
       try {
         const favorites = await getFavorites();
 
-        setIsStarred(
-          favorites.includes(item.id.toString())
-        );
+        setIsStarred(favorites.includes(item.id.toString()));
 
-        const stored =
-          await AsyncStorage.getItem(
-            VOTES_STORAGE_KEY
-          );
+        const stored = await AsyncStorage.getItem(VOTES_STORAGE_KEY);
 
         if (!stored) {
           return;
         }
 
         const votesObj = JSON.parse(stored);
+        const savedVoteQ = votesObj[`${item.id}_Q`];
+        const savedVoteA = votesObj[`${item.id}_A`];
 
-        const savedVoteQ =
-          votesObj[`${item.id}_Q`];
-
-        const savedVoteA =
-          votesObj[`${item.id}_A`];
-
-        if (
-          savedVoteQ === "like" ||
-          savedVoteQ === "dislike"
-        ) {
+        if (savedVoteQ === "like" || savedVoteQ === "dislike") {
           setUserVoteQ(savedVoteQ);
         }
 
-        if (
-          savedVoteA === "like" ||
-          savedVoteA === "dislike"
-        ) {
+        if (savedVoteA === "like" || savedVoteA === "dislike") {
           setUserVoteA(savedVoteA);
         }
       } catch (error) {
-        console.error(
-          "Error loading votes:",
-          error
-        );
+        console.error("Error loading votes:", error);
       }
     };
 
@@ -161,21 +125,10 @@ export const ResolvedRequestCard = ({
   }, [item.id]);
 
   useEffect(() => {
-    setQLikes(
-      Number(item.solution_likes) || 0
-    );
-
-    setQDislikes(
-      Number(item.solution_dislikes) || 0
-    );
-
-    setALikes(
-      Number(item.comment_likes) || 0
-    );
-
-    setADislikes(
-      Number(item.comment_dislikes) || 0
-    );
+    setQLikes(Number(item.solution_likes) || 0);
+    setQDislikes(Number(item.solution_dislikes) || 0);
+    setALikes(Number(item.comment_likes) || 0);
+    setADislikes(Number(item.comment_dislikes) || 0);
   }, [
     item.id,
     item.solution_likes,
@@ -189,90 +142,69 @@ export const ResolvedRequestCard = ({
       return "";
     }
 
-    const date = new Date(dateString);
+    const normalizedDate = dateString.includes(" ")
+      ? dateString.replace(" ", "T")
+      : dateString;
+
+    const date = new Date(normalizedDate);
 
     if (Number.isNaN(date.getTime())) {
       return "";
     }
 
-    return date.toLocaleDateString(
-      getDateLocale(language),
-      {
-        day: "2-digit",
-        month: "2-digit",
-        year: "2-digit",
-      }
-    );
+    return date.toLocaleDateString(getDateLocale(language), {
+      day: "2-digit",
+      month: "2-digit",
+      year: "2-digit",
+    });
   };
 
   const handleStarPress = async () => {
-    if (isStarring) {
-      return;
-    }
+     if (isStarring) {
+       return;
+     }
+ 
+     setIsStarring(true);
+ 
+     const previousStarred = isStarred;
+     const nextStarred = !previousStarred;
+ 
+     setIsStarred(nextStarred);
+ 
+     try {
+       const uuid = await getOrCreateUUID();
+ 
+       await toggleFavoriteApi(uuid, item.id);
+ 
+       await toggleFavorite(item.id.toString());
+     } catch (error) {
+       console.error("Favorite error:", error);
+ 
+       setIsStarred(previousStarred);
+     } finally {
+       setIsStarring(false);
+     }
+   };
 
-    setIsStarring(true);
-
-    const previousStarred = isStarred;
-    const nextStarred = !previousStarred;
-
-    setIsStarred(nextStarred);
-
-    try {
-      const uuid = await getOrCreateUUID();
-
-      await toggleFavoriteApi(
-        uuid,
-        item.id
-      );
-
-      await toggleFavorite(
-        item.id.toString()
-      );
-    } catch (error) {
-      console.error(
-        "Favorite error:",
-        error
-      );
-
-      setIsStarred(previousStarred);
-    } finally {
-      setIsStarring(false);
-    }
-  };
-
-  const saveVoteToStorage = async (
-    suffix: VoteSuffix,
-    type: VoteType
-  ) => {
-    const stored =
-      await AsyncStorage.getItem(
-        VOTES_STORAGE_KEY
-      );
-
-    const votesObj = stored
-      ? JSON.parse(stored)
-      : {};
+  const saveVoteToStorage = async (suffix: VoteSuffix, type: VoteType) => {
+    const stored = await AsyncStorage.getItem(VOTES_STORAGE_KEY);
+    const votesObj = stored ? JSON.parse(stored) : {};
 
     votesObj[`${item.id}${suffix}`] = type;
 
-    await AsyncStorage.setItem(
-      VOTES_STORAGE_KEY,
-      JSON.stringify(votesObj)
-    );
+    await AsyncStorage.setItem(VOTES_STORAGE_KEY, JSON.stringify(votesObj));
   };
 
-  const handleVoteQ = async (
-    type: VoteType
-  ) => {
+  const handleVoteQ = async (type: VoteType) => {
     if (isVotingQ || userVoteQ) {
       return;
     }
 
-    setIsVotingQ(true);
-    setUserVoteQ(type);
-
     const previousLikes = qLikes;
     const previousDislikes = qDislikes;
+
+    setIsVotingQ(true);
+    setUserVoteQ(type);
 
     if (type === "like") {
       setQLikes((prev) => prev + 1);
@@ -283,23 +215,10 @@ export const ResolvedRequestCard = ({
     try {
       const uuid = await getOrCreateUUID();
 
-      await sendLikeDislike(
-        requestType,
-        "solution",
-        uuid,
-        item.id,
-        type
-      );
-
-      await saveVoteToStorage(
-        "_Q",
-        type
-      );
+      await sendLikeDislike(requestType, "solution", uuid, item.id, type);
+      await saveVoteToStorage("_Q", type);
     } catch (error) {
-      console.error(
-        "Vote question error:",
-        error
-      );
+      console.error("Vote question error:", error);
 
       setUserVoteQ(null);
       setQLikes(previousLikes);
@@ -309,18 +228,16 @@ export const ResolvedRequestCard = ({
     }
   };
 
-  const handleVoteA = async (
-    type: VoteType
-  ) => {
+  const handleVoteA = async (type: VoteType) => {
     if (isVotingA || userVoteA) {
       return;
     }
 
-    setIsVotingA(true);
-    setUserVoteA(type);
-
     const previousLikes = aLikes;
     const previousDislikes = aDislikes;
+
+    setIsVotingA(true);
+    setUserVoteA(type);
 
     if (type === "like") {
       setALikes((prev) => prev + 1);
@@ -331,23 +248,10 @@ export const ResolvedRequestCard = ({
     try {
       const uuid = await getOrCreateUUID();
 
-      await sendLikeDislike(
-        requestType,
-        "comment",
-        uuid,
-        item.id,
-        type
-      );
-
-      await saveVoteToStorage(
-        "_A",
-        type
-      );
+      await sendLikeDislike(requestType, "comment", uuid, item.id, type);
+      await saveVoteToStorage("_A", type);
     } catch (error) {
-      console.error(
-        "Vote answer error:",
-        error
-      );
+      console.error("Vote answer error:", error);
 
       setUserVoteA(null);
       setALikes(previousLikes);
@@ -357,516 +261,443 @@ export const ResolvedRequestCard = ({
     }
   };
 
-  const isQDisabled =
-    isVotingQ || userVoteQ !== null;
+  const isQDisabled = isVotingQ || userVoteQ !== null;
+  const isADisabled = isVotingA || userVoteA !== null;
 
-  const isADisabled =
-    isVotingA || userVoteA !== null;
-
-  const softColor =
-    TYPE_COLOR[requestType] ??
-    "#FFFFFF";
+  const softColor = TYPE_COLOR[requestType] ?? "#EAF3FF";
+  const accentColor = TYPE_ACCENT[requestType] ?? "#2563EB";
 
   return (
     <View style={styles.card}>
       <LinearGradient
         colors={[softColor, "#FFFFFF"]}
-        locations={[0, 0.7]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
+        locations={[0, 0.75]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
 
       <View style={styles.content}>
-        <View style={styles.sectionRow}>
-          <View style={styles.leftSide}>
-            <AnonIcon
-              width={36}
-              height={36}
-            />
+        <View style={styles.topRow}>
+          <View style={styles.authorBlock}>
+            <View style={[styles.avatarBox, { backgroundColor: softColor }]}>
+              <AnonIcon width={28} height={28} />
+            </View>
+
+            <View style={styles.authorInfo}>
+              <Text style={styles.anon}>
+                {t("resolvedRequestCard.anonymous", {
+                  defaultValue: "Аноним",
+                })}
+              </Text>
+
+              {!!formatDate(item.created_at) && (
+                <Text style={styles.date}>{formatDate(item.created_at)}</Text>
+              )}
+            </View>
           </View>
 
-          <View style={styles.rightSide}>
-            <View style={styles.header}>
-              <View style={styles.headerLeft}>
-                <Text style={styles.anon}>
-                  {t(
-                    "resolvedRequestCard.anonymous"
-                  )}
-                </Text>
+          <Pressable
+            onPress={handleStarPress}
+            hitSlop={10}
+            disabled={isStarring}
+            style={styles.starButton}
+            accessibilityLabel={
+              isStarred
+                ? t("resolvedRequestCard.removeFavorite")
+                : t("resolvedRequestCard.addFavorite")
+            }
+          >
+            {isStarring ? (
+              <ActivityIndicator size="small" color={accentColor} />
+            ) : isStarred ? (
+              <StarFilledIcon width={22} height={22} />
+            ) : (
+              <StarIcon width={22} height={22} />
+            )}
+          </Pressable>
+        </View>
 
-                <Text style={styles.date}>
-                  {formatDate(
-                    item.created_at
-                  )}
+        <View style={styles.body}>
+          <Text style={styles.requestTitle}>{item.problem}</Text>
+
+          {!!item.solution?.trim() && (
+            <>
+              <View style={styles.solutionBadge}>
+                <Text
+                  style={[styles.solutionBadgeText, { color: accentColor }]}
+                >
+                  {t("resolvedRequestCard.solutionOption", {
+                    defaultValue: "Предложенное решение",
+                  })}
                 </Text>
               </View>
 
-              <Pressable
-                onPress={handleStarPress}
-                hitSlop={10}
-                disabled={isStarring}
-                accessibilityLabel={
-                  isStarred
-                    ? t(
-                        "resolvedRequestCard.removeFavorite"
-                      )
-                    : t(
-                        "resolvedRequestCard.addFavorite"
-                      )
-                }
-              >
-                {isStarring ? (
-                  <ActivityIndicator
-                    size="small"
-                    color="#2563EB"
-                  />
-                ) : isStarred ? (
-                  <StarFilledIcon
-                    width={22}
-                    height={22}
-                  />
-                ) : (
-                  <StarIcon
-                    width={22}
-                    height={22}
-                  />
-                )}
-              </Pressable>
-            </View>
+              <Pressable onPress={() => setExpandedQ((prev) => !prev)}>
+                <Text
+                  style={styles.requestText}
+                  numberOfLines={expandedQ ? undefined : 3}
+                  ellipsizeMode="tail"
+                >
+                  {item.solution}
+                </Text>
 
-            <Text style={styles.requestTitle}>
-              {item.problem}
-            </Text>
-
-            <Pressable
-              onPress={() =>
-                setExpandedQ(
-                  (prev) => !prev
-                )
-              }
-            >
-              <Text
-                style={styles.text}
-                numberOfLines={
-                  expandedQ
-                    ? undefined
-                    : 3
-                }
-              >
-                {item.solution}
-              </Text>
-
-              {!expandedQ &&
-                item.solution &&
-                item.solution.length >
-                  120 && (
-                  <Text
-                    style={
-                      styles.moreTextInline
-                    }
-                  >
-                    {t(
-                      "resolvedRequestCard.more"
-                    )}
+                {!expandedQ && item.solution.length > 120 && (
+                  <Text style={styles.moreTextInline}>
+                    {t("resolvedRequestCard.more", {
+                      defaultValue: "Подробнее",
+                    })}
                   </Text>
                 )}
-            </Pressable>
-
-            <View style={styles.btnStack}>
-              <Pressable
-                style={[
-                  styles.btnItem,
-                  userVoteQ === "like" &&
-                    styles.btnActiveLike,
-                  isQDisabled &&
-                    styles.btnDisabled,
-                ]}
-                onPress={() =>
-                  handleVoteQ("like")
-                }
-                disabled={isQDisabled}
-                accessibilityLabel={t(
-                  "resolvedRequestCard.likeQuestion"
-                )}
-              >
-                {isVotingQ &&
-                userVoteQ === "like" ? (
-                  <ActivityIndicator
-                    size="small"
-                    color="#2E7D32"
-                  />
-                ) : (
-                  <>
-                    <LikeIcon
-                      width={18}
-                      height={16}
-                      fill={
-                        userVoteQ ===
-                        "like"
-                          ? "#2E7D32"
-                          : "#666666"
-                      }
-                    />
-
-                    <Text
-                      style={[
-                        styles.textInactive,
-                        userVoteQ ===
-                          "like" &&
-                          styles.textActiveLike,
-                      ]}
-                    >
-                      {qLikes}
-                    </Text>
-                  </>
-                )}
               </Pressable>
 
-              <Pressable
-                style={[
-                  styles.btnItem,
-                  userVoteQ ===
-                    "dislike" &&
-                    styles.btnActiveDislike,
-                  isQDisabled &&
-                    styles.btnDisabled,
-                ]}
-                onPress={() =>
-                  handleVoteQ("dislike")
-                }
-                disabled={isQDisabled}
-                accessibilityLabel={t(
-                  "resolvedRequestCard.dislikeQuestion"
-                )}
-              >
-                {isVotingQ &&
-                userVoteQ ===
-                  "dislike" ? (
-                  <ActivityIndicator
-                    size="small"
-                    color="#D32F2F"
-                  />
-                ) : (
-                  <>
-                    <DislikeIcon
-                      width={18}
-                      height={16}
-                      fill={
-                        userVoteQ ===
-                        "dislike"
-                          ? "#D32F2F"
-                          : "#666666"
-                      }
-                    />
+              <View style={styles.footer}>
+                <VoteButton
+                  type="like"
+                  count={qLikes}
+                  selectedVote={userVoteQ}
+                  loading={isVotingQ}
+                  disabled={isQDisabled}
+                  onPress={() => handleVoteQ("like")}
+                  accessibilityLabel={t(
+                    "resolvedRequestCard.likeQuestion",
+                  )}
+                />
 
-                    <Text
-                      style={[
-                        styles.textInactive,
-                        userVoteQ ===
-                          "dislike" &&
-                          styles.textActiveDislike,
-                      ]}
-                    >
-                      {qDislikes}
-                    </Text>
-                  </>
-                )}
-              </Pressable>
-            </View>
-          </View>
+                <VoteButton
+                  type="dislike"
+                  count={qDislikes}
+                  selectedVote={userVoteQ}
+                  loading={isVotingQ}
+                  disabled={isQDisabled}
+                  onPress={() => handleVoteQ("dislike")}
+                  accessibilityLabel={t(
+                    "resolvedRequestCard.dislikeQuestion",
+                  )}
+                />
+              </View>
+            </>
+          )}
         </View>
 
-        <View style={styles.sectionRow}>
-          <View style={styles.leftSide}>
-            <SolutionIcon
-              width={36}
-              height={36}
-            />
-          </View>
+        {!!item.comment?.trim() && (
+          <View style={styles.answerSection}>
+            <View style={styles.answerHeader}>
+              <View style={styles.answerAuthorBlock}>
+                <View style={[styles.avatarBox, { backgroundColor: softColor }]}>
+                  <SolutionIcon width={28} height={28} />
+                </View>
 
-          <View style={styles.rightSide}>
-            <View style={styles.headerLeftA}>
-              <Text style={styles.solution}>
-                {t(
-                  "resolvedRequestCard.solutionAuthor"
-                )}
-              </Text>
+                <View style={styles.authorInfo}>
+                  <Text style={[styles.anon, { color: accentColor }]}>
+                    {t("resolvedRequestCard.solutionAuthor", {
+                      defaultValue: "Ответ администрации",
+                    })}
+                  </Text>
 
-              <Text style={styles.date}>
-                {formatDate(
-                  item.updated_at
-                )}
-              </Text>
+                  {!!formatDate(item.updated_at) && (
+                    <Text style={styles.date}>{formatDate(item.updated_at)}</Text>
+                  )}
+                </View>
+              </View>
             </View>
 
-            <Pressable
-              onPress={() =>
-                setExpandedA(
-                  (prev) => !prev
-                )
-              }
-            >
+            <Pressable onPress={() => setExpandedA((prev) => !prev)}>
               <Text
-                style={styles.text}
-                numberOfLines={
-                  expandedA
-                    ? undefined
-                    : 3
-                }
+                style={styles.requestText}
+                numberOfLines={expandedA ? undefined : 3}
+                ellipsizeMode="tail"
               >
                 {item.comment}
               </Text>
 
-              {!expandedA &&
-                item.comment &&
-                item.comment.length >
-                  120 && (
-                  <Text
-                    style={
-                      styles.moreTextInline
-                    }
-                  >
-                    {t(
-                      "resolvedRequestCard.more"
-                    )}
-                  </Text>
-                )}
+              {!expandedA && item.comment.length > 120 && (
+                <Text style={styles.moreTextInline}>
+                  {t("resolvedRequestCard.more", {
+                    defaultValue: "Подробнее",
+                  })}
+                </Text>
+              )}
             </Pressable>
 
-            <View style={styles.btnStack}>
-              <Pressable
-                style={[
-                  styles.btnItem,
-                  userVoteA === "like" &&
-                    styles.btnActiveLike,
-                  isADisabled &&
-                    styles.btnDisabled,
-                ]}
-                onPress={() =>
-                  handleVoteA("like")
-                }
+            <View style={styles.footer}>
+              <VoteButton
+                type="like"
+                count={aLikes}
+                selectedVote={userVoteA}
+                loading={isVotingA}
                 disabled={isADisabled}
-                accessibilityLabel={t(
-                  "resolvedRequestCard.likeAnswer"
-                )}
-              >
-                {isVotingA &&
-                userVoteA === "like" ? (
-                  <ActivityIndicator
-                    size="small"
-                    color="#2E7D32"
-                  />
-                ) : (
-                  <>
-                    <LikeIcon
-                      width={18}
-                      height={16}
-                      fill={
-                        userVoteA ===
-                        "like"
-                          ? "#2E7D32"
-                          : "#666666"
-                      }
-                    />
+                onPress={() => handleVoteA("like")}
+                accessibilityLabel={t("resolvedRequestCard.likeAnswer")}
+              />
 
-                    <Text
-                      style={[
-                        styles.textInactive,
-                        userVoteA ===
-                          "like" &&
-                          styles.textActiveLike,
-                      ]}
-                    >
-                      {aLikes}
-                    </Text>
-                  </>
-                )}
-              </Pressable>
-
-              <Pressable
-                style={[
-                  styles.btnItem,
-                  userVoteA ===
-                    "dislike" &&
-                    styles.btnActiveDislike,
-                  isADisabled &&
-                    styles.btnDisabled,
-                ]}
-                onPress={() =>
-                  handleVoteA("dislike")
-                }
+              <VoteButton
+                type="dislike"
+                count={aDislikes}
+                selectedVote={userVoteA}
+                loading={isVotingA}
                 disabled={isADisabled}
-                accessibilityLabel={t(
-                  "resolvedRequestCard.dislikeAnswer"
-                )}
-              >
-                {isVotingA &&
-                userVoteA ===
-                  "dislike" ? (
-                  <ActivityIndicator
-                    size="small"
-                    color="#D32F2F"
-                  />
-                ) : (
-                  <>
-                    <DislikeIcon
-                      width={18}
-                      height={16}
-                      fill={
-                        userVoteA ===
-                        "dislike"
-                          ? "#D32F2F"
-                          : "#666666"
-                      }
-                    />
-
-                    <Text
-                      style={[
-                        styles.textInactive,
-                        userVoteA ===
-                          "dislike" &&
-                          styles.textActiveDislike,
-                      ]}
-                    >
-                      {aDislikes}
-                    </Text>
-                  </>
-                )}
-              </Pressable>
+                onPress={() => handleVoteA("dislike")}
+                accessibilityLabel={t("resolvedRequestCard.dislikeAnswer")}
+              />
             </View>
           </View>
-        </View>
+        )}
       </View>
     </View>
   );
 };
 
+type VoteButtonProps = {
+  type: VoteType;
+  count: number;
+  selectedVote: VoteType | null;
+  loading: boolean;
+  disabled: boolean;
+  onPress: () => void;
+  accessibilityLabel: string;
+};
+
+const VoteButton = ({
+  type,
+  count,
+  selectedVote,
+  loading,
+  disabled,
+  onPress,
+  accessibilityLabel,
+}: VoteButtonProps) => {
+  const isLike = type === "like";
+  const isActive = selectedVote === type;
+
+  const activeColor = isLike ? "#16A34A" : "#DC2626";
+
+  return (
+    <Pressable
+      style={[
+        styles.voteButton,
+        isActive &&
+          (isLike
+            ? styles.voteButtonLikeActive
+            : styles.voteButtonDislikeActive),
+        disabled && styles.btnDisabled,
+      ]}
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityLabel={accessibilityLabel}
+    >
+      {loading && isActive ? (
+        <ActivityIndicator size="small" color={activeColor} />
+      ) : (
+        <>
+          {isLike ? (
+            <LikeIcon
+              width={18}
+              height={16}
+              fill={isActive ? activeColor : "#64748B"}
+            />
+          ) : (
+            <DislikeIcon
+              width={18}
+              height={16}
+              fill={isActive ? activeColor : "#64748B"}
+            />
+          )}
+
+          <Text
+            style={[
+              styles.voteText,
+              isActive &&
+                (isLike
+                  ? styles.voteTextLikeActive
+                  : styles.voteTextDislikeActive),
+            ]}
+          >
+            {count}
+          </Text>
+        </>
+      )}
+    </Pressable>
+  );
+};
+
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 10,
+    borderRadius: 24,
     overflow: "hidden",
-    marginBottom: 15,
+    marginBottom: 14,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#EEF2F7",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 2,
   },
 
   content: {
     padding: 16,
-    gap: 24,
   },
 
-  sectionRow: {
-    flexDirection: "row",
-    gap: 12,
-  },
-
-  leftSide: {
-    width: 36,
-    alignItems: "center",
-  },
-
-  rightSide: {
-    flex: 1,
-  },
-
-  header: {
+  topRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 6,
   },
 
-  headerLeft: {
+  authorBlock: {
     flexDirection: "row",
-    gap: 10,
     alignItems: "center",
+    flex: 1,
   },
 
-  headerLeftA: {
+  answerAuthorBlock: {
     flexDirection: "row",
-    gap: 10,
     alignItems: "center",
-    marginBottom: 6,
+    flex: 1,
+  },
+
+  authorInfo: {
+    flex: 1,
+  },
+
+  avatarBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
   },
 
   anon: {
-    fontSize: 16,
-    fontWeight: "700",
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#0F172A",
   },
 
   date: {
-    fontSize: 14,
-    color: "#999999",
+    marginTop: 2,
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#94A3B8",
+  },
+
+  starButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  body: {
+    marginTop: 16,
   },
 
   requestTitle: {
-    fontSize: 14,
-    lineHeight: 21,
-    fontWeight: "500",
-    marginBottom: 4,
-  },
-
-  solution: {
     fontSize: 16,
-    fontWeight: "700",
+    lineHeight: 22,
+    fontWeight: "800",
+    color: "#0F172A",
   },
 
-  text: {
+  solutionBadge: {
+    alignSelf: "flex-start",
+    marginTop: 12,
+    marginBottom: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.7)",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+
+  solutionBadgeText: {
     fontSize: 12,
+    fontWeight: "800",
+  },
+
+  requestText: {
+    fontSize: 13,
     lineHeight: 20,
+    fontWeight: "500",
+    color: "#475569",
   },
 
   moreTextInline: {
-    color: "#838282",
-    fontWeight: "600",
+    color: "#64748B",
+    fontWeight: "800",
     fontSize: 12,
-    marginTop: 2,
+    marginTop: 4,
   },
 
-  btnStack: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginTop: 10,
+  answerSection: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#EAF0F6",
   },
 
-  btnItem: {
+  answerHeader: {
+    marginBottom: 12,
+  },
+
+  footer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    paddingVertical: 6,
+    gap: 10,
+    marginTop: 16,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: "#EAF0F6",
+  },
+
+  voteButton: {
+    minWidth: 62,
+    height: 36,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
     paddingHorizontal: 12,
-    backgroundColor:
-      "rgba(0, 0, 0, 0.03)",
-    borderRadius: 100,
+    borderRadius: 18,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+
+  voteButtonLikeActive: {
+    backgroundColor: "#ECFDF3",
+    borderColor: "#BBF7D0",
+  },
+
+  voteButtonDislikeActive: {
+    backgroundColor: "#FEF2F2",
+    borderColor: "#FECACA",
   },
 
   btnDisabled: {
-    opacity: 0.6,
+    opacity: 0.65,
   },
 
-  textInactive: {
-    fontWeight: "600",
-    color: "#666666",
+  voteText: {
+    fontWeight: "800",
+    color: "#64748B",
     fontSize: 13,
   },
 
-  btnActiveLike: {
-    backgroundColor:
-      "rgba(76, 175, 80, 0.15)",
+  voteTextLikeActive: {
+    color: "#16A34A",
   },
 
-  textActiveLike: {
-    color: "#2E7D32",
-    fontWeight: "700",
-  },
-
-  btnActiveDislike: {
-    backgroundColor:
-      "rgba(244, 67, 54, 0.1)",
-  },
-
-  textActiveDislike: {
-    color: "#D32F2F",
-    fontWeight: "700",
+  voteTextDislikeActive: {
+    color: "#DC2626",
   },
 });

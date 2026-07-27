@@ -1,5 +1,5 @@
 export const MAIN_DOMAIN = 'kasipodaq.competence.kz';
-// export const API_SOLUTION_SATBAYEV = 'api.solution.satbayev.university';
+export const API_SOLUTION_SATBAYEV = 'api.solution.satbayev.university';
 // export const SATBAYEV_API = 'satbayev.university'
 
 export const API_CONFIG = {
@@ -7,10 +7,10 @@ export const API_CONFIG = {
   NEWS_API: `https://${MAIN_DOMAIN}/api/news`,
 
   LIKE_DISLIKE_API: (category: string, targetType: string, uuid: string, solutionId: string | number, status: 'like' | 'dislike') =>
-    `https://competence.kz/site/ajax-like?type=${category}&uuid=${uuid}&solution_id=${solutionId}&status=${status}&type=${targetType}`,
+    `https://${MAIN_DOMAIN}/site/ajax-like?type=${category}&uuid=${uuid}&solution_id=${solutionId}&status=${status}&type=${targetType}`,
 
   FAVORITE_TOGGLE_API: (uuid: string, solutionId: string | number) => 
-    `https://competence.kz/site/ajax-favorites?uuid=${uuid}&solution_id=${solutionId}`,
+    `https://${MAIN_DOMAIN}/site/ajax-favorites?uuid=${uuid}&solution_id=${solutionId}`,
 
   MY_FAVORITES: (uuid: string, lang: string) =>
     `https://${MAIN_DOMAIN}/site/api-my-favorites?uuid=${uuid}&lang=${lang}`,
@@ -51,7 +51,7 @@ export const API_CONFIG = {
   DIRECTORY_API: `https://${MAIN_DOMAIN}/api/dep`,
 
   // Отправка
-  UPLOAD_FILES_API: `https://${MAIN_DOMAIN}/upload`,
+  UPLOAD_FILES_API: `https://${API_SOLUTION_SATBAYEV}/upload`,
   ADD_SOLUTION_API: `https://${MAIN_DOMAIN}/api/add-solution`,
    // UUID-зависимый API
   MY_SOLUTIONS: (uuid: string) =>

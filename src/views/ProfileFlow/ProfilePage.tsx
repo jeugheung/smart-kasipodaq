@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import AppLogo from "../../../assets/request-card/solution1.svg";
 
 type CurrentClient = {
   id: number;
@@ -360,7 +361,7 @@ export const ProfilePage = ({ navigation }: any) => {
             <View style={styles.arrowRight} />
           </TouchableOpacity>
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.menuItem}
             activeOpacity={0.7}
             onPress={handleOpenContacts}
@@ -381,7 +382,7 @@ export const ProfilePage = ({ navigation }: any) => {
             </Text>
 
             <View style={styles.arrowRight} />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         <TouchableOpacity
@@ -401,6 +402,18 @@ export const ProfilePage = ({ navigation }: any) => {
             </Text>
           )}
         </TouchableOpacity>
+
+        <View style={styles.footer}>
+          <AppLogo width={58} height={58} />
+
+          <Text style={styles.footerTitle}>
+            Smart Kasipodaq
+          </Text>
+
+          <Text style={styles.footerVersion}>
+            Версия 1.0.0
+          </Text>
+        </View>
       </ScrollView>
     </DefaultLayout>
   );
@@ -566,4 +579,24 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#E40E0E",
   },
+  footer: {
+  alignItems: "center",
+  justifyContent: "center",
+  marginTop: 48,
+  paddingTop: 24,
+  paddingBottom: 20,
+},
+
+footerTitle: {
+  marginTop: 12,
+  fontSize: 17,
+  fontWeight: "700",
+  color: "#344054",
+},
+
+footerVersion: {
+  marginTop: 4,
+  fontSize: 13,
+  color: "#98A2B3",
+},
 });
