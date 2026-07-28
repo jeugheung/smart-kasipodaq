@@ -15,7 +15,7 @@ import {
   View,
 } from "react-native";
 
-import AppLogo from "../../../assets/request-card/solution1.svg";
+import AppLogo from "../../../assets/request-card/solution2.svg";
 
 type CurrentClient = {
   id: number;

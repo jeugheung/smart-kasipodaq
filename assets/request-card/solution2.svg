@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+  <g fill="#0F2748">
+    <!-- outer ring -->
+    <path fill-rule="evenodd" clip-rule="evenodd"
+      d="M10 3a7 7 0 1 1 0 14a7 7 0 0 1 0-14Zm0 0.8a6.2 6.2 0 1 0 0 12.4a6.2 6.2 0 0 0 0-12.4Z"/>
+
+    <!-- center X -->
+    <g transform="translate(10 10) rotate(45)">
+      <rect x="-0.35" y="-4.2" width="0.7" height="8.4"/>
+      <rect x="-4.2" y="-0.35" width="8.4" height="0.7"/>
+      <rect x="-1.2" y="-4.2" width="0.4" height="8.4"/>
+      <rect x="0.8" y="-4.2" width="0.4" height="8.4"/>
+      <rect x="-4.2" y="-1.2" width="8.4" height="0.4"/>
+      <rect x="-4.2" y="0.8" width="8.4" height="0.4"/>
+    </g>
+
+    <!-- inner dots -->
+    <circle cx="10" cy="6.8" r="0.45"/>
+    <circle cx="13.2" cy="10" r="0.45"/>
+    <circle cx="10" cy="13.2" r="0.45"/>
+    <circle cx="6.8" cy="10" r="0.45"/>
+
+    <!-- outer dots -->
+    <circle cx="10" cy="1.2" r="0.6"/>
+    <circle cx="2.2" cy="13.2" r="0.6"/>
+    <circle cx="17.8" cy="13.2" r="0.6"/>
+  </g>
+</svg>

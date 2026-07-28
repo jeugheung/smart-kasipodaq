@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
-  View,
+  Alert,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  ScrollView,
-  Alert,
+  View,
 } from "react-native";
 import { useTranslation } from "react-i18next";
 
@@ -14,33 +14,37 @@ import { DefaultLayout } from "@widgets/Layout/DefaultLayout";
 import { SharedLoader } from "@shared/ui/SharedLoader/SharedLoader";
 
 import {
+  PendingRequestCard,
   RequestItem,
   RequestStatus,
-  PendingRequestCard,
   ResolvedRequestCard,
 } from "@entities/RequestCard";
 
 import {
-  getViolationApproved,
-  getViolationFinished,
-  getWorkApproved,
-  getWorkFinished,
+  getCollectiveApproved,
+  getCollectiveFinished,
   getSalaryApproved,
   getSalaryFinished,
   getSocialApproved,
   getSocialFinished,
-  getCollectiveApproved,
-  getCollectiveFinished,
+  getViolationApproved,
+  getViolationFinished,
+  getWorkApproved,
+  getWorkFinished,
 } from "@shared/api/endpoints";
 
-type RequestType = "violation" | "work" | "salary" | "social" | "collective";
+type RequestType =
+  | "violation"
+  | "work"
+  | "salary"
+  | "social"
+  | "collective";
+
+type ApiRequestItem = Record<string, any>;
 
 const apiMap: Record<
   RequestType,
-  {
-    pending: () => Promise<any[]>;
-    resolved: () => Promise<any[]>;
-  }
+  Record<RequestStatus, () => Promise<ApiRequestItem[]>>
 > = {
   violation: {
     pending: getViolationApproved,
@@ -64,84 +68,94 @@ const apiMap: Record<
   },
 };
 
-const getLanguageCode = (language: string) => {
-  if (language.startsWith("kk")) return "kk";
+const normalizeLanguage = (language: string) => {
+  if (language.startsWith("kk") || language.startsWith("kz")) return "kk";
   if (language.startsWith("en")) return "en";
-
   return "ru";
 };
 
-const getLocalizedField = (
-  item: any,
+const getLocalizedValue = (
+  item: ApiRequestItem,
   field: "problem" | "solution" | "comment",
   language: string,
 ) => {
-  const lang = getLanguageCode(language);
+  const lang = normalizeLanguage(language);
 
-  if (field === "problem") {
-    if (lang === "kk") {
-      return (
-        item.problem_kz ||
-        item.problem_kk ||
-        item.title_kz ||
-        item.title_kk ||
-        item.problem ||
-        item.title ||
-        ""
-      );
-    }
+  const keys: Record<typeof field, Record<string, string[]>> = {
+    problem: {
+      ru: ["problem_ru", "title_ru", "problem", "title"],
+      kk: [
+        "problem_kz",
+        "problem_kk",
+        "title_kz",
+        "title_kk",
+        "problem",
+        "title",
+      ],
+      en: ["problem_en", "title_en", "problem", "title"],
+    },
+    solution: {
+      ru: [
+        "solution_ru",
+        "description_ru",
+        "solution",
+        "description",
+      ],
+      kk: [
+        "solution_kz",
+        "solution_kk",
+        "description_kz",
+        "description_kk",
+        "solution",
+        "description",
+      ],
+      en: [
+        "solution_en",
+        "description_en",
+        "solution",
+        "description",
+      ],
+    },
+    comment: {
+      ru: ["comment_ru", "comment"],
+      kk: ["comment_kz", "comment_kk", "comment"],
+      en: ["comment_en", "comment"],
+    },
+  };
 
-    if (lang === "en") {
-      return (
-        item.problem_en || item.title_en || item.problem || item.title || ""
-      );
-    }
-
-    return item.problem_ru || item.title_ru || item.problem || item.title || "";
-  }
-
-  if (field === "solution") {
-    if (lang === "kk") {
-      return (
-        item.solution_kz ||
-        item.solution_kk ||
-        item.description_kz ||
-        item.description_kk ||
-        item.solution ||
-        item.description ||
-        ""
-      );
-    }
-
-    if (lang === "en") {
-      return (
-        item.solution_en ||
-        item.description_en ||
-        item.solution ||
-        item.description ||
-        ""
-      );
-    }
-
-    return (
-      item.solution_ru ||
-      item.description_ru ||
-      item.solution ||
-      item.description ||
-      ""
-    );
-  }
-
-  if (lang === "kk") {
-    return item.comment_kz || item.comment_kk || item.comment || "";
-  }
-
-  if (lang === "en") {
-    return item.comment_en || item.comment || "";
-  }
-
-  return item.comment_ru || item.comment || "";
+  return keys[field][lang]
+    .map((key) => item[key])
+    .find((value) => value !== undefined && value !== null && value !== "");
 };
+
+const getUserVote = (
+  item: ApiRequestItem,
+): "like" | "dislike" | null => {
+  const vote =
+    item.userVote ??
+    item.user_vote ??
+    item.vote ??
+    item.user_status ??
+    null;
+
+  if (vote === "like" || vote === 1 || vote === "1") return "like";
+  if (vote === "dislike" || vote === -1 || vote === "-1") {
+    return "dislike";
+  }
+
+  return null;
+};
+
+const withTimeout = <T,>(
+  promise: Promise<T>,
+  timeout = 10000,
+): Promise<T> =>
+  Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error("timeout")), timeout),
+    ),
+  ]);
 
 export const RequestsList = ({ route }: any) => {
   const { requestType } = route.params as {
@@ -150,245 +164,196 @@ export const RequestsList = ({ route }: any) => {
 
   const { t, i18n } = useTranslation();
 
-  const language = i18n.resolvedLanguage ?? i18n.language ?? "ru";
+  const language =
+    i18n.resolvedLanguage || i18n.language || "ru";
 
-  const [activeSegment, setActiveSegment] = useState<RequestStatus>("pending");
+  const [activeSegment, setActiveSegment] =
+    useState<RequestStatus>("pending");
 
   const [requests, setRequests] = useState<RequestItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [loading, setLoading] = useState(false);
-
-  const getRequestTypeTitle = useCallback(
-    (type: RequestType) => {
-      return t(`requestsList.types.${type}`);
-    },
-    [t],
-  );
-
-  const fetchWithTimeout = async <T,>(
-    promise: Promise<T>,
-    timeoutMs = 10000,
-  ): Promise<T> => {
-    return Promise.race([
-      promise,
-      new Promise<T>((_, reject) =>
-        setTimeout(() => reject(new Error("timeout")), timeoutMs),
-      ),
-    ]);
-  };
+  const title = t(`requestsList.types.${requestType}`);
 
   const mapRequest = useCallback(
     (
-      item: any,
-      segment: RequestStatus,
-      fallbackType: RequestType,
+      item: ApiRequestItem,
+      status: RequestStatus,
     ): RequestItem => {
-      const rawType = item.type_name || fallbackType;
+      const rawType = item.type_name || requestType;
 
-      const typeKey: RequestType =
-        rawType in apiMap ? (rawType as RequestType) : fallbackType;
-
-      const tag = getRequestTypeTitle(typeKey);
+      const typeName: RequestType =
+        rawType in apiMap ? rawType : requestType;
 
       return {
-        id:
-          item.id?.toString() ??
-          `${fallbackType}-${Date.now()}-${Math.random()}`,
+        // Важно: не удаляем исходные поля API
+        ...item,
 
-        tag,
+        id: String(item.id),
 
-        date: item.created_at || item.updated_at || item.date || "",
+        type_name: typeName,
+
+        tag: t(`requestsList.types.${typeName}`),
+
+        date:
+          item.created_at ||
+          item.updated_at ||
+          item.date ||
+          "",
 
         problem:
-          getLocalizedField(item, "problem", language) ||
+          getLocalizedValue(item, "problem", language) ||
           t("requestsList.untitled"),
 
-        solution: getLocalizedField(item, "solution", language),
+        solution:
+          getLocalizedValue(item, "solution", language) || "",
 
-        comment: getLocalizedField(item, "comment", language),
+        comment:
+          getLocalizedValue(item, "comment", language) || "",
 
-        status: segment,
+        status,
 
-        likes: Number(item.solution_likes || item.likes || 0),
+        likes: Number(
+          item.solution_likes ??
+            item.likes_count ??
+            item.likes ??
+            0,
+        ),
 
-        dislikes: Number(item.solution_dislikes || item.dislikes || 0),
+        dislikes: Number(
+          item.solution_dislikes ??
+            item.dislikes_count ??
+            item.dislikes ??
+            0,
+        ),
 
-        userVote: null,
+        userVote: getUserVote(item),
       };
     },
-    [getRequestTypeTitle, language, t],
+    [language, requestType, t],
   );
 
-  const loadRequests = useCallback(
-    async (segment: RequestStatus) => {
-      setLoading(true);
+  const loadRequests = useCallback(async () => {
+    setLoading(true);
 
-      try {
-        const fetcher = apiMap[requestType][segment];
+    try {
+      const response = await withTimeout(
+        apiMap[requestType][activeSegment](),
+      );
 
-        const data = await fetchWithTimeout(fetcher(), 10000);
+      const data = Array.isArray(response) ? response : [];
 
-        const safeData = Array.isArray(data) ? data : [];
+      console.log("📦 [REQUEST LIST RAW]", {
+        requestType,
+        activeSegment,
+        data,
+      });
 
-        const mapped = safeData.map((item) =>
-          mapRequest(item, segment, requestType),
-        );
+      const mapped = data.map((item) =>
+        mapRequest(item, activeSegment),
+      );
 
-        setRequests(mapped);
-      } catch (error: any) {
-        console.error("Ошибка загрузки заявок:", error);
+      console.log("✅ [REQUEST LIST MAPPED]", mapped);
 
-        if (error?.message === "timeout") {
-          Alert.alert(
-            t("requestsList.errors.networkTitle"),
-            t("requestsList.errors.timeout"),
-          );
-        } else {
-          Alert.alert(
-            t("requestsList.errors.title"),
-            t("requestsList.errors.loadFailed"),
-          );
-        }
+      setRequests(mapped);
+    } catch (error: any) {
+      console.error("❌ [REQUEST LIST ERROR]", error);
 
-        setRequests([]);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [mapRequest, requestType, t],
-  );
+      Alert.alert(
+        t("requestsList.errors.title"),
+        error?.message === "timeout"
+          ? t("requestsList.errors.timeout")
+          : t("requestsList.errors.loadFailed"),
+      );
+
+      setRequests([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [activeSegment, mapRequest, requestType, t]);
 
   useEffect(() => {
-    loadRequests(activeSegment);
-  }, [activeSegment, loadRequests, language]);
+    loadRequests();
+  }, [loadRequests]);
 
-  const handleVote = (id: string, type: "like" | "dislike") => {
-    setRequests((prev) =>
-      prev.map((item) => {
-        if (item.id !== id) return item;
+  const renderSegment = (
+    status: RequestStatus,
+    label: string,
+  ) => {
+    const active = activeSegment === status;
 
-        let newLikes = item.likes;
-        let newDislikes = item.dislikes;
-        let newVote = item.userVote;
-
-        if (item.userVote === type) {
-          newVote = null;
-
-          if (type === "like") {
-            newLikes = Math.max(0, newLikes - 1);
-          } else {
-            newDislikes = Math.max(0, newDislikes - 1);
-          }
-        } else {
-          if (item.userVote === "like") {
-            newLikes = Math.max(0, newLikes - 1);
-          }
-
-          if (item.userVote === "dislike") {
-            newDislikes = Math.max(0, newDislikes - 1);
-          }
-
-          newVote = type;
-
-          if (type === "like") {
-            newLikes++;
-          } else {
-            newDislikes++;
-          }
-        }
-
-        return {
-          ...item,
-          likes: newLikes,
-          dislikes: newDislikes,
-          userVote: newVote,
-        };
-      }),
+    return (
+      <TouchableOpacity
+        activeOpacity={0.8}
+        style={[
+          styles.segmentButton,
+          active && styles.segmentButtonActive,
+        ]}
+        onPress={() => setActiveSegment(status)}
+      >
+        <Text
+          style={[
+            styles.segmentText,
+            active && styles.segmentTextActive,
+          ]}
+        >
+          {label}
+        </Text>
+      </TouchableOpacity>
     );
   };
 
   return (
-    <DefaultLayout variant="back" title={getRequestTypeTitle(requestType)}>
+    <DefaultLayout variant="back" title={title}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.segmentedContainer}>
-          <TouchableOpacity
-            style={[
-              styles.segmentButton,
-              activeSegment === "pending" && styles.segmentButtonActive,
-            ]}
-            onPress={() => setActiveSegment("pending")}
-          >
-            <Text
-              style={[
-                styles.segmentText,
-                activeSegment === "pending" && styles.segmentTextActive,
-              ]}
-            >
-              {t("requestsList.segments.pending")}
-            </Text>
-          </TouchableOpacity>
+          {renderSegment(
+            "pending",
+            t("requestsList.segments.pending"),
+          )}
 
-          <TouchableOpacity
-            style={[
-              styles.segmentButton,
-              activeSegment === "resolved" && styles.segmentButtonActive,
-            ]}
-            onPress={() => setActiveSegment("resolved")}
-          >
-            <Text
-              style={[
-                styles.segmentText,
-                activeSegment === "resolved" && styles.segmentTextActive,
-              ]}
-            >
-              {t("requestsList.segments.resolved")}
-            </Text>
-          </TouchableOpacity>
+          {renderSegment(
+            "resolved",
+            t("requestsList.segments.resolved"),
+          )}
         </View>
 
         {loading ? (
           <View style={styles.loader}>
-            <SharedLoader visible={loading} />
+            <SharedLoader visible />
+          </View>
+        ) : requests.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyIcon}>📭</Text>
+
+            <Text style={styles.emptyTitle}>
+              {t("requestsList.empty.title")}
+            </Text>
+
+            <Text style={styles.emptyDescription}>
+              {t("requestsList.empty.description")}
+            </Text>
           </View>
         ) : (
           <View style={styles.listContainer}>
-            {requests.map((item) =>
-              item.status === "pending" ? (
-                <PendingRequestCard
-                  key={item.id}
-                  item={item}
-                  requestType={item.tag}
-                  onVote={handleVote}
-                />
-              ) : item.status === "resolved" ? (
-                <ResolvedRequestCard
-                  key={item.id}
-                  item={item}
-                  requestType={item.tag}
-                  onVote={handleVote}
-                />
-              ) : null,
-            )}
+            {requests.map((item) => {
+              const commonProps = {
+                key: item.id,
+                item,
+                requestType:
+                  (item as any).type_name || requestType,
+              };
 
-            {requests.length === 0 && (
-              <View style={styles.emptyState}>
-                <View style={styles.emptyIconCircle}>
-                  <Text style={styles.emptyIcon}>📭</Text>
-                </View>
-
-                <Text style={styles.emptyTitle}>
-                  {t("requestsList.empty.title")}
-                </Text>
-
-                <Text style={styles.emptyDescription}>
-                  {t("requestsList.empty.description")}
-                </Text>
-              </View>
-            )}
+              return item.status === "resolved" ? (
+                <ResolvedRequestCard {...commonProps} />
+              ) : (
+                <PendingRequestCard {...commonProps} />
+              );
+            })}
           </View>
         )}
       </ScrollView>
@@ -402,33 +367,23 @@ const styles = StyleSheet.create({
   },
 
   content: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    padding: 16,
     paddingBottom: 100,
     gap: 16,
   },
 
   segmentedContainer: {
     flexDirection: "row",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
     padding: 4,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
+    borderRadius: 14,
+    backgroundColor: "#FFFFFF",
     elevation: 2,
   },
 
   segmentButton: {
     flex: 1,
     paddingVertical: 12,
-    paddingHorizontal: 6,
     alignItems: "center",
-    justifyContent: "center",
     borderRadius: 10,
   },
 
@@ -440,7 +395,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: "#718096",
-    textAlign: "center",
   },
 
   segmentTextActive: {
@@ -452,51 +406,34 @@ const styles = StyleSheet.create({
   },
 
   loader: {
-    paddingVertical: 30,
+    paddingVertical: 40,
     alignItems: "center",
   },
 
   emptyState: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 22,
-    paddingVertical: 34,
-    paddingHorizontal: 22,
+    padding: 32,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
+    borderRadius: 22,
+    backgroundColor: "#FFFFFF",
     elevation: 2,
   },
 
-  emptyIconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: "#EBF4FF",
-    alignItems: "center",
-    justifyContent: "center",
+  emptyIcon: {
+    fontSize: 34,
     marginBottom: 14,
   },
 
-  emptyIcon: {
-    fontSize: 30,
-  },
-
   emptyTitle: {
+    marginBottom: 8,
     fontSize: 16,
     fontWeight: "700",
     color: "#1A202C",
-    marginBottom: 8,
   },
 
   emptyDescription: {
     fontSize: 13,
-    color: "#718096",
-    textAlign: "center",
     lineHeight: 19,
+    textAlign: "center",
+    color: "#718096",
   },
 });
