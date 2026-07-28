@@ -1,12 +1,13 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { colors } from "@shared/theme/colors";
+import React from "react";
+import { Image, StyleSheet, Text, View } from "react-native";
 
 export type NewsItem = {
   id: string;
   title: string;
-  img: string; 
+  img: string;
   date: string;
-  text: string; 
+  text: string;
 };
 
 type Props = {
@@ -14,22 +15,19 @@ type Props = {
 };
 
 export const NewsCard = ({ news }: Props) => {
- console.log('NEWS WIDGET121', news.img)
   return (
     <View style={styles.cardContainer}>
-      {/* 1. Используем обычный Image на фоне */}
       <Image
         source={{ uri: news.img }}
         style={styles.backgroundImage}
         resizeMode="cover"
       />
 
-
       <View style={styles.dateContainer}>
         <Text style={styles.dateText}>{news.date}</Text>
       </View>
 
-      <View style={styles.titleContainer}>
+      <View style={styles.titleOverlay}>
         <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
           {news.title}
         </Text>
@@ -42,47 +40,51 @@ const styles = StyleSheet.create({
   cardContainer: {
     width: 300,
     height: 170,
-    borderRadius: 24,
-    overflow: 'hidden',
-    marginRight: 20,
-    backgroundColor: '#E5E7EB', // Временный серый фон-заглушка (пока грузится картинка)
+    marginRight: 14,
+    overflow: "hidden",
+    borderRadius: 20,
+    backgroundColor: colors.imagePlaceholder,
   },
+
   backgroundImage: {
-    ...StyleSheet.absoluteFillObject, // Растягивает картинку на весь родительский View
-    width: '100%',
-    height: '100%',
+    ...StyleSheet.absoluteFillObject,
+    width: "100%",
+    height: "100%",
   },
+
   dateContainer: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    overflow: 'hidden',
-    backgroundColor: "rgba(0,0,0,0.4)"
+    position: "absolute",
+    top: 10,
+    right: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+    backgroundColor: colors.imageBadge,
   },
+
   dateText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '500',
+    color: colors.white,
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "600",
   },
-  titleContainer: {
-    position: 'absolute',
+
+  titleOverlay: {
+    position: "absolute",
+    right: 0,
     bottom: 0,
     left: 0,
-    width: '100%',
-    padding: 10,
-    maxHeight: 52,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-    overflow: 'hidden',
-    justifyContent: 'center',
-    backgroundColor: "rgba(0,0,0,0.4)"
+    minHeight: 58,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    justifyContent: "flex-end",
+    backgroundColor: colors.imageOverlay,
   },
+
   title: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
+    color: colors.white,
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "700",
   },
 });

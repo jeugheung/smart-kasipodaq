@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { API_CONFIG } from "@shared/api/config";
+import { colors } from "@shared/theme/colors";
 import { DefaultLayout } from "@widgets/Layout/DefaultLayout";
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -13,6 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
 import AppLogo from "../../../assets/request-card/solution1.svg";
 
 type CurrentClient = {
@@ -31,7 +33,6 @@ type MeResponse = {
   result?: number;
   client?: CurrentClient;
 
-  // На случай, если API возвращает пользователя без поля client
   id?: number;
   iin?: string;
   email?: string;
@@ -274,18 +275,11 @@ export const ProfilePage = ({ navigation }: any) => {
     return initials || t("profilePage.defaultUserInitial");
   };
 
-  const handleOpenContacts = () => {
-    Alert.alert(
-      t("profilePage.contactsModal.title"),
-      t("profilePage.contactsModal.message"),
-    );
-  };
-
   if (isLoading) {
     return (
       <DefaultLayout variant="default" title="Smart Kasipodaq">
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#004B87" />
+          <ActivityIndicator size="large" color={colors.accent} />
 
           <Text style={styles.loaderText}>{t("profilePage.loading")}</Text>
         </View>
@@ -315,17 +309,10 @@ export const ProfilePage = ({ navigation }: any) => {
         <View style={styles.menuList}>
           <TouchableOpacity
             style={styles.menuItem}
-            activeOpacity={0.7}
+            activeOpacity={0.72}
             onPress={() => navigation.getParent()?.navigate("MyRequests")}
           >
-            <View
-              style={[
-                styles.iconWrapper,
-                {
-                  backgroundColor: "#E6F4FE",
-                },
-              ]}
-            >
+            <View style={[styles.iconWrapper, styles.requestsIconBackground]}>
               <View style={styles.msgIcon}>
                 <View style={styles.msgIconDot} />
               </View>
@@ -339,18 +326,11 @@ export const ProfilePage = ({ navigation }: any) => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.menuItem}
-            activeOpacity={0.7}
+            style={[styles.menuItem, styles.lastMenuItem]}
+            activeOpacity={0.72}
             onPress={() => navigation.getParent()?.navigate("Favourite")}
           >
-            <View
-              style={[
-                styles.iconWrapper,
-                {
-                  backgroundColor: "#FFF9E6",
-                },
-              ]}
-            >
+            <View style={[styles.iconWrapper, styles.favouritesIconBackground]}>
               <View style={styles.gearIcon} />
             </View>
 
@@ -360,29 +340,6 @@ export const ProfilePage = ({ navigation }: any) => {
 
             <View style={styles.arrowRight} />
           </TouchableOpacity>
-
-          {/* <TouchableOpacity
-            style={styles.menuItem}
-            activeOpacity={0.7}
-            onPress={handleOpenContacts}
-          >
-            <View
-              style={[
-                styles.iconWrapper,
-                {
-                  backgroundColor: "#F0FBE6",
-                },
-              ]}
-            >
-              <View style={styles.contactsIcon} />
-            </View>
-
-            <Text style={styles.menuItemText}>
-              {t("profilePage.menu.contacts")}
-            </Text>
-
-            <View style={styles.arrowRight} />
-          </TouchableOpacity> */}
         </View>
 
         <TouchableOpacity
@@ -390,12 +347,12 @@ export const ProfilePage = ({ navigation }: any) => {
             styles.logoutButton,
             isLoggingOut && styles.logoutButtonDisabled,
           ]}
-          activeOpacity={0.7}
+          activeOpacity={0.72}
           onPress={handleLogout}
           disabled={isLoggingOut}
         >
           {isLoggingOut ? (
-            <ActivityIndicator size="small" color="#E40E0E" />
+            <ActivityIndicator size="small" color={colors.danger} />
           ) : (
             <Text style={styles.logoutButtonText}>
               {t("profilePage.logoutButton")}
@@ -404,15 +361,13 @@ export const ProfilePage = ({ navigation }: any) => {
         </TouchableOpacity>
 
         <View style={styles.footer}>
-          <AppLogo width={58} height={58} />
+          <View style={styles.logoWrapper}>
+            <AppLogo width={50} height={50} />
+          </View>
 
-          <Text style={styles.footerTitle}>
-            Smart Kasipodaq
-          </Text>
+          <Text style={styles.footerTitle}>Smart Kasipodaq</Text>
 
-          <Text style={styles.footerVersion}>
-            Версия 1.0.0
-          </Text>
+          <Text style={styles.footerVersion}>Версия 1.0.0</Text>
         </View>
       </ScrollView>
     </DefaultLayout>
@@ -424,111 +379,145 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F5F7FA",
+    backgroundColor: colors.background,
   },
 
   loaderText: {
-    marginTop: 14,
-    fontSize: 15,
-    color: "#667085",
+    marginTop: 12,
+    color: colors.textLight,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "500",
   },
 
   scrollView: {
     flex: 1,
-    backgroundColor: "#F5F7FA",
+    backgroundColor: colors.background,
   },
 
   content: {
     flexGrow: 1,
     paddingHorizontal: 16,
-    paddingTop: 30,
-    paddingBottom: 120,
+    paddingTop: 24,
+    paddingBottom: 110,
   },
 
   headerBlock: {
     alignItems: "center",
-    marginBottom: 32,
+    marginBottom: 25,
   },
 
   avatar: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 78,
+    height: 78,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#004B87",
+    borderRadius: 39,
+    backgroundColor: colors.primary,
+    shadowColor: colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 4,
   },
 
   avatarText: {
-    fontSize: 30,
-    fontWeight: "700",
-    color: "#FFFFFF",
+    color: colors.white,
+    fontSize: 27,
+    lineHeight: 32,
+    fontWeight: "800",
   },
 
   userName: {
-    marginTop: 16,
-    paddingHorizontal: 20,
-    fontSize: 21,
-    lineHeight: 28,
-    fontWeight: "700",
-    color: "#111827",
+    marginTop: 14,
+    paddingHorizontal: 18,
+    color: colors.textDark,
+    fontSize: 20,
+    lineHeight: 26,
+    fontWeight: "800",
     textAlign: "center",
   },
 
   userIin: {
-    marginTop: 7,
-    fontSize: 14,
-    lineHeight: 20,
-    color: "#667085",
+    marginTop: 5,
+    color: colors.textLight,
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: "500",
   },
 
   menuList: {
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: 18,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.white,
+    shadowColor: colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
   },
 
   menuItem: {
-    minHeight: 76,
-    paddingHorizontal: 16,
+    minHeight: 68,
+    paddingHorizontal: 14,
     flexDirection: "row",
     alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: "#EEF0F3",
+    borderBottomColor: colors.border,
+  },
+
+  lastMenuItem: {
+    borderBottomWidth: 0,
   },
 
   iconWrapper: {
-    width: 44,
-    height: 44,
+    width: 42,
+    height: 42,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 14,
+    borderRadius: 13,
+  },
+
+  requestsIconBackground: {
+    backgroundColor: colors.violationLight,
+  },
+
+  favouritesIconBackground: {
+    backgroundColor: colors.workLight,
   },
 
   menuItemText: {
     flex: 1,
-    marginLeft: 14,
-    fontSize: 16,
-    lineHeight: 22,
-    fontWeight: "600",
-    color: "#1F2937",
+    marginLeft: 13,
+    color: colors.textDark,
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "700",
   },
 
   arrowRight: {
-    width: 9,
-    height: 9,
+    width: 8,
+    height: 8,
     marginRight: 4,
     borderTopWidth: 2,
     borderRightWidth: 2,
-    borderColor: "#98A2B3",
+    borderColor: colors.inactive,
     transform: [{ rotate: "45deg" }],
   },
 
   msgIcon: {
-    width: 22,
-    height: 18,
+    width: 21,
+    height: 17,
     borderWidth: 2,
-    borderColor: "#168ACD",
+    borderColor: colors.profileBlue,
     borderRadius: 5,
   },
 
@@ -539,64 +528,71 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: "#168ACD",
+    backgroundColor: colors.profileBlue,
   },
 
   gearIcon: {
-    width: 21,
-    height: 21,
+    width: 20,
+    height: 20,
     borderWidth: 3,
-    borderColor: "#E3AA00",
-    borderRadius: 11,
-  },
-
-  contactsIcon: {
-    width: 21,
-    height: 21,
-    borderWidth: 2,
-    borderColor: "#62A52F",
-    borderRadius: 11,
+    borderColor: colors.profileYellow,
+    borderRadius: 10,
   },
 
   logoutButton: {
-    minHeight: 54,
-    marginTop: 28,
+    minHeight: 50,
+    marginTop: 22,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "#FECACA",
-    borderRadius: 16,
-    backgroundColor: "#FFF5F5",
+    borderColor: colors.dangerBorder,
+    borderRadius: 14,
+    backgroundColor: colors.dangerLight,
   },
 
   logoutButtonDisabled: {
-    opacity: 0.6,
+    opacity: 0.55,
   },
 
   logoutButtonText: {
-    fontSize: 16,
-    lineHeight: 22,
-    fontWeight: "700",
-    color: "#E40E0E",
+    color: colors.danger,
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "800",
   },
+
   footer: {
-  alignItems: "center",
-  justifyContent: "center",
-  marginTop: 48,
-  paddingTop: 24,
-  paddingBottom: 20,
-},
+    marginTop: "auto",
+    paddingTop: 40,
+    paddingBottom: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 
-footerTitle: {
-  marginTop: 12,
-  fontSize: 17,
-  fontWeight: "700",
-  color: "#344054",
-},
+  logoWrapper: {
+    width: 58,
+    height: 58,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 18,
+    backgroundColor: colors.white,
+  },
 
-footerVersion: {
-  marginTop: 4,
-  fontSize: 13,
-  color: "#98A2B3",
-},
+  footerTitle: {
+    marginTop: 10,
+    color: colors.textDark,
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: "800",
+  },
+
+  footerVersion: {
+    marginTop: 3,
+    color: colors.inactive,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "500",
+  },
 });

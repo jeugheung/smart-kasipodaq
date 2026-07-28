@@ -1,8 +1,10 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
+
+import { colors } from "@shared/theme/colors";
 
 import ViolationIcon from "../../../assets/stat-icons/violation.svg";
 import WorkIcon from "../../../assets/stat-icons/work.svg";
@@ -11,6 +13,7 @@ import SocialIcon from "../../../assets/stat-icons/social.svg";
 import CollectiveIcon from "../../../assets/stat-icons/collective.svg";
 
 type RequestType = "violation" | "work" | "salary" | "social" | "collective";
+type NavigationProp = NativeStackNavigationProp<any>;
 
 type Props = {
   violation: number | string;
@@ -20,14 +23,37 @@ type Props = {
   collective: number | string;
 };
 
-type NavigationProp = NativeStackNavigationProp<any>;
+type StatCardProps = {
+  value: string | number;
+  label: string;
+  Icon: React.FC<any>;
+  type: RequestType;
+};
 
-const CARD_COLORS: Record<RequestType, string> = {
-  violation: "#EAF3FF",
-  work: "#FFF6D8",
-  salary: "#FFF0DF",
-  social: "#ECFDF3",
-  collective: "#F2EAFE",
+const CARD_STYLES: Record<
+  RequestType,
+  { backgroundColor: string; borderColor: string }
+> = {
+  violation: {
+    backgroundColor: colors.violationLight,
+    borderColor: colors.violationBorder,
+  },
+  work: {
+    backgroundColor: colors.workLight,
+    borderColor: colors.workBorder,
+  },
+  salary: {
+    backgroundColor: colors.salaryLight,
+    borderColor: colors.salaryBorder,
+  },
+  social: {
+    backgroundColor: colors.socialLight,
+    borderColor: colors.socialBorder,
+  },
+  collective: {
+    backgroundColor: colors.collectiveLight,
+    borderColor: colors.collectiveBorder,
+  },
 };
 
 export const StatisticsWidget = ({
@@ -47,12 +73,7 @@ export const StatisticsWidget = ({
     Number(social) +
     Number(collective);
 
-  const cards: {
-    value: number | string;
-    label: string;
-    Icon: React.FC<any>;
-    type: RequestType;
-  }[] = [
+  const cards: StatCardProps[] = [
     {
       value: violation,
       label: t("statistics.violation"),
@@ -85,26 +106,34 @@ export const StatisticsWidget = ({
     },
   ];
 
+  const handleSubmitPress = () => {
+    navigation.navigate("RequestsTab", {
+      screen: "RequestsPage",
+    });
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View>
+        <View style={styles.headerTextBlock}>
           <Text style={styles.headerTitle}>{t("statistics.title")}</Text>
 
-          <Text style={styles.headerSubtitle}>
-            {t("statistics.totalRequests", { count: total })}
-          </Text>
+          <View style={styles.totalRow}>
+            <Text style={styles.headerSubtitle}>
+              {t("statistics.totalRequests", { count: total })}
+            </Text>
+          </View>
         </View>
 
         <Pressable
-          style={styles.headerButton}
-          onPress={() =>
-            navigation.navigate("RequestsTab", {
-              screen: "RequestsPage",
-            })
-          }
+          onPress={handleSubmitPress}
+          style={({ pressed }) => [
+            styles.headerButton,
+            pressed && styles.headerButtonPressed,
+          ]}
         >
           <Text style={styles.headerButtonText}>{t("statistics.submit")}</Text>
+          <Text style={styles.headerButtonArrow}>›</Text>
         </Pressable>
       </View>
 
@@ -123,28 +152,22 @@ export const StatisticsWidget = ({
   );
 };
 
-type StatCardProps = {
-  value: string | number;
-  label: string;
-  Icon: React.FC<any>;
-  type: RequestType;
-};
-
 const StatCard = ({ value, label, Icon, type }: StatCardProps) => {
   const navigation = useNavigation<NavigationProp>();
+  const cardStyle = CARD_STYLES[type];
 
   return (
     <Pressable
-      style={({ pressed }) => [
-        styles.card,
-        { backgroundColor: CARD_COLORS[type] },
-        pressed && styles.cardPressed,
-      ]}
       onPress={() =>
         navigation.navigate("RequestsList", {
           requestType: type,
         })
       }
+      style={({ pressed }) => [
+        styles.card,
+        cardStyle,
+        pressed && styles.cardPressed,
+      ]}
     >
       <View style={styles.iconWrapper}>
         <Icon width={20} height={20} />
@@ -152,7 +175,7 @@ const StatCard = ({ value, label, Icon, type }: StatCardProps) => {
 
       <Text style={styles.cardValue}>{value}</Text>
 
-      <Text style={styles.cardLabel} numberOfLines={1}>
+      <Text style={styles.cardLabel} numberOfLines={2}>
         {label}
       </Text>
     </Pressable>
@@ -161,51 +184,100 @@ const StatCard = ({ value, label, Icon, type }: StatCardProps) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 22,
     padding: 14,
-    gap: 12,
+    gap: 14,
     borderWidth: 1,
-    borderColor: "#EEF2F7",
-    shadowColor: "#000",
+    borderColor: colors.border,
+    borderRadius: 22,
+    backgroundColor: colors.white,
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
     elevation: 2,
   },
 
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+
+  headerTextBlock: {
+    flex: 1,
   },
 
   headerTitle: {
+    color: colors.primary,
     fontSize: 17,
+    lineHeight: 22,
     fontWeight: "900",
-    color: "#002F42",
+  },
+
+  totalRow: {
+    marginTop: 4,
+    flexDirection: "row",
+    alignItems: "center",
   },
 
   headerSubtitle: {
-    marginTop: 2,
+    color: colors.textLight,
     fontSize: 12,
+    lineHeight: 16,
     fontWeight: "600",
-    color: "#64748B",
+  },
+
+  totalBadge: {
+    minWidth: 24,
+    height: 20,
+    marginLeft: 6,
+    paddingHorizontal: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 10,
+    backgroundColor: colors.primaryLight,
+  },
+
+  totalBadgeText: {
+    color: colors.accent,
+    fontSize: 11,
+    fontWeight: "900",
   },
 
   headerButton: {
-    height: 34,
-    paddingHorizontal: 16,
-    borderRadius: 17,
-    backgroundColor: "#0057B8",
+    minHeight: 36,
+    paddingHorizontal: 14,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    borderRadius: 18,
+    backgroundColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.16,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+
+  headerButtonPressed: {
+    opacity: 0.82,
+    transform: [{ scale: 0.97 }],
   },
 
   headerButtonText: {
-    fontSize: 13,
+    color: colors.white,
+    fontSize: 12,
     fontWeight: "800",
-    color: "#FFFFFF",
+  },
+
+  headerButtonArrow: {
+    marginTop: -1,
+    marginLeft: 5,
+    color: colors.white,
+    fontSize: 20,
+    lineHeight: 20,
+    fontWeight: "400",
   },
 
   content: {
@@ -215,40 +287,45 @@ const styles = StyleSheet.create({
 
   card: {
     flex: 1,
-    height: 84,
-    borderRadius: 18,
+    minWidth: 0,
+    height: 96,
+    paddingHorizontal: 3,
+    paddingVertical: 8,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 4,
+    borderWidth: 1,
+    borderRadius: 18,
   },
 
   cardPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.96 }],
+    opacity: 0.82,
+    transform: [{ scale: 0.95 }],
   },
 
   iconWrapper: {
     width: 34,
     height: 34,
-    borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.75)",
+    marginBottom: 4,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 5,
+    borderRadius: 12,
+    backgroundColor: colors.iconBackground,
   },
 
   cardValue: {
-    fontSize: 18,
+    color: colors.primary,
+    fontSize: 19,
+    lineHeight: 21,
     fontWeight: "900",
-    color: "#002F42",
-    lineHeight: 20,
   },
 
   cardLabel: {
+    minHeight: 22,
     marginTop: 2,
-    fontSize: 9,
+    color: colors.textLight,
+    fontSize: 8.5,
+    lineHeight: 11,
     fontWeight: "800",
-    color: "#475569",
     textAlign: "center",
   },
 });

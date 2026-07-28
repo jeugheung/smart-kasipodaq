@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
+import { colors } from "@shared/theme/colors";
 import { DefaultLayout } from "@widgets/Layout/DefaultLayout";
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -14,7 +15,8 @@ import {
   View,
 } from "react-native";
 
-const ANKETA_LIST_API = "https://kasipodaq.competence.kz/api/anketa-list";
+const ANKETA_LIST_API =
+  "https://kasipodaq.competence.kz/api/anketa-list";
 
 interface AnketaListItem {
   id: number;
@@ -50,12 +52,15 @@ export const SurveyPage = ({ navigation }: any) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const [errorModal, setErrorModal] = useState<ErrorModalState>(
-    initialErrorModalState,
-  );
+  const [errorModal, setErrorModal] =
+    useState<ErrorModalState>(initialErrorModalState);
 
   const showErrorModal = useCallback(
-    (title: string, message: string, isAuthError = false) => {
+    (
+      title: string,
+      message: string,
+      isAuthError = false,
+    ) => {
       setErrorModal({
         visible: true,
         title,
@@ -67,7 +72,8 @@ export const SurveyPage = ({ navigation }: any) => {
   );
 
   const closeErrorModal = useCallback(() => {
-    const shouldRedirectToLogin = errorModal.isAuthError;
+    const shouldRedirectToLogin =
+      errorModal.isAuthError;
 
     setErrorModal(initialErrorModalState);
 
@@ -81,7 +87,10 @@ export const SurveyPage = ({ navigation }: any) => {
 
   const getErrorMessage = useCallback(
     (error: unknown) => {
-      if (error instanceof Error && error.message) {
+      if (
+        error instanceof Error &&
+        error.message
+      ) {
         return error.message;
       }
 
@@ -99,28 +108,40 @@ export const SurveyPage = ({ navigation }: any) => {
       }
 
       try {
-        const accessToken = await AsyncStorage.getItem("access_token");
+        const accessToken =
+          await AsyncStorage.getItem(
+            "access_token",
+          );
 
         if (!accessToken) {
           showErrorModal(
-            t("surveyPage.errors.authRequired.title"),
-            t("surveyPage.errors.authRequired.message"),
+            t(
+              "surveyPage.errors.authRequired.title",
+            ),
+            t(
+              "surveyPage.errors.authRequired.message",
+            ),
             true,
           );
 
           return;
         }
 
-        const response = await fetch(ANKETA_LIST_API, {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-            Authorization: `Bearer ${accessToken}`,
-            "Accept-Language": i18n.language,
+        const response = await fetch(
+          ANKETA_LIST_API,
+          {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+              Authorization: `Bearer ${accessToken}`,
+              "Accept-Language":
+                i18n.language,
+            },
           },
-        });
+        );
 
-        let data: AnketaListResponse | null = null;
+        let data: AnketaListResponse | null =
+          null;
 
         try {
           data = await response.json();
@@ -128,12 +149,21 @@ export const SurveyPage = ({ navigation }: any) => {
           data = null;
         }
 
-        if (response.status === 401 || response.status === 403) {
-          await AsyncStorage.removeItem("access_token");
+        if (
+          response.status === 401 ||
+          response.status === 403
+        ) {
+          await AsyncStorage.removeItem(
+            "access_token",
+          );
 
           showErrorModal(
-            t("surveyPage.errors.sessionExpired.title"),
-            t("surveyPage.errors.sessionExpired.message"),
+            t(
+              "surveyPage.errors.sessionExpired.title",
+            ),
+            t(
+              "surveyPage.errors.sessionExpired.message",
+            ),
             true,
           );
 
@@ -143,31 +173,50 @@ export const SurveyPage = ({ navigation }: any) => {
         if (!response.ok) {
           throw new Error(
             data?.msg ||
-              t("surveyPage.errors.loadError.statusMessage", {
-                status: response.status,
-              }),
+              t(
+                "surveyPage.errors.loadError.statusMessage",
+                {
+                  status: response.status,
+                },
+              ),
           );
         }
 
         if (!data || data.result !== 1) {
           throw new Error(
-            data?.msg || t("surveyPage.errors.loadError.invalidResponse"),
+            data?.msg ||
+              t(
+                "surveyPage.errors.loadError.invalidResponse",
+              ),
           );
         }
 
-        setAnketas(Array.isArray(data.anketa) ? data.anketa : []);
+        setAnketas(
+          Array.isArray(data.anketa)
+            ? data.anketa
+            : [],
+        );
       } catch (error) {
         showErrorModal(
-          t("surveyPage.errors.loadError.title"),
+          t(
+            "surveyPage.errors.loadError.title",
+          ),
           getErrorMessage(error) ||
-            t("surveyPage.errors.loadError.defaultMessage"),
+            t(
+              "surveyPage.errors.loadError.defaultMessage",
+            ),
         );
       } finally {
         setIsLoading(false);
         setIsRefreshing(false);
       }
     },
-    [getErrorMessage, i18n.language, showErrorModal, t],
+    [
+      getErrorMessage,
+      i18n.language,
+      showErrorModal,
+      t,
+    ],
   );
 
   useFocusEffect(
@@ -180,62 +229,67 @@ export const SurveyPage = ({ navigation }: any) => {
     (anketa: AnketaListItem) => {
       if (anketa.already_answered) {
         showErrorModal(
-          t("surveyPage.errors.alreadyAnswered.title"),
-          t("surveyPage.errors.alreadyAnswered.message"),
+          t(
+            "surveyPage.errors.alreadyAnswered.title",
+          ),
+          t(
+            "surveyPage.errors.alreadyAnswered.message",
+          ),
         );
 
         return;
       }
 
-      navigation.navigate("SurveyDetailPage", {
-        anketaId: anketa.id,
-      });
+      navigation.navigate(
+        "SurveyDetailPage",
+        {
+          anketaId: anketa.id,
+        },
+      );
     },
     [navigation, showErrorModal, t],
   );
 
-  const handleChangeLanguage = useCallback(() => {
-    const currentLanguage = i18n.language;
+  const handleChangeLanguage =
+    useCallback(() => {
+      const currentLanguage =
+        i18n.language;
 
-    let nextLanguage = "ru";
+      let nextLanguage = "ru";
 
-    if (currentLanguage.startsWith("ru")) {
-      nextLanguage = "kz";
-    } else if (
-      currentLanguage.startsWith("kz") ||
-      currentLanguage.startsWith("kk")
-    ) {
-      nextLanguage = "en";
-    } else {
-      nextLanguage = "ru";
-    }
+      if (
+        currentLanguage.startsWith("ru")
+      ) {
+        nextLanguage = "kz";
+      } else if (
+        currentLanguage.startsWith("kz") ||
+        currentLanguage.startsWith("kk")
+      ) {
+        nextLanguage = "en";
+      } else {
+        nextLanguage = "ru";
+      }
 
-    i18n.changeLanguage(nextLanguage);
-  }, [i18n]);
+      i18n.changeLanguage(nextLanguage);
+    }, [i18n]);
 
-  const getCurrentLanguageLabel = () => {
-    if (i18n.language.startsWith("kz") || i18n.language.startsWith("kk")) {
-      return "KZ";
-    }
-
-    if (i18n.language.startsWith("en")) {
-      return "EN";
-    }
-
-    return "RU";
-  };
-
-  const activeAnketasCount = anketas.filter(
-    (item) => !item.already_answered,
-  ).length;
+  const activeAnketasCount =
+    anketas.filter(
+      (item) => !item.already_answered,
+    ).length;
 
   const renderContent = () => {
     if (isLoading) {
       return (
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#0057B8" />
+          <ActivityIndicator
+            size="large"
+            color={colors.accent}
+          />
 
-          <Text style={styles.loadingText}>{t("surveyPage.loading")}</Text>
+          <Text style={styles.loadingText}>
+            {t("surveyPage.loading")}
+          </Text>
         </View>
       );
     }
@@ -243,14 +297,24 @@ export const SurveyPage = ({ navigation }: any) => {
     if (anketas.length === 0) {
       return (
         <View style={styles.emptyCard}>
-          <View style={styles.emptyIconCircle}>
-            <Text style={styles.emptyIcon}>📋</Text>
+          <View
+            style={styles.emptyIconCircle}
+          >
+            <Text style={styles.emptyIcon}>
+              📋
+            </Text>
           </View>
 
-          <Text style={styles.emptyTitle}>{t("surveyPage.empty.title")}</Text>
+          <Text style={styles.emptyTitle}>
+            {t("surveyPage.empty.title")}
+          </Text>
 
-          <Text style={styles.emptyDescription}>
-            {t("surveyPage.empty.description")}
+          <Text
+            style={styles.emptyDescription}
+          >
+            {t(
+              "surveyPage.empty.description",
+            )}
           </Text>
 
           <TouchableOpacity
@@ -258,8 +322,12 @@ export const SurveyPage = ({ navigation }: any) => {
             activeOpacity={0.8}
             onPress={() => fetchAnketas()}
           >
-            <Text style={styles.retryButtonText}>
-              {t("surveyPage.empty.refreshButton")}
+            <Text
+              style={styles.retryButtonText}
+            >
+              {t(
+                "surveyPage.empty.refreshButton",
+              )}
             </Text>
           </TouchableOpacity>
         </View>
@@ -267,49 +335,81 @@ export const SurveyPage = ({ navigation }: any) => {
     }
 
     return anketas.map((anketa) => {
-      const isAnswered = anketa.already_answered;
+      const isAnswered =
+        anketa.already_answered;
 
       return (
         <TouchableOpacity
           key={anketa.id}
-          style={[styles.card, isAnswered && styles.cardAnswered]}
           activeOpacity={0.88}
-          onPress={() => handleOpenAnketa(anketa)}
+          onPress={() =>
+            handleOpenAnketa(anketa)
+          }
+          style={[
+            styles.card,
+            isAnswered &&
+              styles.cardAnswered,
+          ]}
         >
           <View style={styles.cardTop}>
             <View
               style={[
                 styles.iconCircle,
-                isAnswered && styles.iconCircleAnswered,
+                isAnswered &&
+                  styles.iconCircleAnswered,
               ]}
             >
-              <Text style={styles.icon}>{isAnswered ? "✅" : "🗳️"}</Text>
+              <Text style={styles.icon}>
+                {isAnswered ? "✓" : "🗳️"}
+              </Text>
             </View>
 
             <View style={styles.cardInfo}>
-              <View style={[styles.badge, isAnswered && styles.badgeAnswered]}>
+              <View
+                style={[
+                  styles.badge,
+                  isAnswered &&
+                    styles.badgeAnswered,
+                ]}
+              >
                 <Text
                   style={[
                     styles.badgeText,
-                    isAnswered && styles.badgeTextAnswered,
+                    isAnswered &&
+                      styles.badgeTextAnswered,
                   ]}
                 >
                   {isAnswered
-                    ? t("surveyPage.card.answeredBadge")
-                    : t("surveyPage.card.availableBadge")}
+                    ? t(
+                        "surveyPage.card.answeredBadge",
+                      )
+                    : t(
+                        "surveyPage.card.availableBadge",
+                      )}
                 </Text>
               </View>
 
-              <Text style={styles.statusText}>
+              <Text
+                style={styles.statusText}
+              >
                 {isAnswered
-                  ? t("surveyPage.card.answeredStatus")
-                  : t("surveyPage.card.availableStatus")}
+                  ? t(
+                      "surveyPage.card.answeredStatus",
+                    )
+                  : t(
+                      "surveyPage.card.availableStatus",
+                    )}
               </Text>
             </View>
           </View>
 
           <Text
-            style={[styles.cardTitle, isAnswered && styles.cardTitleAnswered]}
+            style={[
+              styles.cardTitle,
+              isAnswered &&
+                styles.cardTitleAnswered,
+            ]}
+            numberOfLines={2}
           >
             {anketa.title}
           </Text>
@@ -318,27 +418,45 @@ export const SurveyPage = ({ navigation }: any) => {
             <Text
               style={[
                 styles.cardDescription,
-                isAnswered && styles.cardDescriptionAnswered,
+                isAnswered &&
+                  styles.cardDescriptionAnswered,
               ]}
-              numberOfLines={4}
+              numberOfLines={3}
             >
               {anketa.description}
             </Text>
           )}
 
-          <View style={[styles.button, isAnswered && styles.buttonAnswered]}>
+          <View
+            style={[
+              styles.button,
+              isAnswered &&
+                styles.buttonAnswered,
+            ]}
+          >
             <Text
               style={[
                 styles.buttonText,
-                isAnswered && styles.buttonTextAnswered,
+                isAnswered &&
+                  styles.buttonTextAnswered,
               ]}
             >
               {isAnswered
-                ? t("surveyPage.card.answeredButton")
-                : t("surveyPage.card.openButton")}
+                ? t(
+                    "surveyPage.card.answeredButton",
+                  )
+                : t(
+                    "surveyPage.card.openButton",
+                  )}
             </Text>
 
-            {!isAnswered && <Text style={styles.buttonArrow}>→</Text>}
+            {!isAnswered && (
+              <Text
+                style={styles.buttonArrow}
+              >
+                ›
+              </Text>
+            )}
           </View>
         </TouchableOpacity>
       );
@@ -348,38 +466,69 @@ export const SurveyPage = ({ navigation }: any) => {
   return (
     <DefaultLayout
       variant="default"
-      title={t("surveyPage.layoutTitle")}
-      onRightPress={handleChangeLanguage}
+      title={t(
+        "surveyPage.layoutTitle",
+      )}
+      onRightPress={
+        handleChangeLanguage
+      }
     >
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
+        contentContainerStyle={
+          styles.content
+        }
+        showsVerticalScrollIndicator={
+          false
+        }
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
-            onRefresh={() => fetchAnketas(true)}
-            tintColor="#0057B8"
-            colors={["#0057B8"]}
+            onRefresh={() =>
+              fetchAnketas(true)
+            }
+            tintColor={colors.accent}
+            colors={[colors.accent]}
           />
         }
       >
         <View style={styles.pageHeader}>
-          <View style={styles.pageHeaderText}>
-            <Text style={styles.pageTitle}>{t("surveyPage.pageTitle")}</Text>
+          <View
+            style={styles.pageHeaderText}
+          >
+            <Text style={styles.pageTitle}>
+              {t(
+                "surveyPage.pageTitle",
+              )}
+            </Text>
 
-            <Text style={styles.pageSubtitle}>
-              {t("surveyPage.pageSubtitle")}
+            <Text
+              style={styles.pageSubtitle}
+            >
+              {t(
+                "surveyPage.pageSubtitle",
+              )}
             </Text>
           </View>
 
           <View style={styles.countBadge}>
-            <Text style={styles.countValue}>{activeAnketasCount}</Text>
+            <Text
+              style={styles.countValue}
+            >
+              {activeAnketasCount}
+            </Text>
 
-            <Text style={styles.countText}>
+            <Text
+              style={styles.countText}
+              numberOfLines={1}
+            >
               {activeAnketasCount === 1
-                ? t("surveyPage.activeCount.one")
-                : t("surveyPage.activeCount.many")}
+                ? t(
+                    "surveyPage.activeCount.one",
+                  )
+                : t(
+                    "surveyPage.activeCount.many",
+                  )}
             </Text>
           </View>
         </View>
@@ -394,25 +543,53 @@ export const SurveyPage = ({ navigation }: any) => {
         statusBarTranslucent
         onRequestClose={closeErrorModal}
       >
-        <View style={styles.modalOverlay}>
+        <View
+          style={styles.modalOverlay}
+        >
           <View style={styles.modalCard}>
-            <View style={styles.errorIconCircle}>
-              <Text style={styles.modalIcon}>⚠️</Text>
+            <View
+              style={
+                styles.errorIconCircle
+              }
+            >
+              <Text
+                style={styles.modalIcon}
+              >
+                ⚠️
+              </Text>
             </View>
 
-            <Text style={styles.modalTitle}>{errorModal.title}</Text>
+            <Text
+              style={styles.modalTitle}
+            >
+              {errorModal.title}
+            </Text>
 
-            <Text style={styles.modalDescription}>{errorModal.message}</Text>
+            <Text
+              style={
+                styles.modalDescription
+              }
+            >
+              {errorModal.message}
+            </Text>
 
             <TouchableOpacity
               style={styles.modalButton}
               activeOpacity={0.8}
               onPress={closeErrorModal}
             >
-              <Text style={styles.modalButtonText}>
+              <Text
+                style={
+                  styles.modalButtonText
+                }
+              >
                 {errorModal.isAuthError
-                  ? t("surveyPage.modal.loginButton")
-                  : t("surveyPage.modal.closeButton")}
+                  ? t(
+                      "surveyPage.modal.loginButton",
+                    )
+                  : t(
+                      "surveyPage.modal.closeButton",
+                    )}
               </Text>
             </TouchableOpacity>
           </View>
@@ -425,179 +602,181 @@ export const SurveyPage = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   scroll: {
     flex: 1,
-    backgroundColor: "#F4F7FB",
+    backgroundColor: colors.background,
   },
 
   content: {
     flexGrow: 1,
-    paddingHorizontal: 18,
-    paddingTop: 22,
-    paddingBottom: 120,
+    paddingHorizontal: 16,
+    paddingTop: 18,
+    paddingBottom: 110,
   },
 
   pageHeader: {
+    marginBottom: 18,
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    marginBottom: 22,
   },
 
   pageHeaderText: {
     flex: 1,
-    paddingRight: 14,
+    minWidth: 0,
+    paddingRight: 12,
   },
 
   pageTitle: {
-    fontSize: 27,
-    lineHeight: 34,
+    color: colors.textDark,
+    fontSize: 25,
+    lineHeight: 31,
     fontWeight: "800",
-    color: "#111827",
   },
 
   pageSubtitle: {
-    marginTop: 7,
-    fontSize: 14,
-    lineHeight: 21,
+    marginTop: 5,
+    color: colors.textLight,
+    fontSize: 13,
+    lineHeight: 19,
     fontWeight: "400",
-    color: "#64748B",
   },
 
   countBadge: {
-    minWidth: 72,
-    minHeight: 64,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    minWidth: 64,
+    minHeight: 58,
+    paddingHorizontal: 9,
+    paddingVertical: 7,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 18,
-    backgroundColor: "#E8F1FF",
     borderWidth: 1,
-    borderColor: "#CFE1FA",
+    borderColor: colors.violationBorder,
+    borderRadius: 17,
+    backgroundColor: colors.violationLight,
   },
 
   countValue: {
-    fontSize: 22,
-    lineHeight: 26,
+    color: colors.accent,
+    fontSize: 21,
+    lineHeight: 24,
     fontWeight: "800",
-    color: "#0057B8",
   },
 
   countText: {
-    marginTop: 2,
-    fontSize: 11,
-    lineHeight: 15,
+    marginTop: 1,
+    color: colors.textLight,
+    fontSize: 10,
+    lineHeight: 14,
     fontWeight: "600",
-    color: "#47719F",
     textAlign: "center",
   },
 
   centerContainer: {
-    flex: 1,
-    minHeight: 380,
+    minHeight: 340,
+    paddingVertical: 40,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 40,
   },
 
   loadingText: {
-    marginTop: 14,
-    fontSize: 15,
-    lineHeight: 21,
+    marginTop: 12,
+    color: colors.textLight,
+    fontSize: 14,
+    lineHeight: 20,
     fontWeight: "500",
-    color: "#64748B",
   },
 
   emptyCard: {
-    minHeight: 320,
-    paddingHorizontal: 24,
-    paddingVertical: 34,
+    minHeight: 280,
+    paddingHorizontal: 22,
+    paddingVertical: 30,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 24,
-    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E5EAF1",
-    shadowColor: "#0F172A",
+    borderColor: colors.border,
+    borderRadius: 20,
+    backgroundColor: colors.white,
+    shadowColor: colors.shadow,
     shadowOffset: {
       width: 0,
-      height: 7,
+      height: 4,
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 18,
-    elevation: 3,
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
   },
 
   emptyIconCircle: {
-    width: 76,
-    height: 76,
+    width: 66,
+    height: 66,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 38,
-    backgroundColor: "#EDF4FF",
+    borderRadius: 22,
+    backgroundColor:
+      colors.primaryLight,
   },
 
   emptyIcon: {
-    fontSize: 34,
+    fontSize: 29,
   },
 
   emptyTitle: {
-    marginTop: 20,
-    fontSize: 20,
-    lineHeight: 27,
+    marginTop: 17,
+    color: colors.textDark,
+    fontSize: 18,
+    lineHeight: 24,
     fontWeight: "800",
-    color: "#172033",
     textAlign: "center",
   },
 
   emptyDescription: {
-    marginTop: 9,
     maxWidth: 290,
-    fontSize: 14,
-    lineHeight: 21,
+    marginTop: 7,
+    color: colors.textLight,
+    fontSize: 13,
+    lineHeight: 20,
     fontWeight: "400",
-    color: "#6B7280",
     textAlign: "center",
   },
 
   retryButton: {
-    marginTop: 24,
-    minWidth: 150,
-    minHeight: 48,
-    paddingHorizontal: 22,
+    minWidth: 145,
+    minHeight: 44,
+    marginTop: 20,
+    paddingHorizontal: 20,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 14,
-    backgroundColor: "#0057B8",
+    borderRadius: 13,
+    backgroundColor: colors.accent,
   },
 
   retryButtonText: {
-    fontSize: 15,
-    lineHeight: 20,
+    color: colors.white,
+    fontSize: 14,
+    lineHeight: 19,
     fontWeight: "700",
-    color: "#FFFFFF",
   },
 
   card: {
-    marginBottom: 16,
-    padding: 18,
-    borderRadius: 22,
-    backgroundColor: "#FFFFFF",
+    marginBottom: 12,
+    padding: 15,
     borderWidth: 1,
-    borderColor: "#E0E8F2",
-    shadowColor: "#152238",
+    borderColor: colors.border,
+    borderRadius: 19,
+    backgroundColor: colors.white,
+    shadowColor: colors.shadow,
     shadowOffset: {
       width: 0,
-      height: 7,
+      height: 4,
     },
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    elevation: 3,
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
   },
 
   cardAnswered: {
-    backgroundColor: "#F7F8FA",
-    borderColor: "#E4E7EC",
-    shadowOpacity: 0.02,
+    borderColor: colors.successBorder,
+    backgroundColor:
+      colors.successLight,
+    shadowOpacity: 0.015,
     elevation: 1,
   },
 
@@ -607,117 +786,132 @@ const styles = StyleSheet.create({
   },
 
   iconCircle: {
-    width: 52,
-    height: 52,
+    width: 46,
+    height: 46,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 17,
-    backgroundColor: "#E8F1FF",
+    borderWidth: 1,
+    borderColor:
+      colors.violationBorder,
+    borderRadius: 15,
+    backgroundColor:
+      colors.violationLight,
   },
 
   iconCircleAnswered: {
-    backgroundColor: "#E8F7EE",
+    borderColor: colors.successBorder,
+    backgroundColor:
+      colors.successLight,
   },
 
   icon: {
-    fontSize: 25,
+    color: colors.success,
+    fontSize: 22,
+    fontWeight: "800",
   },
 
   cardInfo: {
     flex: 1,
-    marginLeft: 13,
+    minWidth: 0,
+    marginLeft: 11,
     alignItems: "flex-start",
   },
 
   badge: {
     maxWidth: "100%",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 30,
-    backgroundColor: "#E6F0FF",
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 20,
+    backgroundColor:
+      colors.primaryLight,
   },
 
   badgeAnswered: {
-    backgroundColor: "#E6F5EC",
+    backgroundColor:
+      colors.successLight,
   },
 
   badgeText: {
-    fontSize: 11,
-    lineHeight: 15,
+    color: colors.accent,
+    fontSize: 10,
+    lineHeight: 14,
     fontWeight: "700",
-    color: "#0057B8",
   },
 
   badgeTextAnswered: {
-    color: "#1A7F45",
+    color: colors.success,
   },
 
   statusText: {
-    marginTop: 6,
-    fontSize: 12,
-    lineHeight: 17,
+    marginTop: 5,
+    color: colors.textLight,
+    fontSize: 11,
+    lineHeight: 16,
     fontWeight: "400",
-    color: "#7A8699",
   },
 
   cardTitle: {
-    marginTop: 18,
-    fontSize: 19,
-    lineHeight: 26,
+    marginTop: 14,
+    color: colors.textDark,
+    fontSize: 17,
+    lineHeight: 23,
     fontWeight: "800",
-    color: "#172033",
   },
 
   cardTitleAnswered: {
-    color: "#5F6877",
+    color: colors.textLight,
   },
 
   cardDescription: {
-    marginTop: 9,
-    fontSize: 14,
-    lineHeight: 21,
+    marginTop: 7,
+    color: colors.textLight,
+    fontSize: 13,
+    lineHeight: 19,
     fontWeight: "400",
-    color: "#64748B",
   },
 
   cardDescriptionAnswered: {
-    color: "#8B93A1",
+    color: colors.inactive,
   },
 
   button: {
-    marginTop: 19,
-    minHeight: 49,
-    paddingHorizontal: 17,
+    minHeight: 43,
+    marginTop: 15,
+    paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 15,
-    backgroundColor: "#0057B8",
+    borderRadius: 13,
+    backgroundColor: colors.accent,
   },
 
   buttonAnswered: {
-    backgroundColor: "#E7EAEE",
+    borderWidth: 1,
+    borderColor: colors.successBorder,
+    backgroundColor:
+      colors.successLight,
   },
 
   buttonText: {
     flexShrink: 1,
-    fontSize: 15,
-    lineHeight: 20,
+    color: colors.white,
+    fontSize: 14,
+    lineHeight: 19,
     fontWeight: "700",
-    color: "#FFFFFF",
     textAlign: "center",
   },
 
   buttonTextAnswered: {
-    color: "#717A89",
+    color: colors.success,
   },
 
   buttonArrow: {
-    marginLeft: 9,
-    fontSize: 21,
-    lineHeight: 24,
+    marginTop: -1,
+    marginLeft: 7,
+    color: colors.white,
+    fontSize: 20,
+    lineHeight: 20,
     fontWeight: "500",
-    color: "#FFFFFF",
   },
 
   modalOverlay: {
@@ -725,75 +919,76 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(12, 20, 34, 0.56)",
+    backgroundColor: colors.overlay,
   },
 
   modalCard: {
     width: "100%",
     maxWidth: 390,
-    paddingHorizontal: 24,
-    paddingTop: 28,
-    paddingBottom: 22,
+    paddingHorizontal: 22,
+    paddingTop: 25,
+    paddingBottom: 20,
     alignItems: "center",
-    borderRadius: 24,
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#000000",
+    borderRadius: 22,
+    backgroundColor: colors.white,
+    shadowColor: colors.shadow,
     shadowOffset: {
       width: 0,
-      height: 12,
+      height: 10,
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 24,
+    shadowOpacity: 0.18,
+    shadowRadius: 20,
     elevation: 10,
   },
 
   errorIconCircle: {
-    width: 66,
-    height: 66,
+    width: 60,
+    height: 60,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 33,
-    backgroundColor: "#FFF2E8",
+    borderRadius: 20,
+    backgroundColor:
+      colors.salaryLight,
   },
 
   modalIcon: {
-    fontSize: 31,
+    fontSize: 28,
   },
 
   modalTitle: {
-    marginTop: 18,
-    fontSize: 20,
-    lineHeight: 27,
+    marginTop: 16,
+    color: colors.textDark,
+    fontSize: 19,
+    lineHeight: 25,
     fontWeight: "800",
-    color: "#172033",
     textAlign: "center",
   },
 
   modalDescription: {
-    marginTop: 9,
-    fontSize: 14,
-    lineHeight: 21,
+    marginTop: 8,
+    color: colors.textLight,
+    fontSize: 13,
+    lineHeight: 20,
     fontWeight: "400",
-    color: "#687386",
     textAlign: "center",
   },
 
   modalButton: {
     width: "100%",
-    minHeight: 50,
-    marginTop: 24,
-    paddingHorizontal: 18,
+    minHeight: 46,
+    marginTop: 21,
+    paddingHorizontal: 17,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 15,
-    backgroundColor: "#0057B8",
+    borderRadius: 13,
+    backgroundColor: colors.accent,
   },
 
   modalButtonText: {
-    fontSize: 15,
-    lineHeight: 20,
+    color: colors.white,
+    fontSize: 14,
+    lineHeight: 19,
     fontWeight: "700",
-    color: "#FFFFFF",
     textAlign: "center",
   },
 });

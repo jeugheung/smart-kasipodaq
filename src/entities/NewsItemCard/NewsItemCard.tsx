@@ -1,30 +1,41 @@
-import React from "react";
-import { View, Text, StyleSheet, ImageBackground, Pressable } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import React from "react";
+import { useTranslation } from "react-i18next";
+import {
+  ImageBackground,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import { NewsItem } from "../../entities/NewsCard";
 import { colors } from "../../shared/theme/colors";
-import { useTranslation } from 'react-i18next';
 
 type Props = {
   news: NewsItem;
 };
 
+type NavigationProp = NativeStackNavigationProp<any>;
+
 export const NewsItemCard = ({ news }: Props) => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
-  console.log('nEWS', news)
 
   return (
     <Pressable
-      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
       onPress={() => navigation.navigate("NewsDetailPage", { news })}
+      style={({ pressed }) => [
+        styles.card,
+        pressed && styles.cardPressed,
+      ]}
     >
       <ImageBackground
         source={{ uri: news.img }}
         style={styles.image}
-        imageStyle={{ borderTopLeftRadius: 18, borderTopRightRadius: 18 }} // Чуть большее скругление
+        imageStyle={styles.imageStyle}
+        resizeMode="cover"
       >
         <View style={styles.imageOverlay}>
           <View style={styles.dateContainer}>
@@ -44,7 +55,11 @@ export const NewsItemCard = ({ news }: Props) => {
 
         <View style={styles.buttonWrapper}>
           <View style={styles.button}>
-            <Text style={styles.buttonText}>{t('common.readMore')}</Text>
+            <Text style={styles.buttonText}>
+              {t("common.readMore")}
+            </Text>
+
+            <Text style={styles.buttonArrow}>›</Text>
           </View>
         </View>
       </View>
@@ -54,78 +69,108 @@ export const NewsItemCard = ({ news }: Props) => {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 18,
-    backgroundColor: "#fff",
     width: "100%",
-    // Мягкая "дорогая" тень
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 4,
-    marginBottom: 20,
-    // Едва заметная граница дает четкость на белом фоне
+    marginBottom: 16,
+    overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#F1F5F9", 
+    borderColor: colors.newsCardBorder,
+    borderRadius: 18,
+    backgroundColor: colors.white,
+    shadowColor: colors.newsCardShadow,
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
   },
+
   cardPressed: {
-    transform: [{ scale: 0.98 }],
     opacity: 0.9,
+    transform: [{ scale: 0.985 }],
   },
+
   image: {
     width: "100%",
-    height: 160, // Оставили как ты просил!
+    height: 160,
   },
+
+  imageStyle: {
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+  },
+
   imageOverlay: {
     flex: 1,
-    justifyContent: "flex-start",
-    alignItems: "flex-end",
     padding: 12,
-    // Легкий градиент/затемнение можно добавить тут, если картинки сливаются, 
-    // но стеклянная плашка и так будет читаться хорошо.
+    alignItems: "flex-end",
+    justifyContent: "flex-start",
+    backgroundColor: colors.imageOverlayLight,
   },
+
   dateContainer: {
-    // Эффект темного стекла
-    backgroundColor: "rgba(15, 23, 42, 0.65)", 
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
-    overflow: "hidden",
-  },
-  date: {
-    color: "#F8FAFC",
-    fontSize: 12,
-    fontWeight: "600",
-    letterSpacing: 0.5,
-  },
-  textContainer: {
-    padding: 16,
-    paddingTop: 14,
-  },
-  title: {
-    color: "#1E293B", // Более мягкий черный (Slate 800)
-    fontSize: 16,
-    fontWeight: "700",
-    lineHeight: 24, // Добавляет "воздуха" между строками
-    marginBottom: 16,
-  },
-  buttonWrapper: {
-    flexDirection: "row",
-    justifyContent: "flex-end", // Можно поменять на 'flex-end', если хочешь кнопку справа
-  },
-  button: {
-    paddingHorizontal: 16,
-    height: 34,
-    backgroundColor: "#F1F5F9", // Нежный серо-голубой фон
-    borderRadius: 12, // Аккуратная форма таблетки
+    minHeight: 28,
+    paddingHorizontal: 11,
+    paddingVertical: 5,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.newsDateBorder,
+    borderRadius: 14,
+    backgroundColor: colors.newsDateBackground,
   },
-  buttonText: {
-    fontSize: 13,
-    color: colors.primary, // Акцентный цвет из твоей темы
+
+  date: {
+    color: colors.white,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "700",
+  },
+
+  textContainer: {
+    paddingHorizontal: 15,
+    paddingTop: 13,
+    paddingBottom: 14,
+  },
+
+  title: {
+    marginBottom: 14,
+    color: colors.newsTitle,
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: "700",
+  },
+
+  buttonWrapper: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+  },
+
+  button: {
+    minHeight: 34,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 12,
+    backgroundColor: colors.newsButtonBackground,
+  },
+
+  buttonText: {
+    color: colors.primary,
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "700",
+  },
+
+  buttonArrow: {
+    marginTop: -1,
+    marginLeft: 5,
+    color: colors.primary,
+    fontSize: 19,
+    lineHeight: 19,
+    fontWeight: "400",
   },
 });

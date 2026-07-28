@@ -1,8 +1,12 @@
+import { addSolution } from "@shared/api/endpoints";
+import { getOrCreateUUID } from "@shared/lib/uuid";
 import { colors } from "@shared/theme/colors";
 import { AppButton } from "@shared/ui/AppButton";
 import { InputWithCounter } from "@shared/ui/InputWithCounter";
 import { ToggleSwitch } from "@shared/ui/ToggleSwitch";
+import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
@@ -14,59 +18,35 @@ import {
   Text,
   View,
 } from "react-native";
-import { useTranslation } from "react-i18next";
-import * as ImagePicker from "expo-image-picker";
 
-import { addSolution } from "@shared/api/endpoints";
-import { getOrCreateUUID } from "@shared/lib/uuid";
-
-import { useFileUpload, UploadFile } from "./lib/upload";
+import { UploadFile, useFileUpload } from "./lib/upload";
 
 type RequestType = "violation" | "work" | "salary" | "social" | "collective";
-
 type FilePickerAction = "gallery" | "files";
 
-const TAB_KEYS: RequestType[] = [
-  "violation",
-  "work",
-  "salary",
-  "social",
-  "collective",
-];
+const TAB_KEYS: RequestType[] = ["violation", "work", "salary", "social", "collective"];
 
 export const RequestForm = ({ navigation }: any) => {
   const { t } = useTranslation();
-
-  const { files, uploading, pickFiles, setFiles, uploadSingleFile } =
-    useFileUpload();
+  const { files, uploading, pickFiles, setFiles, uploadSingleFile } = useFileUpload();
 
   const [activeTab, setActiveTab] = useState<RequestType>("violation");
-
   const [problem, setProblem] = useState("");
   const [contacts, setContacts] = useState("");
   const [anonymous, setAnonymous] = useState(true);
   const [loading, setLoading] = useState(false);
-
   const [isMenuVisible, setIsMenuVisible] = useState(false);
-
-  const [pendingAction, setPendingAction] = useState<FilePickerAction | null>(
-    null,
-  );
+  const [pendingAction, setPendingAction] = useState<FilePickerAction | null>(null);
 
   const sheetAnim = useRef(new Animated.Value(400)).current;
 
   const tabs = useMemo(
-    () =>
-      TAB_KEYS.map((key) => ({
-        key,
-        title: t(`requestForm.tabs.${key}`),
-      })),
+    () => TAB_KEYS.map((key) => ({ key, title: t(`requestForm.tabs.${key}`) })),
     [t],
   );
 
   const openSheet = () => {
     setIsMenuVisible(true);
-
     sheetAnim.setValue(400);
 
     requestAnimationFrame(() => {
@@ -79,33 +59,26 @@ export const RequestForm = ({ navigation }: any) => {
   };
 
   const closeSheet = (nextAction?: FilePickerAction) => {
-    if (nextAction) {
-      setPendingAction(nextAction);
-    }
+    if (nextAction) setPendingAction(nextAction);
 
     Animated.timing(sheetAnim, {
       toValue: 400,
       duration: 250,
       useNativeDriver: true,
-    }).start(() => {
-      setIsMenuVisible(false);
-    });
+    }).start(() => setIsMenuVisible(false));
   };
 
   const handlePickImage = async () => {
     try {
-      const permission =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (permission.status !== ImagePicker.PermissionStatus.GRANTED) {
         Alert.alert(
           t("requestForm.alerts.errorTitle"),
           t("requestForm.files.galleryPermissionDenied", {
-            defaultValue:
-              "Доступ к галерее запрещён. Разрешите доступ в настройках телефона.",
+            defaultValue: "Доступ к галерее запрещён. Разрешите доступ в настройках телефона.",
           }),
         );
-
         return;
       }
 
@@ -115,16 +88,12 @@ export const RequestForm = ({ navigation }: any) => {
         quality: 0.8,
       });
 
-      if (result.canceled || !result.assets?.length) {
-        return;
-      }
+      if (result.canceled || !result.assets?.length) return;
 
       const timestamp = Date.now();
 
       const selectedFiles: UploadFile[] = result.assets.map((asset, index) => {
-        const originalName =
-          asset.fileName || `image_${timestamp}_${index + 1}.jpg`;
-
+        const originalName = asset.fileName || `image_${timestamp}_${index + 1}.jpg`;
         const nameWithoutExtension = originalName.replace(/\.[^/.]+$/, "");
 
         return {
@@ -155,19 +124,11 @@ export const RequestForm = ({ navigation }: any) => {
   };
 
   useEffect(() => {
-    if (isMenuVisible || !pendingAction) {
-      return;
-    }
+    if (isMenuVisible || !pendingAction) return;
 
     const timer = setTimeout(() => {
-      if (pendingAction === "gallery") {
-        void handlePickImage();
-      }
-
-      if (pendingAction === "files") {
-        void pickFiles();
-      }
-
+      if (pendingAction === "gallery") void handlePickImage();
+      if (pendingAction === "files") void pickFiles();
       setPendingAction(null);
     }, 150);
 
@@ -175,9 +136,7 @@ export const RequestForm = ({ navigation }: any) => {
   }, [isMenuVisible, pendingAction, pickFiles]);
 
   const removeFile = (uri: string) => {
-    setFiles((previousFiles) =>
-      previousFiles.filter((file) => file.uri !== uri),
-    );
+    setFiles((previousFiles) => previousFiles.filter((file) => file.uri !== uri));
   };
 
   const submit = async () => {
@@ -186,7 +145,6 @@ export const RequestForm = ({ navigation }: any) => {
         t("requestForm.alerts.errorTitle"),
         t("requestForm.alerts.problemRequired"),
       );
-
       return;
     }
 
@@ -197,7 +155,6 @@ export const RequestForm = ({ navigation }: any) => {
           defaultValue: "Дождитесь завершения загрузки файлов",
         }),
       );
-
       return;
     }
 
@@ -205,23 +162,17 @@ export const RequestForm = ({ navigation }: any) => {
       setLoading(true);
 
       const uuid = await getOrCreateUUID();
-
-      
-
       const payload = {
         type_name: activeTab,
         problem: problem.trim(),
         solution: problem.trim(),
         phone: contacts.trim() || undefined,
-        files: files.filter((f) => f.serverPath).map((f) => f.serverPath!),
+        files: files.filter((file) => file.serverPath).map((file) => file.serverPath!),
         uuid,
-
-        // Раскомментируй, если API принимает это поле:
         // is_anonymous: anonymous,
       };
 
-      console.log("PAYLOAD", payload)
-
+      console.log("PAYLOAD", payload);
       await addSolution(payload);
 
       Alert.alert(
@@ -264,16 +215,14 @@ export const RequestForm = ({ navigation }: any) => {
 
             return (
               <Pressable
+                onPress={() => setActiveTab(item.key)}
                 style={({ pressed }) => [
                   styles.tabButton,
                   isActive && styles.activeTab,
-                  pressed && styles.tabButtonPressed,
+                  pressed && styles.pressed,
                 ]}
-                onPress={() => setActiveTab(item.key)}
               >
-                <Text
-                  style={[styles.tabText, isActive && styles.activeTabText]}
-                >
+                <Text style={[styles.tabText, isActive && styles.activeTabText]}>
                   {item.title}
                 </Text>
               </Pressable>
@@ -298,21 +247,16 @@ export const RequestForm = ({ navigation }: any) => {
       />
 
       <Pressable
-        style={({ pressed }) => [
-          styles.uploadBtn,
-          pressed && styles.uploadBtnPressed,
-        ]}
         onPress={openSheet}
         disabled={loading}
+        style={({ pressed }) => [styles.uploadBtn, pressed && styles.pressed]}
       >
-        {/* <Text style={styles.uploadIcon}>📎</Text> */}
-
         <Text style={styles.uploadText}>{t("requestForm.attachFiles")}</Text>
 
         {uploading && (
           <ActivityIndicator
             size="small"
-            color="#079BC9"
+            color={colors.accent}
             style={styles.uploadIndicator}
           />
         )}
@@ -333,18 +277,19 @@ export const RequestForm = ({ navigation }: any) => {
           <View style={styles.fileList}>
             {files.map((file: UploadFile) => {
               const isUploaded = Boolean(file.serverPath);
-
               const progress = Math.min(Math.max(file.progress || 0, 0), 100);
 
               return (
                 <View
                   key={file.uri}
-                  style={[
-                    styles.fileCard,
-                    isUploaded && styles.fileCardSuccess,
-                  ]}
+                  style={[styles.fileCard, isUploaded && styles.fileCardSuccess]}
                 >
-                  <View style={styles.fileIconWrapper}>
+                  <View
+                    style={[
+                      styles.fileIconWrapper,
+                      isUploaded && styles.fileIconWrapperSuccess,
+                    ]}
+                  >
                     <Text style={styles.fileIcon}>
                       {file.type?.startsWith("image/") ? "🖼️" : "📄"}
                     </Text>
@@ -377,27 +322,20 @@ export const RequestForm = ({ navigation }: any) => {
 
                   <View style={styles.fileActions}>
                     {!isUploaded && (
-                      <ActivityIndicator size="small" color="#079BC9" />
+                      <ActivityIndicator size="small" color={colors.accent} />
                     )}
 
                     <Pressable
+                      hitSlop={10}
                       style={styles.removeButton}
                       onPress={() => removeFile(file.uri)}
-                      hitSlop={10}
                     >
                       <Text style={styles.removeIcon}>×</Text>
                     </Pressable>
                   </View>
 
                   {!isUploaded && (
-                    <View
-                      style={[
-                        styles.progressBar,
-                        {
-                          width: `${progress}%`,
-                        },
-                      ]}
-                    />
+                    <View style={[styles.progressBar, { width: `${progress}%` }]} />
                   )}
                 </View>
               );
@@ -448,19 +386,13 @@ export const RequestForm = ({ navigation }: any) => {
           <Animated.View
             style={[
               styles.bottomMenu,
-              {
-                transform: [
-                  {
-                    translateY: sheetAnim,
-                  },
-                ],
-              },
+              { transform: [{ translateY: sheetAnim }] },
             ]}
           >
             <View style={styles.sheetHandle} />
 
             <View style={styles.sheetHeader}>
-              <View>
+              <View style={styles.sheetHeaderText}>
                 <Text style={styles.sheetTitle}>
                   {t("requestForm.files.modalTitle", {
                     defaultValue: "Прикрепить файл",
@@ -475,9 +407,9 @@ export const RequestForm = ({ navigation }: any) => {
               </View>
 
               <Pressable
+                hitSlop={10}
                 style={styles.sheetCloseButton}
                 onPress={() => closeSheet()}
-                hitSlop={10}
               >
                 <Text style={styles.sheetClose}>×</Text>
               </Pressable>
@@ -485,14 +417,13 @@ export const RequestForm = ({ navigation }: any) => {
 
             <View style={styles.sheetContent}>
               <Pressable
+                onPress={() => closeSheet("gallery")}
                 style={({ pressed }) => [
                   styles.sheetItem,
-                  styles.galleryItem,
                   pressed && styles.sheetItemPressed,
                 ]}
-                onPress={() => closeSheet("gallery")}
               >
-                <View style={[styles.sheetItemIcon, styles.galleryIcon]}>
+                <View style={styles.sheetItemIcon}>
                   <Text style={styles.sheetItemEmoji}>🖼️</Text>
                 </View>
 
@@ -514,14 +445,13 @@ export const RequestForm = ({ navigation }: any) => {
               </Pressable>
 
               <Pressable
+                onPress={() => closeSheet("files")}
                 style={({ pressed }) => [
                   styles.sheetItem,
-                  styles.documentItem,
                   pressed && styles.sheetItemPressed,
                 ]}
-                onPress={() => closeSheet("files")}
               >
-                <View style={[styles.sheetItemIcon, styles.documentIcon]}>
+                <View style={styles.sheetItemIcon}>
                   <Text style={styles.sheetItemEmoji}>📄</Text>
                 </View>
 
@@ -561,18 +491,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
 
-  tabsWrapper: {
-    marginHorizontal: -15,
-    gap: 12,
-  },
-
-  tabsContent: {
-    paddingHorizontal: 15,
-  },
+  tabsWrapper: { marginHorizontal: -15, gap: 12 },
+  tabsContent: { paddingHorizontal: 15 },
 
   tabsTitle: {
     paddingLeft: 15,
-    color: "#111827",
+    color: colors.primary,
     fontSize: 16,
     lineHeight: 24,
     fontWeight: "800",
@@ -586,31 +510,30 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "#E1E6ED",
+    borderColor: colors.border,
     borderRadius: 22,
-    backgroundColor: "#E9EDF2",
-  },
-
-  tabButtonPressed: {
-    opacity: 0.82,
+    backgroundColor: colors.lightGray,
   },
 
   activeTab: {
-    borderColor: "#2563EB",
-    backgroundColor: "#2563EB",
+    borderColor: colors.primary,
+    backgroundColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 3,
   },
 
   tabText: {
-    color: "#585858",
+    color: colors.textLight,
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: "600",
     textAlign: "center",
   },
 
-  activeTabText: {
-    color: "#FFFFFF",
-    fontWeight: "700",
-  },
+  activeTabText: { color: colors.white, fontWeight: "800" },
+  pressed: { opacity: 0.8, transform: [{ scale: 0.99 }] },
 
   uploadBtn: {
     position: "relative",
@@ -619,40 +542,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#079BC9",
+    borderWidth: 1.5,
+    borderColor: colors.accent,
     borderRadius: 16,
-    backgroundColor: "#F0F9FF",
-  },
-
-  uploadBtnPressed: {
-    opacity: 0.8,
-    transform: [
-      {
-        scale: 0.99,
-      },
-    ],
-  },
-
-  uploadIcon: {
-    marginRight: 8,
-    fontSize: 17,
+    backgroundColor: colors.primaryLight,
   },
 
   uploadText: {
-    color: "#079BC9",
+    color: colors.accent,
     fontSize: 14,
-    fontWeight: "700",
+    fontWeight: "800",
   },
 
-  uploadIndicator: {
-    position: "absolute",
-    right: 17,
-  },
-
-  fileSection: {
-    gap: 10,
-  },
+  uploadIndicator: { position: "absolute", right: 17 },
+  fileSection: { gap: 10 },
 
   fileSectionHeader: {
     flexDirection: "row",
@@ -660,7 +563,7 @@ const styles = StyleSheet.create({
   },
 
   fileSectionTitle: {
-    color: "#1F2937",
+    color: colors.textDark,
     fontSize: 14,
     fontWeight: "800",
   },
@@ -671,18 +574,16 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     paddingHorizontal: 7,
     overflow: "hidden",
-    color: "#0057B8",
+    color: colors.white,
     fontSize: 12,
     lineHeight: 24,
     fontWeight: "800",
     textAlign: "center",
     borderRadius: 12,
-    backgroundColor: "#E4F1FF",
+    backgroundColor: colors.accent,
   },
 
-  fileList: {
-    gap: 10,
-  },
+  fileList: { gap: 10 },
 
   fileCard: {
     position: "relative",
@@ -693,14 +594,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#E1E7EF",
+    borderColor: colors.border,
     borderRadius: 15,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.white,
   },
 
   fileCardSuccess: {
-    borderColor: "#A7F3D0",
-    backgroundColor: "#F0FDF4",
+    borderColor: colors.successBorder,
+    backgroundColor: colors.successLight,
   },
 
   fileIconWrapper: {
@@ -710,20 +611,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 12,
-    backgroundColor: "#EFF6FF",
+    backgroundColor: colors.primaryLight,
   },
 
-  fileIcon: {
-    fontSize: 19,
-  },
-
-  fileInfo: {
-    flex: 1,
-    minWidth: 0,
-  },
+  fileIconWrapperSuccess: { backgroundColor: colors.successLight },
+  fileIcon: { fontSize: 19 },
+  fileInfo: { flex: 1, minWidth: 0 },
 
   fileName: {
-    color: "#374151",
+    color: colors.textDark,
     fontSize: 14,
     lineHeight: 19,
     fontWeight: "700",
@@ -731,14 +627,15 @@ const styles = StyleSheet.create({
 
   fileStatus: {
     marginTop: 3,
-    color: "#6B7280",
+    color: colors.textLight,
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "500",
   },
 
   fileStatusSuccess: {
-    color: "#059669",
+    color: colors.success,
+    fontWeight: "700",
   },
 
   fileActions: {
@@ -754,12 +651,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 15,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.lightGray,
   },
 
   removeIcon: {
     marginTop: -2,
-    color: "#7B8492",
+    color: colors.textLight,
     fontSize: 22,
     lineHeight: 24,
     fontWeight: "400",
@@ -771,7 +668,7 @@ const styles = StyleSheet.create({
     left: 0,
     height: 3,
     borderRadius: 2,
-    backgroundColor: "#079BC9",
+    backgroundColor: colors.accent,
   },
 
   anonBlock: {
@@ -781,12 +678,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
 
-  anonTextBlock: {
-    flex: 1,
-  },
+  anonTextBlock: { flex: 1 },
 
   anonTitle: {
-    color: "#111827",
+    color: colors.textDark,
     fontSize: 14,
     lineHeight: 21,
     fontWeight: "800",
@@ -794,7 +689,7 @@ const styles = StyleSheet.create({
 
   anonSubtitle: {
     marginTop: 2,
-    color: "#848484",
+    color: colors.textLight,
     fontSize: 11,
     lineHeight: 17,
     fontWeight: "500",
@@ -807,21 +702,17 @@ const styles = StyleSheet.create({
 
   darkBackdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(8, 15, 28, 0.52)",
+    backgroundColor: colors.overlay,
   },
 
   bottomMenu: {
     overflow: "hidden",
     borderTopLeftRadius: 26,
     borderTopRightRadius: 26,
-    backgroundColor: "#FFFFFF",
-
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: -5,
-    },
-    shadowOpacity: 0.12,
+    backgroundColor: colors.white,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: -5 },
+    shadowOpacity: 0.16,
     shadowRadius: 15,
     elevation: 12,
   },
@@ -833,7 +724,7 @@ const styles = StyleSheet.create({
     marginBottom: 3,
     alignSelf: "center",
     borderRadius: 3,
-    backgroundColor: "#D7DDE5",
+    backgroundColor: colors.inactive,
   },
 
   sheetHeader: {
@@ -844,11 +735,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     borderBottomWidth: 1,
-    borderBottomColor: "#EEF1F5",
+    borderBottomColor: colors.lightGray,
   },
 
+  sheetHeaderText: { flex: 1, paddingRight: 12 },
+
   sheetTitle: {
-    color: "#1F2937",
+    color: colors.primary,
     fontSize: 19,
     lineHeight: 25,
     fontWeight: "800",
@@ -856,7 +749,7 @@ const styles = StyleSheet.create({
 
   sheetSubtitle: {
     marginTop: 3,
-    color: "#8A94A3",
+    color: colors.textLight,
     fontSize: 12,
     lineHeight: 17,
     fontWeight: "500",
@@ -868,12 +761,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 19,
-    backgroundColor: "#F1F4F8",
+    backgroundColor: colors.lightGray,
   },
 
   sheetClose: {
     marginTop: -2,
-    color: "#7B8492",
+    color: colors.textLight,
     fontSize: 25,
     lineHeight: 27,
   },
@@ -891,25 +784,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: 16,
-    backgroundColor: "#FFFFFF",
-  },
-
-  galleryItem: {
-    borderColor: "#A8E7E1",
-  },
-
-  documentItem: {
-    borderColor: "#F3DE85",
+    backgroundColor: colors.white,
   },
 
   sheetItemPressed: {
     opacity: 0.78,
-    transform: [
-      {
-        scale: 0.99,
-      },
-    ],
+    transform: [{ scale: 0.99 }],
+    backgroundColor: colors.lightGray,
   },
 
   sheetItemIcon: {
@@ -919,26 +802,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 15,
+    backgroundColor: colors.primaryLight,
   },
 
-  galleryIcon: {
-    backgroundColor: "#E7FAF7",
-  },
-
-  documentIcon: {
-    backgroundColor: "#FFF8D8",
-  },
-
-  sheetItemEmoji: {
-    fontSize: 22,
-  },
-
-  sheetItemContent: {
-    flex: 1,
-  },
+  sheetItemEmoji: { fontSize: 22 },
+  sheetItemContent: { flex: 1 },
 
   sheetItemTitle: {
-    color: "#344054",
+    color: colors.textDark,
     fontSize: 15,
     lineHeight: 20,
     fontWeight: "800",
@@ -946,7 +817,7 @@ const styles = StyleSheet.create({
 
   sheetItemDescription: {
     marginTop: 3,
-    color: "#8A94A3",
+    color: colors.textLight,
     fontSize: 12,
     lineHeight: 17,
     fontWeight: "500",
@@ -954,13 +825,11 @@ const styles = StyleSheet.create({
 
   sheetItemArrow: {
     marginLeft: 10,
-    color: "#98A2B3",
+    color: colors.accent,
     fontSize: 30,
     lineHeight: 31,
     fontWeight: "300",
   },
 
-  sheetFooter: {
-    height: 34,
-  },
+  sheetFooter: { height: 34 },
 });

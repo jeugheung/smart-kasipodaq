@@ -1,3 +1,5 @@
+import { colors } from "@shared/theme/colors";
+import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
   ActivityIndicator,
@@ -5,7 +7,6 @@ import {
   Text,
   View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
 
 interface WelcomeCardProps {
@@ -28,48 +29,35 @@ export const WelcomeCard = ({
   const userName = [firstName, middleName]
     .filter(
       (value): value is string =>
-        typeof value === "string" &&
-        value.trim().length > 0,
+        typeof value === "string" && value.trim().length > 0,
     )
     .join(" ")
     .trim();
 
   const getStatusText = () => {
-    if (status === 1) {
-      return t("welcomeCard.statusActive");
-    }
-
-    if (status === 0) {
-      return t("welcomeCard.statusInactive");
-    }
-
+    if (status === 1) return t("welcomeCard.statusActive");
+    if (status === 0) return t("welcomeCard.statusInactive");
     return t("welcomeCard.statusUnauthorized");
   };
 
   const getStatusStyle = () => {
-    if (status === 1) {
-      return styles.statusActive;
-    }
-
-    if (status === 0) {
-      return styles.statusInactive;
-    }
-
+    if (status === 1) return styles.statusActive;
+    if (status === 0) return styles.statusInactive;
     return styles.statusUnauthorized;
   };
 
   if (loading) {
     return (
       <LinearGradient
-        colors={["#0A65B7", "#004B87"]}
+        colors={[
+          colors.welcomeGradientStart,
+          colors.welcomeGradientEnd,
+        ]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.card, styles.loadingCard]}
       >
-        <ActivityIndicator
-          size="large"
-          color="#FFFFFF"
-        />
+        <ActivityIndicator size="large" color={colors.white} />
 
         <Text style={styles.loadingText}>
           {t("welcomeCard.loadingProfile")}
@@ -80,7 +68,12 @@ export const WelcomeCard = ({
 
   return (
     <LinearGradient
-      colors={["#0B66B8", "#00447F"]}
+      colors={[
+        colors.welcomeGradientStart,
+        colors.welcomeGradientMiddle,
+        colors.welcomeGradientEnd,
+      ]}
+      locations={[0, 0.55, 1]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.card}
@@ -98,25 +91,20 @@ export const WelcomeCard = ({
             style={styles.nameValue}
             numberOfLines={2}
             adjustsFontSizeToFit
-            minimumFontScale={0.78}
+            minimumFontScale={0.76}
           >
             {userName || t("welcomeCard.user")}
           </Text>
         </View>
 
-        <View
-          style={[
-            styles.statusBadge,
-            getStatusStyle(),
-          ]}
-        >
+        <View style={[styles.statusBadge, getStatusStyle()]}>
           <View style={styles.statusDot} />
 
           <Text
             style={styles.statusValue}
-            numberOfLines={2}
+            numberOfLines={1}
             adjustsFontSizeToFit
-            minimumFontScale={0.8}
+            minimumFontScale={0.75}
           >
             {getStatusText()}
           </Text>
@@ -127,9 +115,7 @@ export const WelcomeCard = ({
 
       <View style={styles.organizationRow}>
         <View style={styles.organizationIcon}>
-          <Text style={styles.organizationIconText}>
-            🏢
-          </Text>
+          <Text style={styles.organizationIconText}>🏢</Text>
         </View>
 
         <View style={styles.organizationContent}>
@@ -139,14 +125,12 @@ export const WelcomeCard = ({
 
           <Text
             style={styles.organizationTitle}
-            numberOfLines={2}
+            numberOfLines={1}
             adjustsFontSizeToFit
-            minimumFontScale={0.82}
+            minimumFontScale={0.8}
           >
             {profsoyuzName ||
-              t(
-                "welcomeCard.organizationNotSpecified",
-              )}
+              t("welcomeCard.organizationNotSpecified")}
           </Text>
         </View>
       </View>
@@ -158,20 +142,16 @@ const styles = StyleSheet.create({
   card: {
     position: "relative",
     width: "100%",
-    minHeight: 205,
-    paddingHorizontal: 20,
-    paddingVertical: 20,
+    minHeight: 168,
+    paddingHorizontal: 18,
+    paddingVertical: 17,
     overflow: "hidden",
-    borderRadius: 26,
-
-    shadowColor: "#004B87",
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 18,
-    elevation: 9,
+    borderRadius: 22,
+    shadowColor: colors.welcomeShadow,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 6,
   },
 
   loadingCard: {
@@ -180,33 +160,31 @@ const styles = StyleSheet.create({
   },
 
   loadingText: {
-    marginTop: 11,
-    color: "#FFFFFF",
-    fontSize: 14,
-    lineHeight: 20,
+    marginTop: 8,
+    color: colors.white,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: "600",
   },
 
   decorCircleLarge: {
     position: "absolute",
-    top: -85,
-    right: -65,
-    width: 190,
-    height: 190,
-    borderRadius: 95,
-    backgroundColor:
-      "rgba(255,255,255,0.07)",
+    top: -74,
+    right: -54,
+    width: 170,
+    height: 170,
+    borderRadius: 85,
+    backgroundColor: colors.welcomeDecoration,
   },
 
   decorCircleSmall: {
     position: "absolute",
-    right: 35,
-    bottom: -55,
-    width: 115,
-    height: 115,
-    borderRadius: 58,
-    backgroundColor:
-      "rgba(255,255,255,0.05)",
+    right: 24,
+    bottom: -56,
+    width: 108,
+    height: 108,
+    borderRadius: 54,
+    backgroundColor: colors.welcomeDecorationLight,
   },
 
   topRow: {
@@ -218,82 +196,75 @@ const styles = StyleSheet.create({
   welcomeBlock: {
     flex: 1,
     minWidth: 0,
-    paddingRight: 12,
+    paddingRight: 10,
   },
 
   welcomeText: {
-    marginBottom: 6,
-    color: "rgba(255,255,255,0.86)",
-    fontSize: 14,
-    lineHeight: 19,
+    marginBottom: 4,
+    color: colors.welcomeTextMuted,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: "500",
   },
 
   nameValue: {
-    color: "#FFFFFF",
-    fontSize: 27,
-    lineHeight: 33,
+    color: colors.white,
+    fontSize: 23,
+    lineHeight: 28,
     fontWeight: "800",
-    letterSpacing: -0.4,
+    letterSpacing: -0.3,
   },
 
   statusBadge: {
-    maxWidth: 126,
-    minHeight: 40,
-    paddingHorizontal: 11,
-    paddingVertical: 8,
+    maxWidth: 116,
+    minHeight: 34,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderRadius: 14,
+    borderRadius: 13,
   },
 
   statusActive: {
-    backgroundColor:
-      "rgba(46, 204, 113, 0.18)",
-    borderColor:
-      "rgba(188, 255, 216, 0.55)",
+    backgroundColor: colors.welcomeBadge,
+    borderColor: colors.welcomeBadgeBorder,
   },
 
   statusInactive: {
-    backgroundColor:
-      "rgba(255, 184, 77, 0.18)",
-    borderColor:
-      "rgba(255, 220, 165, 0.55)",
+    backgroundColor: colors.welcomeInactiveBadge,
+    borderColor: colors.welcomeInactiveBorder,
   },
 
   statusUnauthorized: {
-    backgroundColor:
-      "rgba(255,255,255,0.12)",
-    borderColor:
-      "rgba(255,255,255,0.32)",
+    backgroundColor: colors.welcomeNeutralBadge,
+    borderColor: colors.welcomeNeutralBorder,
   },
 
   statusDot: {
-    width: 7,
-    height: 7,
-    marginRight: 7,
+    width: 6,
+    height: 6,
+    marginRight: 6,
     flexShrink: 0,
-    borderRadius: 4,
-    backgroundColor: "#FFFFFF",
+    borderRadius: 3,
+    backgroundColor: colors.white,
   },
 
   statusValue: {
     flexShrink: 1,
-    color: "#FFFFFF",
-    fontSize: 12,
-    lineHeight: 16,
+    color: colors.white,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "800",
     textAlign: "center",
   },
 
   divider: {
     height: 1,
-    marginTop: 22,
-    marginBottom: 17,
-    backgroundColor:
-      "rgba(255,255,255,0.16)",
+    marginTop: 15,
+    marginBottom: 13,
+    backgroundColor: colors.welcomeDivider,
   },
 
   organizationRow: {
@@ -302,22 +273,20 @@ const styles = StyleSheet.create({
   },
 
   organizationIcon: {
-    width: 44,
-    height: 44,
-    marginRight: 12,
+    width: 38,
+    height: 38,
+    marginRight: 10,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
-    borderRadius: 14,
-    backgroundColor:
-      "rgba(255,255,255,0.14)",
     borderWidth: 1,
-    borderColor:
-      "rgba(255,255,255,0.18)",
+    borderColor: colors.welcomeIconBorder,
+    borderRadius: 12,
+    backgroundColor: colors.welcomeIconBackground,
   },
 
   organizationIconText: {
-    fontSize: 20,
+    fontSize: 17,
   },
 
   organizationContent: {
@@ -326,17 +295,17 @@ const styles = StyleSheet.create({
   },
 
   organizationLabel: {
-    marginBottom: 3,
-    color: "rgba(255,255,255,0.74)",
-    fontSize: 12,
-    lineHeight: 16,
+    marginBottom: 2,
+    color: colors.welcomeTextSecondary,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "500",
   },
 
   organizationTitle: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    lineHeight: 22,
+    color: colors.white,
+    fontSize: 15,
+    lineHeight: 20,
     fontWeight: "800",
   },
 });

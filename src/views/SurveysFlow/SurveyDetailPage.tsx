@@ -1,7 +1,12 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors } from '@shared/theme/colors';
-import { DefaultLayout } from '@widgets/Layout/DefaultLayout';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { colors } from "@shared/theme/colors";
+import { DefaultLayout } from "@widgets/Layout/DefaultLayout";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   Modal,
@@ -11,13 +16,13 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
+} from "react-native";
 
 const ANKETA_VIEW_API =
-  'https://kasipodaq.competence.kz/api/anketa-view';
+  "https://kasipodaq.competence.kz/api/anketa-view";
 
 const ANKETA_SUBMIT_API =
-  'https://kasipodaq.competence.kz/api/anketa-submit';
+  "https://kasipodaq.competence.kz/api/anketa-submit";
 
 interface AnketaOption {
   id: number;
@@ -53,10 +58,10 @@ interface SelectedAnswers {
 }
 
 type ResultModalType =
-  | 'success'
-  | 'error'
-  | 'warning'
-  | 'auth';
+  | "success"
+  | "error"
+  | "warning"
+  | "auth";
 
 interface ResultModalState {
   visible: boolean;
@@ -67,9 +72,9 @@ interface ResultModalState {
 
 const initialModalState: ResultModalState = {
   visible: false,
-  type: 'error',
-  title: '',
-  message: '',
+  type: "error",
+  title: "",
+  message: "",
 };
 
 export const SurveyDetailPage = ({
@@ -78,57 +83,78 @@ export const SurveyDetailPage = ({
 }: any) => {
   const anketaId = Number(route?.params?.anketaId);
 
-  const [anketa, setAnketa] = useState<AnketaDetail | null>(null);
+  const [anketa, setAnketa] =
+    useState<AnketaDetail | null>(null);
+
   const [selectedAnswers, setSelectedAnswers] =
     useState<SelectedAnswers>({});
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] =
+    useState(true);
+
+  const [isRefreshing, setIsRefreshing] =
+    useState(false);
+
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
 
   const [resultModal, setResultModal] =
-    useState<ResultModalState>(initialModalState);
-
-  const showModal = (
-    type: ResultModalType,
-    title: string,
-    message: string
-  ) => {
-    setResultModal({
-      visible: true,
-      type,
-      title,
-      message,
-    });
-  };
-
-  const getErrorMessage = (error: unknown) => {
-    if (error instanceof Error) {
-      return error.message;
-    }
-
-    return 'Произошла неизвестная ошибка';
-  };
-
-  const handleUnauthorized = async () => {
-    await AsyncStorage.removeItem('access_token');
-
-    showModal(
-      'auth',
-      'Сессия завершена',
-      'Срок действия авторизации истёк. Войдите в аккаунт повторно.'
+    useState<ResultModalState>(
+      initialModalState,
     );
-  };
+
+  const showModal = useCallback(
+    (
+      type: ResultModalType,
+      title: string,
+      message: string,
+    ) => {
+      setResultModal({
+        visible: true,
+        type,
+        title,
+        message,
+      });
+    },
+    [],
+  );
+
+  const getErrorMessage = useCallback(
+    (error: unknown) => {
+      if (error instanceof Error) {
+        return error.message;
+      }
+
+      return "Произошла неизвестная ошибка";
+    },
+    [],
+  );
+
+  const handleUnauthorized =
+    useCallback(async () => {
+      await AsyncStorage.removeItem(
+        "access_token",
+      );
+
+      showModal(
+        "auth",
+        "Сессия завершена",
+        "Срок действия авторизации истёк. Войдите в аккаунт повторно.",
+      );
+    }, [showModal]);
 
   const fetchAnketa = useCallback(
     async (refresh = false) => {
-      if (!anketaId || Number.isNaN(anketaId)) {
+      if (
+        !anketaId ||
+        Number.isNaN(anketaId)
+      ) {
         setIsLoading(false);
 
         showModal(
-          'error',
-          'Ошибка перехода',
-          'Не удалось определить идентификатор анкеты.'
+          "error",
+          "Ошибка перехода",
+          "Не удалось определить идентификатор анкеты.",
         );
 
         return;
@@ -141,13 +167,16 @@ export const SurveyDetailPage = ({
       }
 
       try {
-        const accessToken = await AsyncStorage.getItem('access_token');
+        const accessToken =
+          await AsyncStorage.getItem(
+            "access_token",
+          );
 
         if (!accessToken) {
           showModal(
-            'auth',
-            'Требуется авторизация',
-            'Для прохождения анкеты необходимо войти в аккаунт.'
+            "auth",
+            "Требуется авторизация",
+            "Для прохождения анкеты необходимо войти в аккаунт.",
           );
 
           return;
@@ -156,15 +185,16 @@ export const SurveyDetailPage = ({
         const response = await fetch(
           `${ANKETA_VIEW_API}?id=${encodeURIComponent(anketaId)}`,
           {
-            method: 'GET',
+            method: "GET",
             headers: {
-              Accept: 'application/json',
+              Accept: "application/json",
               Authorization: `Bearer ${accessToken}`,
             },
-          }
+          },
         );
 
-        let data: AnketaViewResponse | null = null;
+        let data: AnketaViewResponse | null =
+          null;
 
         try {
           data = await response.json();
@@ -172,66 +202,95 @@ export const SurveyDetailPage = ({
           data = null;
         }
 
-        if (response.status === 401 || response.status === 403) {
+        if (
+          response.status === 401 ||
+          response.status === 403
+        ) {
           await handleUnauthorized();
           return;
         }
 
         if (response.status === 404) {
-          throw new Error('Анкета не найдена или была удалена');
+          throw new Error(
+            "Анкета не найдена или была удалена",
+          );
         }
 
         if (!response.ok) {
           throw new Error(
             data?.msg ||
-              `Не удалось получить анкету. Код ошибки: ${response.status}`
+              `Не удалось получить анкету. Код ошибки: ${response.status}`,
           );
         }
 
-        if (!data || data.result !== 1 || !data.anketa) {
-          throw new Error(data?.msg || 'Сервер не вернул данные анкеты');
+        if (
+          !data ||
+          data.result !== 1 ||
+          !data.anketa
+        ) {
+          throw new Error(
+            data?.msg ||
+              "Сервер не вернул данные анкеты",
+          );
         }
 
-        const normalizedAnketa: AnketaDetail = {
-          ...data.anketa,
-          questions: Array.isArray(data.anketa.questions)
-            ? data.anketa.questions.map(question => ({
-                ...question,
-                options: Array.isArray(question.options)
-                  ? question.options
-                  : [],
-              }))
-            : [],
-        };
+        const normalizedAnketa: AnketaDetail =
+          {
+            ...data.anketa,
+            questions: Array.isArray(
+              data.anketa.questions,
+            )
+              ? data.anketa.questions.map(
+                  (question) => ({
+                    ...question,
+                    options: Array.isArray(
+                      question.options,
+                    )
+                      ? question.options
+                      : [],
+                  }),
+                )
+              : [],
+          };
 
         setAnketa(normalizedAnketa);
         setSelectedAnswers({});
       } catch (error) {
         showModal(
-          'error',
-          'Ошибка загрузки',
+          "error",
+          "Ошибка загрузки",
           getErrorMessage(error) ||
-            'Не удалось загрузить анкету. Проверьте интернет-соединение.'
+            "Не удалось загрузить анкету. Проверьте интернет-соединение.",
         );
       } finally {
         setIsLoading(false);
         setIsRefreshing(false);
       }
     },
-    [anketaId]
+    [
+      anketaId,
+      getErrorMessage,
+      handleUnauthorized,
+      showModal,
+    ],
   );
 
   useEffect(() => {
     fetchAnketa();
   }, [fetchAnketa]);
 
-  const questions = anketa?.questions ?? [];
+  const questions =
+    anketa?.questions ?? [];
 
-  const answeredCount = useMemo(() => {
-    return questions.filter(
-      question => selectedAnswers[question.id] !== undefined
-    ).length;
-  }, [questions, selectedAnswers]);
+  const answeredCount = useMemo(
+    () =>
+      questions.filter(
+        (question) =>
+          selectedAnswers[question.id] !==
+          undefined,
+      ).length,
+    [questions, selectedAnswers],
+  );
 
   const totalCount = questions.length;
 
@@ -242,24 +301,26 @@ export const SurveyDetailPage = ({
 
   const handleSelectOption = (
     questionId: number,
-    optionId: number
+    optionId: number,
   ) => {
     if (isSubmitting) {
       return;
     }
 
-    setSelectedAnswers(previousAnswers => ({
-      ...previousAnswers,
-      [questionId]: optionId,
-    }));
+    setSelectedAnswers(
+      (previousAnswers) => ({
+        ...previousAnswers,
+        [questionId]: optionId,
+      }),
+    );
   };
 
   const validateAnswers = () => {
     if (!anketa) {
       showModal(
-        'error',
-        'Анкета не загружена',
-        'Обновите страницу и попробуйте снова.'
+        "error",
+        "Анкета не загружена",
+        "Обновите страницу и попробуйте снова.",
       );
 
       return false;
@@ -267,27 +328,33 @@ export const SurveyDetailPage = ({
 
     if (anketa.questions.length === 0) {
       showModal(
-        'warning',
-        'Нет вопросов',
-        'В этой анкете пока нет вопросов для заполнения.'
+        "warning",
+        "Нет вопросов",
+        "В этой анкете пока нет вопросов для заполнения.",
       );
 
       return false;
     }
 
-    const unansweredQuestion = anketa.questions.find(
-      question => selectedAnswers[question.id] === undefined
-    );
-
-    if (unansweredQuestion) {
-      const questionIndex = anketa.questions.findIndex(
-        question => question.id === unansweredQuestion.id
+    const unansweredQuestion =
+      anketa.questions.find(
+        (question) =>
+          selectedAnswers[question.id] ===
+          undefined,
       );
 
+    if (unansweredQuestion) {
+      const questionIndex =
+        anketa.questions.findIndex(
+          (question) =>
+            question.id ===
+            unansweredQuestion.id,
+        );
+
       showModal(
-        'warning',
-        'Ответьте на все вопросы',
-        `Не выбран ответ на вопрос №${questionIndex + 1}.`
+        "warning",
+        "Ответьте на все вопросы",
+        `Не выбран ответ на вопрос №${questionIndex + 1}.`,
       );
 
       return false;
@@ -297,20 +364,27 @@ export const SurveyDetailPage = ({
   };
 
   const handleSubmit = async () => {
-    if (!validateAnswers() || !anketa || isSubmitting) {
+    if (
+      !validateAnswers() ||
+      !anketa ||
+      isSubmitting
+    ) {
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const accessToken = await AsyncStorage.getItem('access_token');
+      const accessToken =
+        await AsyncStorage.getItem(
+          "access_token",
+        );
 
       if (!accessToken) {
         showModal(
-          'auth',
-          'Требуется авторизация',
-          'Для отправки ответов необходимо войти в аккаунт.'
+          "auth",
+          "Требуется авторизация",
+          "Для отправки ответов необходимо войти в аккаунт.",
         );
 
         return;
@@ -318,23 +392,31 @@ export const SurveyDetailPage = ({
 
       const requestBody = {
         anketa_id: anketa.id,
-        answers: anketa.questions.map(question => ({
-          question_id: question.id,
-          option_id: selectedAnswers[question.id],
-        })),
+        answers: anketa.questions.map(
+          (question) => ({
+            question_id: question.id,
+            option_id:
+              selectedAnswers[question.id],
+          }),
+        ),
       };
 
-      const response = await fetch(ANKETA_SUBMIT_API, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
+      const response = await fetch(
+        ANKETA_SUBMIT_API,
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type":
+              "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(requestBody),
         },
-        body: JSON.stringify(requestBody),
-      });
+      );
 
-      let data: AnketaSubmitResponse | null = null;
+      let data: AnketaSubmitResponse | null =
+        null;
 
       try {
         data = await response.json();
@@ -342,22 +424,20 @@ export const SurveyDetailPage = ({
         data = null;
       }
 
-      if (response.status === 401 || response.status === 403) {
+      if (
+        response.status === 401 ||
+        response.status === 403
+      ) {
         await handleUnauthorized();
         return;
       }
 
-      /*
-       * Обычно сервер возвращает 409 или 422,
-       * когда анкета уже была отправлена
-       * либо данные не прошли проверку.
-       */
       if (response.status === 409) {
         showModal(
-          'warning',
-          'Анкета уже пройдена',
+          "warning",
+          "Анкета уже пройдена",
           data?.msg ||
-            'Ответы на эту анкету уже были отправлены ранее.'
+            "Ответы на эту анкету уже были отправлены ранее.",
         );
 
         return;
@@ -365,10 +445,10 @@ export const SurveyDetailPage = ({
 
       if (response.status === 422) {
         showModal(
-          'error',
-          'Некорректные ответы',
+          "error",
+          "Некорректные ответы",
           data?.msg ||
-            'Сервер не принял ответы. Проверьте заполнение анкеты.'
+            "Сервер не принял ответы. Проверьте заполнение анкеты.",
         );
 
         return;
@@ -377,27 +457,28 @@ export const SurveyDetailPage = ({
       if (!response.ok) {
         throw new Error(
           data?.msg ||
-            `Не удалось отправить ответы. Код ошибки: ${response.status}`
+            `Не удалось отправить ответы. Код ошибки: ${response.status}`,
         );
       }
 
       if (!data || data.result !== 1) {
         throw new Error(
-          data?.msg || 'Сервер не подтвердил сохранение ответов'
+          data?.msg ||
+            "Сервер не подтвердил сохранение ответов",
         );
       }
 
       showModal(
-        'success',
-        'Анкета пройдена',
-        'Спасибо! Ваши ответы успешно сохранены.'
+        "success",
+        "Анкета пройдена",
+        "Спасибо! Ваши ответы успешно сохранены.",
       );
     } catch (error) {
       showModal(
-        'error',
-        'Ошибка отправки',
+        "error",
+        "Ошибка отправки",
         getErrorMessage(error) ||
-          'Не удалось отправить ответы. Попробуйте ещё раз.'
+          "Не удалось отправить ответы. Попробуйте ещё раз.",
       );
     } finally {
       setIsSubmitting(false);
@@ -409,59 +490,51 @@ export const SurveyDetailPage = ({
 
     setResultModal(initialModalState);
 
-    if (modalType === 'success') {
+    if (modalType === "success") {
       navigation.goBack();
       return;
     }
 
-    if (modalType === 'auth') {
+    if (modalType === "auth") {
       navigation.reset({
         index: 0,
-        routes: [{ name: 'LoginPage' }],
+        routes: [{ name: "LoginPage" }],
       });
     }
   };
 
   const getModalIcon = () => {
     switch (resultModal.type) {
-      case 'success':
-        return '✅';
-
-      case 'warning':
-        return '⚠️';
-
-      case 'auth':
-        return '🔐';
-
+      case "success":
+        return "✅";
+      case "warning":
+        return "⚠️";
+      case "auth":
+        return "🔐";
       default:
-        return '❌';
+        return "❌";
     }
   };
 
   const getModalButtonText = () => {
     switch (resultModal.type) {
-      case 'success':
-        return 'Готово';
-
-      case 'auth':
-        return 'Перейти ко входу';
-
+      case "success":
+        return "Готово";
+      case "auth":
+        return "Перейти ко входу";
       default:
-        return 'Понятно';
+        return "Понятно";
     }
   };
 
   const getModalIconStyle = () => {
     switch (resultModal.type) {
-      case 'success':
+      case "success":
         return styles.modalIconSuccess;
-
-      case 'warning':
+      case "warning":
         return styles.modalIconWarning;
-
-      case 'auth':
+      case "auth":
         return styles.modalIconAuth;
-
       default:
         return styles.modalIconError;
     }
@@ -469,7 +542,10 @@ export const SurveyDetailPage = ({
 
   const renderLoading = () => (
     <View style={styles.centerContainer}>
-      <ActivityIndicator size="large" color="#0057B8" />
+      <ActivityIndicator
+        size="large"
+        color={colors.accent}
+      />
 
       <Text style={styles.loadingText}>
         Загружаем вопросы анкеты...
@@ -480,7 +556,9 @@ export const SurveyDetailPage = ({
   const renderEmptyQuestions = () => (
     <View style={styles.emptyCard}>
       <View style={styles.emptyIconCircle}>
-        <Text style={styles.emptyIcon}>📋</Text>
+        <Text style={styles.emptyIcon}>
+          📋
+        </Text>
       </View>
 
       <Text style={styles.emptyTitle}>
@@ -488,7 +566,8 @@ export const SurveyDetailPage = ({
       </Text>
 
       <Text style={styles.emptyDescription}>
-        Вопросы пока не добавлены. Вернитесь позже или обновите страницу.
+        Вопросы пока не добавлены. Вернитесь
+        позже или обновите страницу.
       </Text>
 
       <TouchableOpacity
@@ -496,7 +575,9 @@ export const SurveyDetailPage = ({
         activeOpacity={0.8}
         onPress={() => fetchAnketa()}
       >
-        <Text style={styles.retryButtonText}>Обновить</Text>
+        <Text style={styles.retryButtonText}>
+          Обновить
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -505,7 +586,7 @@ export const SurveyDetailPage = ({
     <DefaultLayout
       variant="back"
       title="Анкета"
-      onRightPress={() => alert('EN')}
+      onRightPress={() => alert("EN")}
     >
       <View style={styles.screen}>
         {isLoading ? (
@@ -513,49 +594,89 @@ export const SurveyDetailPage = ({
         ) : (
           <ScrollView
             style={styles.scrollView}
-            contentContainerStyle={styles.content}
-            showsVerticalScrollIndicator={false}
+            contentContainerStyle={
+              styles.content
+            }
+            showsVerticalScrollIndicator={
+              false
+            }
             keyboardShouldPersistTaps="handled"
             refreshControl={
               <RefreshControl
                 refreshing={isRefreshing}
-                onRefresh={() => fetchAnketa(true)}
-                tintColor="#0057B8"
-                colors={['#0057B8']}
+                onRefresh={() =>
+                  fetchAnketa(true)
+                }
+                tintColor={colors.accent}
+                colors={[colors.accent]}
               />
             }
           >
             {anketa && (
               <>
-                <View style={styles.pageHeader}>
-                  <View style={styles.pageHeaderText}>
-                    <Text style={styles.pageTitle}>
+                <View
+                  style={styles.pageHeader}
+                >
+                  <View
+                    style={
+                      styles.pageHeaderText
+                    }
+                  >
+                    <Text
+                      style={styles.pageTitle}
+                    >
                       Анкетирование
                     </Text>
 
-                    <Text style={styles.pageSubtitle}>
-                      Выберите один вариант ответа в каждом вопросе
+                    <Text
+                      style={
+                        styles.pageSubtitle
+                      }
+                    >
+                      Выберите один вариант
+                      ответа в каждом вопросе
                     </Text>
                   </View>
 
-                  <View style={styles.progressBadge}>
-                    <Text style={styles.progressValue}>
-                      {answeredCount}/{totalCount}
+                  <View
+                    style={
+                      styles.progressBadge
+                    }
+                  >
+                    <Text
+                      style={
+                        styles.progressValue
+                      }
+                    >
+                      {answeredCount}/
+                      {totalCount}
                     </Text>
 
-                    <Text style={styles.progressLabel}>
+                    <Text
+                      style={
+                        styles.progressLabel
+                      }
+                    >
                       ответов
                     </Text>
                   </View>
                 </View>
 
-                <View style={styles.surveyHeader}>
-                  <Text style={styles.surveyTitle}>
+                <View
+                  style={styles.surveyHeader}
+                >
+                  <Text
+                    style={styles.surveyTitle}
+                  >
                     {anketa.title}
                   </Text>
 
                   {!!anketa.description && (
-                    <Text style={styles.surveyDescription}>
+                    <Text
+                      style={
+                        styles.surveyDescription
+                      }
+                    >
                       {anketa.description}
                     </Text>
                   )}
@@ -563,103 +684,167 @@ export const SurveyDetailPage = ({
 
                 {questions.length === 0
                   ? renderEmptyQuestions()
-                  : questions.map((question, questionIndex) => (
-                      <View
-                        key={question.id}
-                        style={styles.card}
-                      >
-                        <View style={styles.questionHeader}>
-                          <View style={styles.questionNumber}>
-                            <Text style={styles.questionNumberText}>
-                              {questionIndex + 1}
+                  : questions.map(
+                      (
+                        question,
+                        questionIndex,
+                      ) => (
+                        <View
+                          key={question.id}
+                          style={styles.card}
+                        >
+                          <View
+                            style={
+                              styles.questionHeader
+                            }
+                          >
+                            <View
+                              style={
+                                styles.questionNumber
+                              }
+                            >
+                              <Text
+                                style={
+                                  styles.questionNumberText
+                                }
+                              >
+                                {questionIndex +
+                                  1}
+                              </Text>
+                            </View>
+
+                            <Text
+                              style={
+                                styles.cardTitle
+                              }
+                            >
+                              {
+                                question.question_text
+                              }
                             </Text>
                           </View>
 
-                          <Text style={styles.cardTitle}>
-                            {question.question_text}
-                          </Text>
-                        </View>
+                          {question.options
+                            .length === 0 ? (
+                            <View
+                              style={
+                                styles.noOptionsContainer
+                              }
+                            >
+                              <Text
+                                style={
+                                  styles.noOptionsText
+                                }
+                              >
+                                Для этого
+                                вопроса не
+                                добавлены
+                                варианты
+                                ответа.
+                              </Text>
+                            </View>
+                          ) : (
+                            <View
+                              style={
+                                styles.optionsList
+                              }
+                            >
+                              {question.options.map(
+                                (option) => {
+                                  const isSelected =
+                                    selectedAnswers[
+                                      question
+                                        .id
+                                    ] ===
+                                    option.id;
 
-                        {question.options.length === 0 ? (
-                          <View style={styles.noOptionsContainer}>
-                            <Text style={styles.noOptionsText}>
-                              Для этого вопроса не добавлены варианты ответа.
-                            </Text>
-                          </View>
-                        ) : (
-                          <View style={styles.optionsList}>
-                            {question.options.map(option => {
-                              const isSelected =
-                                selectedAnswers[question.id] ===
-                                option.id;
-
-                              return (
-                                <TouchableOpacity
-                                  key={option.id}
-                                  style={[
-                                    styles.optionRow,
-                                    isSelected &&
-                                      styles.optionRowSelected,
-                                  ]}
-                                  activeOpacity={0.75}
-                                  disabled={isSubmitting}
-                                  onPress={() =>
-                                    handleSelectOption(
-                                      question.id,
-                                      option.id
-                                    )
-                                  }
-                                >
-                                  <View
-                                    style={[
-                                      styles.checkbox,
-                                      isSelected &&
-                                        styles.checkboxSelected,
-                                    ]}
-                                  >
-                                    {isSelected && (
+                                  return (
+                                    <TouchableOpacity
+                                      key={
+                                        option.id
+                                      }
+                                      activeOpacity={
+                                        0.75
+                                      }
+                                      disabled={
+                                        isSubmitting
+                                      }
+                                      onPress={() =>
+                                        handleSelectOption(
+                                          question.id,
+                                          option.id,
+                                        )
+                                      }
+                                      style={[
+                                        styles.optionRow,
+                                        isSelected &&
+                                          styles.optionRowSelected,
+                                      ]}
+                                    >
                                       <View
-                                        style={styles.checkboxDot}
-                                      />
-                                    )}
-                                  </View>
+                                        style={[
+                                          styles.checkbox,
+                                          isSelected &&
+                                            styles.checkboxSelected,
+                                        ]}
+                                      >
+                                        {isSelected && (
+                                          <View
+                                            style={
+                                              styles.checkboxDot
+                                            }
+                                          />
+                                        )}
+                                      </View>
 
-                                  <Text
-                                    style={[
-                                      styles.optionText,
-                                      isSelected &&
-                                        styles.optionTextSelected,
-                                    ]}
-                                  >
-                                    {option.option_text}
-                                  </Text>
-                                </TouchableOpacity>
-                              );
-                            })}
-                          </View>
-                        )}
-                      </View>
-                    ))}
+                                      <Text
+                                        style={[
+                                          styles.optionText,
+                                          isSelected &&
+                                            styles.optionTextSelected,
+                                        ]}
+                                      >
+                                        {
+                                          option.option_text
+                                        }
+                                      </Text>
+                                    </TouchableOpacity>
+                                  );
+                                },
+                              )}
+                            </View>
+                          )}
+                        </View>
+                      ),
+                    )}
 
                 {questions.length > 0 && (
                   <TouchableOpacity
+                    activeOpacity={0.8}
+                    disabled={!canSubmit}
+                    onPress={handleSubmit}
                     style={[
                       styles.submitButton,
                       !canSubmit &&
                         styles.submitButtonDisabled,
                     ]}
-                    activeOpacity={0.8}
-                    disabled={!canSubmit}
-                    onPress={handleSubmit}
                   >
                     {isSubmitting ? (
-                      <View style={styles.submitLoadingRow}>
+                      <View
+                        style={
+                          styles.submitLoadingRow
+                        }
+                      >
                         <ActivityIndicator
                           size="small"
-                          color="#FFFFFF"
+                          color={colors.white}
                         />
 
-                        <Text style={styles.submitButtonText}>
+                        <Text
+                          style={
+                            styles.submitButtonText
+                          }
+                        >
                           Отправляем ответы...
                         </Text>
                       </View>
@@ -672,7 +857,7 @@ export const SurveyDetailPage = ({
                         ]}
                       >
                         {canSubmit
-                          ? 'Отправить ответы'
+                          ? "Отправить ответы"
                           : `Ответьте на все вопросы (${answeredCount}/${totalCount})`}
                       </Text>
                     )}
@@ -698,7 +883,9 @@ export const SurveyDetailPage = ({
                   getModalIconStyle(),
                 ]}
               >
-                <Text style={styles.modalIcon}>
+                <Text
+                  style={styles.modalIcon}
+                >
                   {getModalIcon()}
                 </Text>
               </View>
@@ -707,7 +894,11 @@ export const SurveyDetailPage = ({
                 {resultModal.title}
               </Text>
 
-              <Text style={styles.modalDescription}>
+              <Text
+                style={
+                  styles.modalDescription
+                }
+              >
                 {resultModal.message}
               </Text>
 
@@ -716,7 +907,11 @@ export const SurveyDetailPage = ({
                 activeOpacity={0.8}
                 onPress={closeResultModal}
               >
-                <Text style={styles.modalButtonText}>
+                <Text
+                  style={
+                    styles.modalButtonText
+                  }
+                >
                   {getModalButtonText()}
                 </Text>
               </TouchableOpacity>
@@ -731,392 +926,427 @@ export const SurveyDetailPage = ({
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background || '#F5F7FA',
+    backgroundColor: colors.background,
   },
 
   scrollView: {
     flex: 1,
-    backgroundColor: colors.background || '#F5F7FA',
+    backgroundColor: colors.background,
   },
 
   content: {
     flexGrow: 1,
-    paddingHorizontal: 15,
-    paddingTop: 20,
-    paddingBottom: 120,
-    gap: 16,
+    paddingHorizontal: 16,
+    paddingTop: 18,
+    paddingBottom: 110,
+    gap: 13,
   },
 
   centerContainer: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     paddingHorizontal: 30,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   loadingText: {
-    marginTop: 14,
-    color: '#64748B',
+    marginTop: 12,
+    color: colors.textLight,
     fontSize: 14,
-    fontWeight: '600',
+    lineHeight: 20,
+    fontWeight: "600",
   },
 
   pageHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
     gap: 12,
   },
 
   pageHeaderText: {
     flex: 1,
+    minWidth: 0,
   },
 
   pageTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#002F42',
+    color: colors.textDark,
+    fontSize: 23,
+    lineHeight: 29,
+    fontWeight: "800",
   },
 
   pageSubtitle: {
     marginTop: 4,
+    color: colors.textLight,
     fontSize: 13,
-    color: '#7A8494',
-    fontWeight: '500',
     lineHeight: 18,
+    fontWeight: "500",
   },
 
   progressBadge: {
-    minWidth: 68,
-    height: 50,
+    minWidth: 66,
+    minHeight: 52,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.violationBorder,
     borderRadius: 16,
-    backgroundColor: '#EBF4FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 10,
+    backgroundColor: colors.violationLight,
   },
 
   progressValue: {
+    color: colors.accent,
     fontSize: 17,
-    fontWeight: '900',
-    color: '#0057B8',
     lineHeight: 20,
+    fontWeight: "900",
   },
 
   progressLabel: {
+    marginTop: 1,
+    color: colors.textLight,
     fontSize: 10,
-    fontWeight: '700',
-    color: '#64748B',
+    lineHeight: 13,
+    fontWeight: "700",
   },
 
   surveyHeader: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 18,
-    shadowColor: '#000',
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 19,
+    backgroundColor: colors.white,
+    shadowColor: colors.shadow,
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
+    shadowOpacity: 0.035,
+    shadowRadius: 9,
+    elevation: 2,
   },
 
   surveyTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#002F42',
-    lineHeight: 25,
+    color: colors.textDark,
+    fontSize: 17,
+    lineHeight: 23,
+    fontWeight: "800",
   },
 
   surveyDescription: {
-    marginTop: 8,
+    marginTop: 7,
+    color: colors.textLight,
     fontSize: 13,
-    lineHeight: 20,
-    color: '#64748B',
+    lineHeight: 19,
+    fontWeight: "400",
   },
 
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 16,
-    gap: 16,
-    shadowColor: '#000',
+    padding: 15,
+    gap: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 19,
+    backgroundColor: colors.white,
+    shadowColor: colors.shadow,
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
+    shadowOpacity: 0.035,
+    shadowRadius: 9,
+    elevation: 2,
   },
 
   questionHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: 10,
   },
 
   questionNumber: {
     width: 28,
     height: 28,
-    borderRadius: 14,
-    backgroundColor: '#EBF4FF',
-    alignItems: 'center',
-    justifyContent: 'center',
     marginTop: 1,
+    flexShrink: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.violationBorder,
+    borderRadius: 14,
+    backgroundColor: colors.violationLight,
   },
 
   questionNumberText: {
+    color: colors.accent,
     fontSize: 13,
-    fontWeight: '900',
-    color: '#0057B8',
+    lineHeight: 17,
+    fontWeight: "900",
   },
 
   cardTitle: {
     flex: 1,
-    fontSize: 16,
-    fontWeight: '800',
-    lineHeight: 23,
-    color: '#111827',
+    color: colors.textDark,
+    fontSize: 15,
+    lineHeight: 22,
+    fontWeight: "800",
   },
 
   optionsList: {
-    gap: 10,
+    gap: 8,
   },
 
   optionRow: {
-    minHeight: 50,
-    borderRadius: 16,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+    minHeight: 47,
     paddingHorizontal: 12,
-    paddingVertical: 11,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    backgroundColor: colors.lightGray,
   },
 
   optionRowSelected: {
-    backgroundColor: '#EBF4FF',
-    borderColor: '#0057B8',
+    borderColor: colors.accent,
+    backgroundColor: colors.primaryLight,
   },
 
   checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 21,
+    height: 21,
+    flexShrink: 0,
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 2,
-    borderColor: '#94A3B8',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.inactive,
+    borderRadius: 11,
+    backgroundColor: colors.white,
   },
 
   checkboxSelected: {
-    borderColor: '#0057B8',
+    borderColor: colors.accent,
   },
 
   checkboxDot: {
-    width: 10,
-    height: 10,
+    width: 9,
+    height: 9,
     borderRadius: 5,
-    backgroundColor: '#0057B8',
+    backgroundColor: colors.accent,
   },
 
   optionText: {
     flex: 1,
-    fontSize: 15,
-    fontWeight: '700',
-    lineHeight: 21,
-    color: '#334155',
+    color: colors.textDark,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "600",
   },
 
   optionTextSelected: {
-    color: '#002F42',
+    color: colors.primary,
+    fontWeight: "700",
   },
 
   noOptionsContainer: {
-    borderRadius: 16,
-    backgroundColor: '#FFF7ED',
+    padding: 13,
     borderWidth: 1,
-    borderColor: '#FED7AA',
-    padding: 14,
+    borderColor: colors.salaryBorder,
+    borderRadius: 14,
+    backgroundColor: colors.salaryLight,
   },
 
   noOptionsText: {
-    color: '#C2410C',
+    color: colors.textDark,
     fontSize: 13,
-    fontWeight: '600',
     lineHeight: 19,
+    fontWeight: "600",
   },
 
   submitButton: {
-    minHeight: 52,
-    borderRadius: 26,
-    backgroundColor: '#0057B8',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 4,
+    minHeight: 48,
+    marginTop: 2,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 11,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 14,
+    backgroundColor: colors.accent,
   },
 
   submitButtonDisabled: {
-    backgroundColor: '#E2E8F0',
+    backgroundColor: colors.border,
   },
 
   submitButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '800',
-    textAlign: 'center',
+    color: colors.white,
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "800",
+    textAlign: "center",
   },
 
   submitButtonTextDisabled: {
-    color: '#94A3B8',
+    color: colors.inactive,
   },
 
   submitLoadingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 9,
   },
 
   emptyCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    paddingHorizontal: 24,
-    paddingVertical: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingHorizontal: 22,
+    paddingVertical: 29,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 19,
+    backgroundColor: colors.white,
   },
 
   emptyIconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: '#EBF4FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
+    width: 64,
+    height: 64,
+    marginBottom: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 21,
+    backgroundColor: colors.primaryLight,
   },
 
   emptyIcon: {
-    fontSize: 34,
+    fontSize: 29,
   },
 
   emptyTitle: {
-    color: '#002F42',
-    fontSize: 19,
-    fontWeight: '900',
-    textAlign: 'center',
+    color: colors.textDark,
+    fontSize: 18,
+    lineHeight: 24,
+    fontWeight: "900",
+    textAlign: "center",
   },
 
   emptyDescription: {
-    marginTop: 8,
-    color: '#64748B',
-    fontSize: 14,
-    fontWeight: '500',
-    lineHeight: 21,
-    textAlign: 'center',
+    marginTop: 7,
+    color: colors.textLight,
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "500",
+    textAlign: "center",
   },
 
   retryButton: {
-    height: 46,
     minWidth: 140,
-    borderRadius: 23,
-    backgroundColor: '#0057B8',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 22,
-    paddingHorizontal: 24,
+    minHeight: 44,
+    marginTop: 19,
+    paddingHorizontal: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 13,
+    backgroundColor: colors.accent,
   },
 
   retryButtonText: {
-    color: '#FFFFFF',
+    color: colors.white,
     fontSize: 14,
-    fontWeight: '800',
+    lineHeight: 19,
+    fontWeight: "800",
   },
 
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.48)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.overlay,
   },
 
   modalCard: {
-    width: '100%',
-    maxWidth: 420,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 28,
-    padding: 24,
-    alignItems: 'center',
+    width: "100%",
+    maxWidth: 390,
+    padding: 22,
+    alignItems: "center",
+    borderRadius: 22,
+    backgroundColor: colors.white,
+    shadowColor: colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 20,
+    elevation: 10,
   },
 
   modalIconCircle: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
+    width: 62,
+    height: 62,
+    marginBottom: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 21,
   },
 
   modalIconSuccess: {
-    backgroundColor: '#DCFCE7',
+    backgroundColor: colors.successLight,
   },
 
   modalIconWarning: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.workLight,
   },
 
   modalIconError: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: colors.salaryLight,
   },
 
   modalIconAuth: {
-    backgroundColor: '#DBEAFE',
+    backgroundColor: colors.violationLight,
   },
 
   modalIcon: {
-    fontSize: 34,
+    fontSize: 29,
   },
 
   modalTitle: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: '#002F42',
-    marginBottom: 8,
-    textAlign: 'center',
+    marginBottom: 7,
+    color: colors.textDark,
+    fontSize: 19,
+    lineHeight: 25,
+    fontWeight: "900",
+    textAlign: "center",
   },
 
   modalDescription: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#64748B',
-    textAlign: 'center',
+    marginBottom: 20,
+    color: colors.textLight,
+    fontSize: 13,
     lineHeight: 20,
-    marginBottom: 22,
+    fontWeight: "500",
+    textAlign: "center",
   },
 
   modalButton: {
-    width: '100%',
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#0057B8',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: "100%",
+    minHeight: 46,
+    paddingHorizontal: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 13,
+    backgroundColor: colors.accent,
   },
 
   modalButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '800',
+    color: colors.white,
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "800",
   },
 });

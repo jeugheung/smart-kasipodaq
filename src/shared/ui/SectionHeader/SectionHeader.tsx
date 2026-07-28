@@ -55,12 +55,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#544A4A",
+    color: "#0A192F",
   },
 
   actionText: {
     fontSize: 14,
     fontWeight: "400",
-    color: "#828282",
+    color: "#1E3A8A",
   },
 });
