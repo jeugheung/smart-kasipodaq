@@ -90,55 +90,43 @@ const initialForm: FormState = {
   profsoyuzId: null,
 };
 
-const LOGIN_LOGO = require("../../../assets/splash-icon.png");
+const LOGIN_LOGO = require("../../../assets/icon.png");
 
 export const RegisterPage = ({ navigation, route }: RegisterPageProps) => {
   const { t } = useTranslation();
 
-  const [form, setForm] = useState<FormState>(initialForm);
-
+  const [form, setForm] = useState(initialForm);
   const [profsoyuzList, setProfsoyuzList] = useState<Profsoyuz[]>([]);
-
   const [isProfsoyuzLoading, setIsProfsoyuzLoading] = useState(false);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [isSelectOpen, setIsSelectOpen] = useState(false);
-
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
     useState(false);
 
   const selectedProfsoyuz = useMemo(
-    () => profsoyuzList.find((item) => item.id === form.profsoyuzId) ?? null,
-    [form.profsoyuzId, profsoyuzList],
+    () => profsoyuzList.find(({ id }) => id === form.profsoyuzId) ?? null,
+    [profsoyuzList, form.profsoyuzId],
   );
-
-  const parseResponse = async <T,>(response: Response): Promise<T | null> => {
-    const responseText = await response.text();
-
-    if (!responseText) {
-      return null;
-    }
-
-    try {
-      return JSON.parse(responseText) as T;
-    } catch {
-      console.error("Сервер вернул некорректный JSON:", responseText);
-
-      return null;
-    }
-  };
 
   const updateField = <K extends keyof FormState>(
     field: K,
     value: FormState[K],
   ) => {
-    setForm((previous) => ({
-      ...previous,
-      [field]: value,
-    }));
+    setForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const parseResponse = async <T,>(response: Response): Promise<T | null> => {
+    const text = await response.text();
+
+    if (!text) return null;
+
+    try {
+      return JSON.parse(text) as T;
+    } catch {
+      console.error("Сервер вернул некорректный JSON:", text);
+      return null;
+    }
   };
 
   const loadProfsoyuzList = useCallback(async () => {
@@ -146,40 +134,27 @@ export const RegisterPage = ({ navigation, route }: RegisterPageProps) => {
       setIsProfsoyuzLoading(true);
 
       const response = await fetch(API_CONFIG.PROFSOYUZ_LIST_API, {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-        },
+        headers: { Accept: "application/json" },
       });
 
       const data = await parseResponse<ProfsoyuzListResponse>(response);
 
-      if (!response.ok) {
+      if (!response.ok || data?.result !== 1) {
         throw new Error(data?.msg || t("registerPage.errors.profsoyuzLoad"));
       }
 
-      if (!data) {
-        throw new Error(t("registerPage.errors.emptyResponse"));
-      }
-
-      if (data.result !== 1) {
-        throw new Error(data.msg || t("registerPage.errors.profsoyuzLoad"));
-      }
-
-      const activeProfsoyuz = (data.profsoyuz ?? []).filter(
-        (item) => item.status === 1,
+      setProfsoyuzList(
+        (data.profsoyuz ?? []).filter(({ status }) => status === 1),
       );
-
-      setProfsoyuzList(activeProfsoyuz);
     } catch (error) {
       console.error("Ошибка загрузки профсоюзов:", error);
 
-      const message =
+      Alert.alert(
+        t("registerPage.alerts.errorTitle"),
         error instanceof Error
           ? error.message
-          : t("registerPage.errors.profsoyuzLoad");
-
-      Alert.alert(t("registerPage.alerts.errorTitle"), message);
+          : t("registerPage.errors.profsoyuzLoad"),
+      );
     } finally {
       setIsProfsoyuzLoading(false);
     }
@@ -190,133 +165,80 @@ export const RegisterPage = ({ navigation, route }: RegisterPageProps) => {
   }, [loadProfsoyuzList]);
 
   const handleIinChange = (value: string) => {
-    const onlyNumbers = value.replace(/\D/g, "");
-
-    updateField("iin", onlyNumbers.slice(0, 12));
+    updateField("iin", value.replace(/\D/g, "").slice(0, 12));
   };
 
   const handlePhoneChange = (value: string) => {
-    const digits = value.replace(/\D/g, "");
+    let digits = value.replace(/\D/g, "");
 
-    let normalizedDigits = digits;
+    if (digits.startsWith("8")) digits = `7${digits.slice(1)}`;
+    if (!digits.startsWith("7")) digits = `7${digits}`;
 
-    if (normalizedDigits.startsWith("8")) {
-      normalizedDigits = "7" + normalizedDigits.slice(1);
-    }
-
-    if (!normalizedDigits.startsWith("7")) {
-      normalizedDigits = "7" + normalizedDigits;
-    }
-
-    normalizedDigits = normalizedDigits.slice(0, 11);
-
-    updateField("phone", `+${normalizedDigits}`);
+    updateField("phone", `+${digits.slice(0, 11)}`);
   };
 
-  const validateForm = (): boolean => {
-    if (!form.lastName.trim()) {
-      Alert.alert(
-        t("registerPage.alerts.errorTitle"),
-        t("registerPage.validation.lastNameRequired"),
-      );
+  const showValidationError = (message: string) => {
+    Alert.alert(t("registerPage.alerts.errorTitle"), message);
+    return false;
+  };
 
-      return false;
+  const validateForm = () => {
+    if (!form.lastName.trim()) {
+      return showValidationError(t("registerPage.validation.lastNameRequired"));
     }
 
     if (!form.firstName.trim()) {
-      Alert.alert(
-        t("registerPage.alerts.errorTitle"),
+      return showValidationError(
         t("registerPage.validation.firstNameRequired"),
       );
-
-      return false;
     }
 
     if (!form.middleName.trim()) {
-      Alert.alert(
-        t("registerPage.alerts.errorTitle"),
+      return showValidationError(
         t("registerPage.validation.middleNameRequired"),
       );
-
-      return false;
     }
 
     if (!/^\d{12}$/.test(form.iin)) {
-      Alert.alert(
-        t("registerPage.alerts.errorTitle"),
-        t("registerPage.validation.iinLength"),
-      );
-
-      return false;
+      return showValidationError(t("registerPage.validation.iinLength"));
     }
 
     const email = form.email.trim();
 
     if (!email) {
-      Alert.alert(
-        t("registerPage.alerts.errorTitle"),
-        t("registerPage.validation.emailRequired"),
-      );
-
-      return false;
+      return showValidationError(t("registerPage.validation.emailRequired"));
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      Alert.alert(
-        t("registerPage.alerts.errorTitle"),
-        t("registerPage.validation.emailInvalid"),
-      );
-
-      return false;
+      return showValidationError(t("registerPage.validation.emailInvalid"));
     }
 
     if (!/^\+7\d{10}$/.test(form.phone)) {
-      Alert.alert(
-        t("registerPage.alerts.errorTitle"),
-        t("registerPage.validation.phoneInvalid"),
-      );
-
-      return false;
+      return showValidationError(t("registerPage.validation.phoneInvalid"));
     }
 
     if (form.password.length < 8) {
-      Alert.alert(
-        t("registerPage.alerts.errorTitle"),
-        t("registerPage.validation.passwordLength"),
-      );
-
-      return false;
+      return showValidationError(t("registerPage.validation.passwordLength"));
     }
 
     if (form.password !== form.confirmPassword) {
-      Alert.alert(
-        t("registerPage.alerts.errorTitle"),
-        t("registerPage.validation.passwordMismatch"),
-      );
-
-      return false;
+      return showValidationError(t("registerPage.validation.passwordMismatch"));
     }
 
     if (!form.profsoyuzId) {
-      Alert.alert(
-        t("registerPage.alerts.errorTitle"),
+      return showValidationError(
         t("registerPage.validation.profsoyuzRequired"),
       );
-
-      return false;
     }
 
     return true;
   };
 
-  const getCurrentUser = async (
-    accessToken: string,
-  ): Promise<MeResponse | null> => {
+  const getCurrentUser = async (token: string) => {
     const response = await fetch(API_CONFIG.ME_API, {
-      method: "GET",
       headers: {
         Accept: "application/json",
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -330,15 +252,13 @@ export const RegisterPage = ({ navigation, route }: RegisterPageProps) => {
   };
 
   const navigateAfterRegistration = () => {
-    const redirectTab = route.params?.redirectTab ?? "ProfileTab";
-
     navigation.reset({
       index: 0,
       routes: [
         {
           name: "MainTabs",
           params: {
-            screen: redirectTab,
+            screen: route.params?.redirectTab ?? "ProfileTab",
           },
         },
       ],
@@ -346,23 +266,10 @@ export const RegisterPage = ({ navigation, route }: RegisterPageProps) => {
   };
 
   const handleRegister = async () => {
-    if (isSubmitting || !validateForm()) {
-      return;
-    }
+    if (isSubmitting || !validateForm()) return;
 
     try {
       setIsSubmitting(true);
-
-      const payload = {
-        last_name: form.lastName.trim(),
-        first_name: form.firstName.trim(),
-        middle_name: form.middleName.trim(),
-        iin: form.iin,
-        email: form.email.trim().toLowerCase(),
-        phone: form.phone,
-        password: form.password,
-        profsoyuz_id: form.profsoyuzId,
-      };
 
       const response = await fetch(API_CONFIG.REGISTER_API, {
         method: "POST",
@@ -370,24 +277,23 @@ export const RegisterPage = ({ navigation, route }: RegisterPageProps) => {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          last_name: form.lastName.trim(),
+          first_name: form.firstName.trim(),
+          middle_name: form.middleName.trim(),
+          iin: form.iin,
+          email: form.email.trim().toLowerCase(),
+          phone: form.phone,
+          password: form.password,
+          profsoyuz_id: form.profsoyuzId,
+        }),
       });
 
       const data = await parseResponse<RegisterResponse>(response);
 
-      if (!response.ok) {
+      if (!response.ok || data?.result !== 1) {
         throw new Error(
           data?.msg || t("registerPage.errors.registrationFailed"),
-        );
-      }
-
-      if (!data) {
-        throw new Error(t("registerPage.errors.emptyResponse"));
-      }
-
-      if (data.result !== 1) {
-        throw new Error(
-          data.msg || t("registerPage.errors.registrationFailed"),
         );
       }
 
@@ -398,12 +304,10 @@ export const RegisterPage = ({ navigation, route }: RegisterPageProps) => {
           await getCurrentUser(data.access_token);
         } catch (error) {
           await AsyncStorage.removeItem("access_token");
-
           throw error;
         }
 
         navigateAfterRegistration();
-
         return;
       }
 
@@ -413,23 +317,22 @@ export const RegisterPage = ({ navigation, route }: RegisterPageProps) => {
         [
           {
             text: t("registerPage.success.loginButton"),
-            onPress: () => {
+            onPress: () =>
               navigation.replace("LoginPage", {
                 redirectTab: route.params?.redirectTab ?? "ProfileTab",
-              });
-            },
+              }),
           },
         ],
       );
     } catch (error) {
       console.error("Ошибка регистрации:", error);
 
-      const message =
+      Alert.alert(
+        t("registerPage.alerts.errorTitle"),
         error instanceof Error
           ? error.message
-          : t("registerPage.errors.connection");
-
-      Alert.alert(t("registerPage.alerts.errorTitle"), message);
+          : t("registerPage.errors.connection"),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -467,9 +370,9 @@ export const RegisterPage = ({ navigation, route }: RegisterPageProps) => {
   return (
     <DefaultLayout variant="back" title={t("registerPage.layoutTitle")}>
       <KeyboardAvoidingView
+        style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
-        style={styles.container}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -486,9 +389,7 @@ export const RegisterPage = ({ navigation, route }: RegisterPageProps) => {
             </View>
 
             <Text style={styles.brandName}>Smart Kasipodaq</Text>
-
             <Text style={styles.brandTitle}>{t("registerPage.title")}</Text>
-
             <Text style={styles.brandSubtitle}>
               {t("registerPage.subtitle")}
             </Text>
@@ -567,7 +468,7 @@ export const RegisterPage = ({ navigation, route }: RegisterPageProps) => {
                 <Text
                   style={[
                     styles.selectText,
-                    !selectedProfsoyuz && styles.selectPlaceholder,
+                    !selectedProfsoyuz && styles.placeholder,
                   ]}
                   numberOfLines={1}
                 >
@@ -578,13 +479,13 @@ export const RegisterPage = ({ navigation, route }: RegisterPageProps) => {
                 </Text>
 
                 {isProfsoyuzLoading ? (
-                  <ActivityIndicator size="small" color="#0057B8" />
+                  <ActivityIndicator size="small" color={colors.accent} />
                 ) : (
                   <View style={styles.selectArrow} />
                 )}
               </TouchableOpacity>
 
-              {!isProfsoyuzLoading && profsoyuzList.length === 0 && (
+              {!isProfsoyuzLoading && !profsoyuzList.length && (
                 <TouchableOpacity
                   activeOpacity={0.7}
                   onPress={() => void loadProfsoyuzList()}
@@ -596,99 +497,35 @@ export const RegisterPage = ({ navigation, route }: RegisterPageProps) => {
               )}
             </View>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>
-                {t("registerPage.fields.passwordLabel")}
-              </Text>
+            <PasswordInput
+              label={t("registerPage.fields.passwordLabel")}
+              placeholder={t("registerPage.fields.passwordPlaceholder")}
+              value={form.password}
+              error={passwordError}
+              visible={isPasswordVisible}
+              disabled={isSubmitting}
+              onChangeText={(value) => updateField("password", value)}
+              onToggle={() => setIsPasswordVisible((current) => !current)}
+              visibleText={t("registerPage.fields.hidePassword")}
+              hiddenText={t("registerPage.fields.showPassword")}
+            />
 
-              <View
-                style={[
-                  styles.inputWrapper,
-                  passwordError && styles.inputWrapperError,
-                ]}
-              >
-                <TextInput
-                  style={styles.inputInside}
-                  placeholder={t("registerPage.fields.passwordPlaceholder")}
-                  placeholderTextColor="#A7B0C0"
-                  value={form.password}
-                  onChangeText={(value) => updateField("password", value)}
-                  editable={!isSubmitting}
-                  secureTextEntry={!isPasswordVisible}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  selectionColor="#0057B8"
-                />
-
-                <TouchableOpacity
-                  style={styles.passwordButton}
-                  activeOpacity={0.7}
-                  onPress={() => setIsPasswordVisible((current) => !current)}
-                >
-                  <Text style={styles.passwordButtonText}>
-                    {isPasswordVisible
-                      ? t("registerPage.fields.hidePassword")
-                      : t("registerPage.fields.showPassword")}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {!!passwordError && (
-                <Text style={styles.validationText}>{passwordError}</Text>
-              )}
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>
-                {t("registerPage.fields.confirmPasswordLabel")}
-              </Text>
-
-              <View
-                style={[
-                  styles.inputWrapper,
-                  confirmPasswordError && styles.inputWrapperError,
-                ]}
-              >
-                <TextInput
-                  style={styles.inputInside}
-                  placeholder={t(
-                    "registerPage.fields.confirmPasswordPlaceholder",
-                  )}
-                  placeholderTextColor="#A7B0C0"
-                  value={form.confirmPassword}
-                  onChangeText={(value) =>
-                    updateField("confirmPassword", value)
-                  }
-                  editable={!isSubmitting}
-                  secureTextEntry={!isConfirmPasswordVisible}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  returnKeyType="done"
-                  selectionColor="#0057B8"
-                  onSubmitEditing={handleRegister}
-                />
-
-                <TouchableOpacity
-                  style={styles.passwordButton}
-                  activeOpacity={0.7}
-                  onPress={() =>
-                    setIsConfirmPasswordVisible((current) => !current)
-                  }
-                >
-                  <Text style={styles.passwordButtonText}>
-                    {isConfirmPasswordVisible
-                      ? t("registerPage.fields.hidePassword")
-                      : t("registerPage.fields.showPassword")}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {!!confirmPasswordError && (
-                <Text style={styles.validationText}>
-                  {confirmPasswordError}
-                </Text>
-              )}
-            </View>
+            <PasswordInput
+              label={t("registerPage.fields.confirmPasswordLabel")}
+              placeholder={t("registerPage.fields.confirmPasswordPlaceholder")}
+              value={form.confirmPassword}
+              error={confirmPasswordError}
+              visible={isConfirmPasswordVisible}
+              disabled={isSubmitting}
+              returnKeyType="done"
+              onSubmitEditing={handleRegister}
+              onChangeText={(value) => updateField("confirmPassword", value)}
+              onToggle={() =>
+                setIsConfirmPasswordVisible((current) => !current)
+              }
+              visibleText={t("registerPage.fields.hidePassword")}
+              hiddenText={t("registerPage.fields.showPassword")}
+            />
 
             <TouchableOpacity
               style={[
@@ -696,14 +533,13 @@ export const RegisterPage = ({ navigation, route }: RegisterPageProps) => {
                 isSubmitDisabled && styles.submitButtonDisabled,
               ]}
               activeOpacity={0.85}
-              onPress={handleRegister}
               disabled={isSubmitDisabled}
+              onPress={handleRegister}
             >
               {isSubmitting ? (
-                <View style={styles.loadingButtonContent}>
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-
-                  <Text style={styles.submitButtonText}>
+                <View style={styles.loadingContent}>
+                  <ActivityIndicator size="small" color={colors.white} />
+                  <Text style={styles.loadingText}>
                     {t("registerPage.registering")}
                   </Text>
                 </View>
@@ -770,7 +606,7 @@ export const RegisterPage = ({ navigation, route }: RegisterPageProps) => {
 
             <FlatList
               data={profsoyuzList}
-              keyExtractor={(item) => String(item.id)}
+              keyExtractor={({ id }) => String(id)}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.selectList}
               ListEmptyComponent={
@@ -806,7 +642,6 @@ export const RegisterPage = ({ navigation, route }: RegisterPageProps) => {
                     activeOpacity={0.75}
                     onPress={() => {
                       updateField("profsoyuzId", item.id);
-
                       setIsSelectOpen(false);
                     }}
                   >
@@ -855,28 +690,90 @@ export const RegisterPage = ({ navigation, route }: RegisterPageProps) => {
   );
 };
 
-const FormInput = ({ label, error, style, ...props }: FormInputProps) => {
-  return (
-    <View style={styles.inputContainer}>
-      <Text style={styles.inputLabel}>{label}</Text>
+const FormInput = ({ label, error, style, ...props }: FormInputProps) => (
+  <View style={styles.inputContainer}>
+    <Text style={styles.inputLabel}>{label}</Text>
 
+    <TextInput
+      {...props}
+      style={[styles.input, !!error && styles.inputError, style]}
+      placeholderTextColor={colors.inactive}
+      selectionColor={colors.accent}
+      autoCorrect={false}
+    />
+
+    {!!error && <Text style={styles.validationText}>{error}</Text>}
+  </View>
+);
+
+type PasswordInputProps = {
+  label: string;
+  placeholder: string;
+  value: string;
+  error?: string;
+  visible: boolean;
+  disabled: boolean;
+  visibleText: string;
+  hiddenText: string;
+  returnKeyType?: "done";
+  onChangeText: (value: string) => void;
+  onToggle: () => void;
+  onSubmitEditing?: () => void;
+};
+
+const PasswordInput = ({
+  label,
+  placeholder,
+  value,
+  error,
+  visible,
+  disabled,
+  visibleText,
+  hiddenText,
+  returnKeyType,
+  onChangeText,
+  onToggle,
+  onSubmitEditing,
+}: PasswordInputProps) => (
+  <View style={styles.inputContainer}>
+    <Text style={styles.inputLabel}>{label}</Text>
+
+    <View style={[styles.inputWrapper, !!error && styles.inputWrapperError]}>
       <TextInput
-        {...props}
-        style={[styles.input, !!error && styles.inputError, style]}
-        placeholderTextColor="#A7B0C0"
-        selectionColor="#0057B8"
+        style={styles.inputInside}
+        placeholder={placeholder}
+        placeholderTextColor={colors.inactive}
+        value={value}
+        onChangeText={onChangeText}
+        editable={!disabled}
+        secureTextEntry={!visible}
+        autoCapitalize="none"
         autoCorrect={false}
+        selectionColor={colors.accent}
+        returnKeyType={returnKeyType}
+        onSubmitEditing={onSubmitEditing}
       />
 
-      {!!error && <Text style={styles.validationText}>{error}</Text>}
+      <TouchableOpacity
+        style={styles.passwordButton}
+        activeOpacity={0.7}
+        disabled={disabled}
+        onPress={onToggle}
+      >
+        <Text style={styles.passwordButtonText}>
+          {visible ? visibleText : hiddenText}
+        </Text>
+      </TouchableOpacity>
     </View>
-  );
-};
+
+    {!!error && <Text style={styles.validationText}>{error}</Text>}
+  </View>
+);
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background || "#F4F7FB",
+    backgroundColor: colors.background,
   },
 
   scrollContent: {
@@ -898,13 +795,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 28,
-    backgroundColor: "#0867CD",
-
-    shadowColor: "#0867CD",
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
+    backgroundColor: colors.primary,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.22,
     shadowRadius: 16,
     elevation: 8,
@@ -916,7 +809,7 @@ const styles = StyleSheet.create({
   },
 
   brandName: {
-    color: "#111827",
+    color: colors.primary,
     fontSize: 26,
     lineHeight: 33,
     fontWeight: "800",
@@ -925,7 +818,7 @@ const styles = StyleSheet.create({
 
   brandTitle: {
     marginTop: 13,
-    color: "#172033",
+    color: colors.textDark,
     fontSize: 21,
     lineHeight: 28,
     fontWeight: "800",
@@ -935,10 +828,9 @@ const styles = StyleSheet.create({
   brandSubtitle: {
     maxWidth: 320,
     marginTop: 7,
-    color: "#687386",
+    color: colors.textLight,
     fontSize: 14,
     lineHeight: 21,
-    fontWeight: "400",
     textAlign: "center",
   },
 
@@ -947,15 +839,11 @@ const styles = StyleSheet.create({
     paddingTop: 22,
     paddingBottom: 24,
     borderWidth: 1,
-    borderColor: "#E3EAF3",
+    borderColor: colors.border,
     borderRadius: 24,
-    backgroundColor: "#FFFFFF",
-
-    shadowColor: "#11233E",
-    shadowOffset: {
-      width: 0,
-      height: 7,
-    },
+    backgroundColor: colors.white,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 7 },
     shadowOpacity: 0.07,
     shadowRadius: 18,
     elevation: 4,
@@ -968,7 +856,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     marginBottom: 8,
     paddingLeft: 3,
-    color: "#344054",
+    color: colors.textDark,
     fontSize: 14,
     lineHeight: 19,
     fontWeight: "700",
@@ -979,18 +867,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: "#D9E1EC",
+    borderColor: colors.border,
     borderRadius: 15,
-    backgroundColor: "#F9FBFD",
-    color: "#172033",
+    backgroundColor: colors.lightGray,
+    color: colors.textDark,
     fontSize: 15,
     lineHeight: 20,
     fontWeight: "500",
   },
 
   inputError: {
-    borderColor: "#E96A6A",
-    backgroundColor: "#FFF9F9",
+    borderColor: colors.dangerBorder,
+    backgroundColor: colors.dangerLight,
   },
 
   inputWrapper: {
@@ -1000,14 +888,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#D9E1EC",
+    borderColor: colors.border,
     borderRadius: 15,
-    backgroundColor: "#F9FBFD",
+    backgroundColor: colors.lightGray,
   },
 
   inputWrapperError: {
-    borderColor: "#E96A6A",
-    backgroundColor: "#FFF9F9",
+    borderColor: colors.dangerBorder,
+    backgroundColor: colors.dangerLight,
   },
 
   inputInside: {
@@ -1015,7 +903,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
     minHeight: 54,
     paddingVertical: 12,
-    color: "#172033",
+    color: colors.textDark,
     fontSize: 15,
     lineHeight: 20,
     fontWeight: "500",
@@ -1029,7 +917,7 @@ const styles = StyleSheet.create({
   },
 
   passwordButtonText: {
-    color: "#0057B8",
+    color: colors.accent,
     fontSize: 12,
     fontWeight: "700",
   },
@@ -1037,7 +925,7 @@ const styles = StyleSheet.create({
   validationText: {
     marginTop: 6,
     paddingLeft: 3,
-    color: "#D14343",
+    color: colors.danger,
     fontSize: 12,
     lineHeight: 17,
     fontWeight: "500",
@@ -1050,22 +938,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     borderWidth: 1,
-    borderColor: "#D9E1EC",
+    borderColor: colors.border,
     borderRadius: 15,
-    backgroundColor: "#F9FBFD",
+    backgroundColor: colors.lightGray,
   },
 
   selectText: {
     flex: 1,
     marginRight: 12,
-    color: "#172033",
+    color: colors.textDark,
     fontSize: 15,
     lineHeight: 20,
     fontWeight: "500",
   },
 
-  selectPlaceholder: {
-    color: "#A7B0C0",
+  placeholder: {
+    color: colors.inactive,
   },
 
   selectArrow: {
@@ -1074,14 +962,14 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     borderRightWidth: 2,
     borderBottomWidth: 2,
-    borderColor: "#667085",
+    borderColor: colors.textLight,
     transform: [{ rotate: "45deg" }],
   },
 
   retryText: {
     marginTop: 7,
     paddingLeft: 3,
-    color: "#0057B8",
+    color: colors.accent,
     fontSize: 12,
     lineHeight: 17,
     fontWeight: "700",
@@ -1094,37 +982,40 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 16,
-    backgroundColor: "#0057B8",
-
-    shadowColor: "#0057B8",
-    shadowOffset: {
-      width: 0,
-      height: 6,
-    },
+    backgroundColor: colors.accent,
+    shadowColor: colors.accent,
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.2,
     shadowRadius: 12,
     elevation: 5,
   },
 
   submitButtonDisabled: {
-    backgroundColor: "#AEBFD4",
+    backgroundColor: colors.inactive,
     shadowOpacity: 0,
     elevation: 0,
   },
 
-  loadingButtonContent: {
+  loadingContent: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
   },
 
   submitButtonText: {
-    marginLeft: 8,
-    color: "#FFFFFF",
+    color: colors.white,
     fontSize: 16,
     lineHeight: 22,
     fontWeight: "800",
     textAlign: "center",
+  },
+
+  loadingText: {
+    marginLeft: 8,
+    color: colors.white,
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: "800",
   },
 
   loginBlock: {
@@ -1136,7 +1027,7 @@ const styles = StyleSheet.create({
   },
 
   loginQuestion: {
-    color: "#7A8494",
+    color: colors.textLight,
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "500",
@@ -1144,7 +1035,7 @@ const styles = StyleSheet.create({
 
   loginLink: {
     marginLeft: 5,
-    color: "#0057B8",
+    color: colors.accent,
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "800",
@@ -1153,7 +1044,7 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: "rgba(12, 20, 34, 0.56)",
+    backgroundColor: colors.overlay,
   },
 
   modalContent: {
@@ -1163,7 +1054,7 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.white,
   },
 
   modalHandle: {
@@ -1172,7 +1063,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     alignSelf: "center",
     borderRadius: 3,
-    backgroundColor: "#D8DEE8",
+    backgroundColor: colors.border,
   },
 
   modalHeader: {
@@ -1185,7 +1076,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     flex: 1,
     paddingRight: 12,
-    color: "#172033",
+    color: colors.textDark,
     fontSize: 20,
     lineHeight: 27,
     fontWeight: "800",
@@ -1197,15 +1088,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 19,
-    backgroundColor: "#F1F4F8",
+    backgroundColor: colors.lightGray,
   },
 
   closeButtonText: {
     marginTop: -2,
-    color: "#667085",
+    color: colors.textLight,
     fontSize: 27,
     lineHeight: 29,
-    fontWeight: "400",
   },
 
   selectList: {
@@ -1220,14 +1110,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#E7ECF3",
+    borderColor: colors.border,
     borderRadius: 16,
-    backgroundColor: "#F9FBFD",
+    backgroundColor: colors.lightGray,
   },
 
   selectItemActive: {
-    borderColor: "#8DBBEA",
-    backgroundColor: "#EDF5FF",
+    borderColor: colors.accent,
+    backgroundColor: colors.primaryLight,
   },
 
   organizationIcon: {
@@ -1237,34 +1127,34 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 13,
-    backgroundColor: "#E8EEF6",
+    backgroundColor: colors.border,
   },
 
   organizationIconActive: {
-    backgroundColor: "#D8EAFE",
+    backgroundColor: colors.primaryLight,
   },
 
   organizationIconText: {
-    color: "#667085",
+    color: colors.textLight,
     fontSize: 16,
     fontWeight: "800",
   },
 
   organizationIconTextActive: {
-    color: "#0057B8",
+    color: colors.accent,
   },
 
   selectItemText: {
     flex: 1,
     marginRight: 12,
-    color: "#253043",
+    color: colors.textDark,
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "600",
   },
 
   selectItemTextActive: {
-    color: "#0057B8",
+    color: colors.accent,
     fontWeight: "700",
   },
 
@@ -1274,19 +1164,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
-    borderColor: "#B8C1CE",
+    borderColor: colors.inactive,
     borderRadius: 11,
   },
 
   radioOuterActive: {
-    borderColor: "#0057B8",
+    borderColor: colors.accent,
   },
 
   radioInner: {
     width: 11,
     height: 11,
     borderRadius: 6,
-    backgroundColor: "#0057B8",
+    backgroundColor: colors.accent,
   },
 
   emptyContainer: {
@@ -1300,7 +1190,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 33,
-    backgroundColor: "#EEF4FC",
+    backgroundColor: colors.primaryLight,
   },
 
   emptyIcon: {
@@ -1309,7 +1199,7 @@ const styles = StyleSheet.create({
 
   emptyText: {
     marginTop: 15,
-    color: "#7A8494",
+    color: colors.textLight,
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "500",
@@ -1321,11 +1211,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 11,
     borderRadius: 13,
-    backgroundColor: "#0057B8",
+    backgroundColor: colors.accent,
   },
 
   reloadButtonText: {
-    color: "#FFFFFF",
+    color: colors.white,
     fontSize: 14,
     lineHeight: 19,
     fontWeight: "700",

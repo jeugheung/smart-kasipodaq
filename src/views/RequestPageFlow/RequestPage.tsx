@@ -9,7 +9,7 @@ export const RequestPage = ({ navigation }: any) => {
 
   return (
     <DefaultLayout variant="default" title="Smart Kasipodaq" onRightPress={() => alert("EN")}>
-      <RequestForm />
+       <RequestForm navigation={navigation} />
     </DefaultLayout>
   );
 };

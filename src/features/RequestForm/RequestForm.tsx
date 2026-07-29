@@ -1,3 +1,5 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { API_CONFIG } from "@shared/api/config";
 import { addSolution } from "@shared/api/endpoints";
 import { getOrCreateUUID } from "@shared/lib/uuid";
 import { colors } from "@shared/theme/colors";
@@ -22,28 +24,215 @@ import {
 import { UploadFile, useFileUpload } from "./lib/upload";
 
 type RequestType = "violation" | "work" | "salary" | "social" | "collective";
+
 type FilePickerAction = "gallery" | "files";
 
-const TAB_KEYS: RequestType[] = ["violation", "work", "salary", "social", "collective"];
+type MeResponse = {
+  msg?: string;
+  result?: number;
+  id?: number;
+  client?: {
+    id: number;
+    iin?: string;
+    email?: string;
+    full_name?: string;
+    first_name?: string;
+    last_name?: string;
+    middle_name?: string | null;
+  };
+  [key: string]: unknown;
+};
+
+const TAB_KEYS: RequestType[] = [
+  "violation",
+  "work",
+  "salary",
+  "social",
+  "collective",
+];
 
 export const RequestForm = ({ navigation }: any) => {
   const { t } = useTranslation();
-  const { files, uploading, pickFiles, setFiles, uploadSingleFile } = useFileUpload();
+
+  const { files, uploading, pickFiles, setFiles, uploadSingleFile } =
+    useFileUpload();
 
   const [activeTab, setActiveTab] = useState<RequestType>("violation");
+
   const [problem, setProblem] = useState("");
   const [contacts, setContacts] = useState("");
+
+  // По умолчанию заявка анонимная
   const [anonymous, setAnonymous] = useState(true);
+
+  // ID авторизованного пользователя для неанонимной заявки
+  const [clientId, setClientId] = useState<number | null>(null);
+
   const [loading, setLoading] = useState(false);
+  const [isCheckingUser, setIsCheckingUser] = useState(false);
+
+  const [isAuthModalVisible, setIsAuthModalVisible] = useState(false);
+
+  const [isConsentModalVisible, setIsConsentModalVisible] = useState(false);
+
   const [isMenuVisible, setIsMenuVisible] = useState(false);
-  const [pendingAction, setPendingAction] = useState<FilePickerAction | null>(null);
+
+  const [pendingAction, setPendingAction] = useState<FilePickerAction | null>(
+    null,
+  );
+
+  const parent = navigation.getParent();
 
   const sheetAnim = useRef(new Animated.Value(400)).current;
 
   const tabs = useMemo(
-    () => TAB_KEYS.map((key) => ({ key, title: t(`requestForm.tabs.${key}`) })),
+    () =>
+      TAB_KEYS.map((key) => ({
+        key,
+        title: t(`requestForm.tabs.${key}`),
+      })),
     [t],
   );
+
+  const parseResponse = async <T,>(response: Response): Promise<T | null> => {
+    const text = await response.text();
+
+    if (!text) return null;
+
+    try {
+      return JSON.parse(text) as T;
+    } catch {
+      console.error("Сервер вернул некорректный JSON:", text);
+      return null;
+    }
+  };
+
+  /**
+   * Проверяет авторизацию и получает ID пользователя.
+   * Если токена нет или он недействителен — возвращает null.
+   */
+  const getAuthorizedClientId = async (): Promise<number | null> => {
+    const accessToken = await AsyncStorage.getItem("access_token");
+
+    if (!accessToken) return null;
+
+    const response = await fetch(API_CONFIG.ME_API, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (response.status === 401 || response.status === 403) {
+      await AsyncStorage.removeItem("access_token");
+      return null;
+    }
+
+    const data = await parseResponse<MeResponse>(response);
+
+    if (!response.ok) {
+      throw new Error(
+        data?.msg ||
+          t("requestForm.anonymous.userLoadError", {
+            defaultValue: "Не удалось получить данные пользователя",
+          }),
+      );
+    }
+
+    const userId = data?.client?.id ?? data?.id;
+
+    if (!userId) {
+      throw new Error(
+        t("requestForm.anonymous.userIdMissing", {
+          defaultValue: "Сервер не вернул ID пользователя",
+        }),
+      );
+    }
+
+    return userId;
+  };
+
+  /**
+   * Обрабатывает изменение анонимности.
+   *
+   * true  — включаем анонимную отправку сразу.
+   * false — сначала проверяем авторизацию,
+   *         затем показываем согласие на передачу данных.
+   */
+  const handleAnonymousChange = async (nextValue: boolean) => {
+    if (isCheckingUser || loading) return;
+
+    if (nextValue) {
+      setAnonymous(true);
+      setClientId(null);
+      return;
+    }
+
+    try {
+      setIsCheckingUser(true);
+
+      const userId = await getAuthorizedClientId();
+
+      if (!userId) {
+        setAnonymous(true);
+        setClientId(null);
+        setIsAuthModalVisible(true);
+        return;
+      }
+
+      setClientId(userId);
+      setIsConsentModalVisible(true);
+    } catch (error) {
+      console.error("Ошибка проверки авторизации пользователя:", error);
+
+      setAnonymous(true);
+      setClientId(null);
+
+      Alert.alert(
+        t("requestForm.alerts.errorTitle"),
+        error instanceof Error
+          ? error.message
+          : t("requestForm.anonymous.userLoadError", {
+              defaultValue: "Не удалось получить данные пользователя",
+            }),
+      );
+    } finally {
+      setIsCheckingUser(false);
+    }
+  };
+
+  const confirmNonAnonymousRequest = () => {
+    if (!clientId) {
+      setAnonymous(true);
+      setIsConsentModalVisible(false);
+      return;
+    }
+
+    setAnonymous(false);
+    setIsConsentModalVisible(false);
+  };
+
+  const cancelNonAnonymousRequest = () => {
+    setAnonymous(true);
+    setClientId(null);
+    setIsConsentModalVisible(false);
+  };
+
+  const navigateToLogin = () => {
+    setIsAuthModalVisible(false);
+
+    if (parent) {
+      parent.navigate("LoginPage", {
+        redirectTab: "RequestsTab",
+      });
+      return;
+    }
+
+    navigation.navigate("LoginPage", {
+      redirectTab: "RequestsTab",
+    });
+  };
 
   const openSheet = () => {
     setIsMenuVisible(true);
@@ -70,15 +259,18 @@ export const RequestForm = ({ navigation }: any) => {
 
   const handlePickImage = async () => {
     try {
-      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permission =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (permission.status !== ImagePicker.PermissionStatus.GRANTED) {
         Alert.alert(
           t("requestForm.alerts.errorTitle"),
           t("requestForm.files.galleryPermissionDenied", {
-            defaultValue: "Доступ к галерее запрещён. Разрешите доступ в настройках телефона.",
+            defaultValue:
+              "Доступ к галерее запрещён. Разрешите доступ в настройках телефона.",
           }),
         );
+
         return;
       }
 
@@ -93,7 +285,9 @@ export const RequestForm = ({ navigation }: any) => {
       const timestamp = Date.now();
 
       const selectedFiles: UploadFile[] = result.assets.map((asset, index) => {
-        const originalName = asset.fileName || `image_${timestamp}_${index + 1}.jpg`;
+        const originalName =
+          asset.fileName || `image_${timestamp}_${index + 1}.jpg`;
+
         const nameWithoutExtension = originalName.replace(/\.[^/.]+$/, "");
 
         return {
@@ -104,7 +298,7 @@ export const RequestForm = ({ navigation }: any) => {
         };
       });
 
-      setFiles((previousFiles) => [...previousFiles, ...selectedFiles]);
+      setFiles((currentFiles) => [...currentFiles, ...selectedFiles]);
 
       selectedFiles.forEach((file) => {
         uploadSingleFile(file).catch((error) => {
@@ -127,8 +321,14 @@ export const RequestForm = ({ navigation }: any) => {
     if (isMenuVisible || !pendingAction) return;
 
     const timer = setTimeout(() => {
-      if (pendingAction === "gallery") void handlePickImage();
-      if (pendingAction === "files") void pickFiles();
+      if (pendingAction === "gallery") {
+        void handlePickImage();
+      }
+
+      if (pendingAction === "files") {
+        void pickFiles();
+      }
+
       setPendingAction(null);
     }, 150);
 
@@ -136,7 +336,7 @@ export const RequestForm = ({ navigation }: any) => {
   }, [isMenuVisible, pendingAction, pickFiles]);
 
   const removeFile = (uri: string) => {
-    setFiles((previousFiles) => previousFiles.filter((file) => file.uri !== uri));
+    setFiles((currentFiles) => currentFiles.filter((file) => file.uri !== uri));
   };
 
   const submit = async () => {
@@ -145,6 +345,7 @@ export const RequestForm = ({ navigation }: any) => {
         t("requestForm.alerts.errorTitle"),
         t("requestForm.alerts.problemRequired"),
       );
+
       return;
     }
 
@@ -155,24 +356,53 @@ export const RequestForm = ({ navigation }: any) => {
           defaultValue: "Дождитесь завершения загрузки файлов",
         }),
       );
+
       return;
     }
 
     try {
       setLoading(true);
 
-      const uuid = await getOrCreateUUID();
+      let senderIdentifier: string;
+
+      if (anonymous) {
+        // Анонимная заявка — отправляем UUID устройства
+        senderIdentifier = await getOrCreateUUID();
+      } else {
+        // Неанонимная заявка — отправляем ID пользователя
+        if (!clientId) {
+          setAnonymous(true);
+
+          Alert.alert(
+            t("requestForm.alerts.errorTitle"),
+            t("requestForm.anonymous.userIdMissing", {
+              defaultValue:
+                "Не удалось определить пользователя. Повторно выберите неанонимную отправку.",
+            }),
+          );
+
+          return;
+        }
+
+        senderIdentifier = String(clientId);
+      }
+
       const payload = {
         type_name: activeTab,
         problem: problem.trim(),
         solution: problem.trim(),
         phone: contacts.trim() || undefined,
-        files: files.filter((file) => file.serverPath).map((file) => file.serverPath!),
-        uuid,
-        // is_anonymous: anonymous,
+        files: files
+          .filter((file) => file.serverPath)
+          .map((file) => file.serverPath!),
+
+        // Для анонимной заявки — UUID.
+        // Для неанонимной заявки — ID пользователя.
+        uuid: senderIdentifier,
       };
 
-      console.log("PAYLOAD", payload);
+      console.log("📤 ADD SOLUTION PAYLOAD:", payload);
+
       await addSolution(payload);
 
       Alert.alert(
@@ -183,6 +413,7 @@ export const RequestForm = ({ navigation }: any) => {
       setProblem("");
       setContacts("");
       setAnonymous(true);
+      setClientId(null);
       setActiveTab("violation");
       setFiles([]);
     } catch (error: any) {
@@ -197,7 +428,8 @@ export const RequestForm = ({ navigation }: any) => {
     }
   };
 
-  const isSubmitDisabled = loading || uploading || !problem.trim();
+  const isSubmitDisabled =
+    loading || uploading || isCheckingUser || !problem.trim();
 
   return (
     <View style={styles.content}>
@@ -222,7 +454,9 @@ export const RequestForm = ({ navigation }: any) => {
                   pressed && styles.pressed,
                 ]}
               >
-                <Text style={[styles.tabText, isActive && styles.activeTabText]}>
+                <Text
+                  style={[styles.tabText, isActive && styles.activeTabText]}
+                >
                   {item.title}
                 </Text>
               </Pressable>
@@ -277,12 +511,16 @@ export const RequestForm = ({ navigation }: any) => {
           <View style={styles.fileList}>
             {files.map((file: UploadFile) => {
               const isUploaded = Boolean(file.serverPath);
+
               const progress = Math.min(Math.max(file.progress || 0, 0), 100);
 
               return (
                 <View
                   key={file.uri}
-                  style={[styles.fileCard, isUploaded && styles.fileCardSuccess]}
+                  style={[
+                    styles.fileCard,
+                    isUploaded && styles.fileCardSuccess,
+                  ]}
                 >
                   <View
                     style={[
@@ -335,7 +573,9 @@ export const RequestForm = ({ navigation }: any) => {
                   </View>
 
                   {!isUploaded && (
-                    <View style={[styles.progressBar, { width: `${progress}%` }]} />
+                    <View
+                      style={[styles.progressBar, { width: `${progress}%` }]}
+                    />
                   )}
                 </View>
               );
@@ -351,11 +591,28 @@ export const RequestForm = ({ navigation }: any) => {
           </Text>
 
           <Text style={styles.anonSubtitle}>
-            {t("requestForm.anonymous.subtitle")}
+            {anonymous
+              ? t("requestForm.anonymous.subtitle", {
+                  defaultValue:
+                    "Ваши данные не будут переданы вместе с заявкой",
+                })
+              : t("requestForm.anonymous.nonAnonymousSubtitle", {
+                  defaultValue: "Ваши данные будут переданы вместе с заявкой",
+                })}
           </Text>
         </View>
 
-        <ToggleSwitch value={anonymous} onChange={setAnonymous} />
+        <View style={styles.switchContainer}>
+          {isCheckingUser && (
+            <ActivityIndicator
+              size="small"
+              color={colors.accent}
+              style={styles.switchLoader}
+            />
+          )}
+
+          <ToggleSwitch value={anonymous} onChange={handleAnonymousChange} />
+        </View>
       </View>
 
       <AppButton
@@ -373,6 +630,124 @@ export const RequestForm = ({ navigation }: any) => {
         disabled={isSubmitDisabled}
       />
 
+      {/* Модалка: пользователь не авторизован */}
+      <Modal
+        visible={isAuthModalVisible}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setIsAuthModalVisible(false)}
+      >
+        <Pressable
+          style={styles.confirmOverlay}
+          onPress={() => setIsAuthModalVisible(false)}
+        >
+          <Pressable
+            style={styles.confirmModal}
+            onPress={(event) => event.stopPropagation()}
+          >
+            <View style={styles.modalIcon}>
+              <Text style={styles.modalIconText}>👤</Text>
+            </View>
+
+            <Text style={styles.confirmTitle}>
+              {t("requestForm.anonymous.authRequiredTitle", {
+                defaultValue: "Требуется авторизация",
+              })}
+            </Text>
+
+            <Text style={styles.confirmDescription}>
+              {t("requestForm.anonymous.authRequiredMessage", {
+                defaultValue:
+                  "Чтобы отправить заявку не анонимно, необходимо войти в аккаунт.",
+              })}
+            </Text>
+
+            <View style={styles.confirmActions}>
+              <Pressable
+                style={styles.cancelButton}
+                onPress={() => setIsAuthModalVisible(false)}
+              >
+                <Text style={styles.cancelButtonText}>
+                  {t("common.cancel", {
+                    defaultValue: "Отмена",
+                  })}
+                </Text>
+              </Pressable>
+
+              <Pressable style={styles.confirmButton} onPress={navigateToLogin}>
+                <Text style={styles.confirmButtonText}>
+                  {t("requestForm.anonymous.loginButton", {
+                    defaultValue: "Войти",
+                  })}
+                </Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* Модалка: согласие на передачу данных */}
+      <Modal
+        visible={isConsentModalVisible}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={cancelNonAnonymousRequest}
+      >
+        <Pressable
+          style={styles.confirmOverlay}
+          onPress={cancelNonAnonymousRequest}
+        >
+          <Pressable
+            style={styles.confirmModal}
+            onPress={(event) => event.stopPropagation()}
+          >
+            <View style={styles.modalIcon}>
+              <Text style={styles.modalIconText}>ℹ️</Text>
+            </View>
+
+            <Text style={styles.confirmTitle}>
+              {t("requestForm.anonymous.consentTitle", {
+                defaultValue: "Неанонимная заявка",
+              })}
+            </Text>
+
+            <Text style={styles.confirmDescription}>
+              {t("requestForm.anonymous.consentMessage", {
+                defaultValue:
+                  "Ваши персональные данные будут переданы вместе с заявкой. Вы согласны продолжить?",
+              })}
+            </Text>
+
+            <View style={styles.confirmActions}>
+              <Pressable
+                style={styles.cancelButton}
+                onPress={cancelNonAnonymousRequest}
+              >
+                <Text style={styles.cancelButtonText}>
+                  {t("common.cancel", {
+                    defaultValue: "Отмена",
+                  })}
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={styles.confirmButton}
+                onPress={confirmNonAnonymousRequest}
+              >
+                <Text style={styles.confirmButtonText}>
+                  {t("requestForm.anonymous.agreeButton", {
+                    defaultValue: "Согласен",
+                  })}
+                </Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* Модалка выбора файла */}
       <Modal
         visible={isMenuVisible}
         transparent
@@ -386,7 +761,9 @@ export const RequestForm = ({ navigation }: any) => {
           <Animated.View
             style={[
               styles.bottomMenu,
-              { transform: [{ translateY: sheetAnim }] },
+              {
+                transform: [{ translateY: sheetAnim }],
+              },
             ]}
           >
             <View style={styles.sheetHandle} />
@@ -491,8 +868,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
 
-  tabsWrapper: { marginHorizontal: -15, gap: 12 },
-  tabsContent: { paddingHorizontal: 15 },
+  tabsWrapper: {
+    marginHorizontal: -15,
+    gap: 12,
+  },
+
+  tabsContent: {
+    paddingHorizontal: 15,
+  },
 
   tabsTitle: {
     paddingLeft: 15,
@@ -532,8 +915,15 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  activeTabText: { color: colors.white, fontWeight: "800" },
-  pressed: { opacity: 0.8, transform: [{ scale: 0.99 }] },
+  activeTabText: {
+    color: colors.white,
+    fontWeight: "800",
+  },
+
+  pressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.99 }],
+  },
 
   uploadBtn: {
     position: "relative",
@@ -554,8 +944,14 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
 
-  uploadIndicator: { position: "absolute", right: 17 },
-  fileSection: { gap: 10 },
+  uploadIndicator: {
+    position: "absolute",
+    right: 17,
+  },
+
+  fileSection: {
+    gap: 10,
+  },
 
   fileSectionHeader: {
     flexDirection: "row",
@@ -583,7 +979,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
   },
 
-  fileList: { gap: 10 },
+  fileList: {
+    gap: 10,
+  },
 
   fileCard: {
     position: "relative",
@@ -614,9 +1012,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryLight,
   },
 
-  fileIconWrapperSuccess: { backgroundColor: colors.successLight },
-  fileIcon: { fontSize: 19 },
-  fileInfo: { flex: 1, minWidth: 0 },
+  fileIconWrapperSuccess: {
+    backgroundColor: colors.successLight,
+  },
+
+  fileIcon: {
+    fontSize: 19,
+  },
+
+  fileInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
 
   fileName: {
     color: colors.textDark,
@@ -659,7 +1066,6 @@ const styles = StyleSheet.create({
     color: colors.textLight,
     fontSize: 22,
     lineHeight: 24,
-    fontWeight: "400",
   },
 
   progressBar: {
@@ -678,7 +1084,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
 
-  anonTextBlock: { flex: 1 },
+  anonTextBlock: {
+    flex: 1,
+  },
 
   anonTitle: {
     color: colors.textDark,
@@ -693,6 +1101,106 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 17,
     fontWeight: "500",
+  },
+
+  switchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  switchLoader: {
+    marginRight: 10,
+  },
+
+  confirmOverlay: {
+    flex: 1,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.overlay,
+  },
+
+  confirmModal: {
+    width: "100%",
+    maxWidth: 380,
+    padding: 22,
+    borderRadius: 22,
+    backgroundColor: colors.white,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 10,
+  },
+
+  modalIcon: {
+    width: 58,
+    height: 58,
+    marginBottom: 15,
+    alignSelf: "center",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 29,
+    backgroundColor: colors.primaryLight,
+  },
+
+  modalIconText: {
+    fontSize: 26,
+  },
+
+  confirmTitle: {
+    color: colors.primary,
+    fontSize: 19,
+    lineHeight: 26,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+
+  confirmDescription: {
+    marginTop: 10,
+    color: colors.textLight,
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: "500",
+    textAlign: "center",
+  },
+
+  confirmActions: {
+    marginTop: 22,
+    flexDirection: "row",
+    gap: 10,
+  },
+
+  cancelButton: {
+    flex: 1,
+    minHeight: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    backgroundColor: colors.lightGray,
+  },
+
+  cancelButtonText: {
+    color: colors.textDark,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+
+  confirmButton: {
+    flex: 1,
+    minHeight: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 14,
+    backgroundColor: colors.accent,
+  },
+
+  confirmButtonText: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: "800",
   },
 
   modalOverlay: {
@@ -738,7 +1246,10 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.lightGray,
   },
 
-  sheetHeaderText: { flex: 1, paddingRight: 12 },
+  sheetHeaderText: {
+    flex: 1,
+    paddingRight: 12,
+  },
 
   sheetTitle: {
     color: colors.primary,
@@ -805,8 +1316,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryLight,
   },
 
-  sheetItemEmoji: { fontSize: 22 },
-  sheetItemContent: { flex: 1 },
+  sheetItemEmoji: {
+    fontSize: 22,
+  },
+
+  sheetItemContent: {
+    flex: 1,
+  },
 
   sheetItemTitle: {
     color: colors.textDark,
@@ -831,5 +1347,7 @@ const styles = StyleSheet.create({
     fontWeight: "300",
   },
 
-  sheetFooter: { height: 34 },
+  sheetFooter: {
+    height: 34,
+  },
 });

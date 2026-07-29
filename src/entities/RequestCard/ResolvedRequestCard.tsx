@@ -13,7 +13,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { RequestItem, RequestType } from "./types";
 
 import AnonIcon from "../../../assets/request-card/anon.svg";
-import SolutionIcon from "../../../assets/request-card/solution.svg";
+import SolutionIcon from "../../../assets/request-card/solution2.svg";
 import StarIcon from "../../../assets/request-card/start.svg";
 import StarFilledIcon from "../../../assets/request-card/star-filled.svg";
 import LikeIcon from "../../../assets/request-card/like.svg";

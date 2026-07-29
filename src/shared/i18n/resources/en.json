@@ -3,7 +3,8 @@
     "language": "Language",
     "submit": "Submit",
     "more": "More",
-    "readMore": "Read more"
+    "readMore": "Read more",
+     "cancel": "Cancel"
   },
   "welcomeCard": {
     "welcome": "Welcome",
@@ -93,29 +94,53 @@
     "tabs": {
       "violation": "Labor Code violation",
       "work": "Working conditions",
-      "salary": "Wages and payment",
+      "salary": "Salary and compensation",
       "social": "Social benefits",
       "collective": "Collective agreement proposal"
     },
     "placeholders": {
-      "problem": "Describe the problem",
-      "contacts": "Leave your contact details"
+      "problem": "Describe your problem or suggestion",
+      "contacts": "Contact details (optional)"
     },
-    "attachFiles": "📎 Attach files",
-    "anonymous": {
-      "title": "Anonymous request",
-      "subtitle": "Hide my personal information"
-    },
+    "attachFiles": "Attach files",
     "buttons": {
-      "submit": "Submit",
-      "sending": "Submitting..."
+      "sending": "Sending...",
+      "submit": "Submit request"
     },
     "alerts": {
       "errorTitle": "Error",
-      "successTitle": "Success",
-      "problemRequired": "Please describe the problem",
-      "successMessage": "Your request has been submitted",
+      "problemRequired": "Describe the problem or suggestion",
+      "successTitle": "Done",
+      "successMessage": "Your request has been submitted successfully",
       "submitFailed": "Failed to submit the request"
+    },
+    "files": {
+      "title": "Attached files",
+      "uploaded": "Uploaded",
+      "loading": "Uploading",
+      "uploading": "Uploading files...",
+      "waitForUpload": "Wait until all files are uploaded",
+      "modalTitle": "Attach a file",
+      "modalSubtitle": "Select a file source",
+      "pickFromGallery": "Choose from gallery",
+      "galleryDescription": "Photos and images",
+      "pickFiles": "Choose a document",
+      "filesDescription": "PDF, Word, and other files",
+      "galleryPermissionDenied": "Gallery access is denied. Allow access in your phone settings.",
+      "pickImageFailed": "Failed to select an image"
+    },
+    "anonymous": {
+      "title": "Submit anonymously",
+      "subtitle": "Your personal data will not be sent with the request",
+      "nonAnonymousSubtitle": "Your personal data will be sent with the request",
+      "userLoadError": "Failed to load user data",
+      "userIdMissing": "Unable to identify the user. Select non-anonymous submission again.",
+      "authRequiredTitle": "Authorization required",
+      "authRequiredMessage": "You need to sign in to submit a non-anonymous request.",
+      "loginButton": "Sign in",
+      "consentTitle": "Non-anonymous request",
+      "consentMessage": "Your personal data will be sent with the request. Do you agree to continue?",
+      "agreeButton": "I agree"
     }
   },
   "surveyPage": {

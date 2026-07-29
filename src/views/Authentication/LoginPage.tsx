@@ -48,17 +48,7 @@ type MeResponse = {
 
 type LoginPageProps = NativeStackScreenProps<RootStackParamList, "LoginPage">;
 
-/**
- * Если assets находится рядом с LoginPage.tsx:
- */
-const LOGIN_LOGO = require("../../../assets/splash-icon.png");
-
-/**
- * Если assets находится в корне проекта,
- * замени путь, например:
- *
- * const LOGIN_LOGO = require("../../../assets/splash-icon.png");
- */
+const LOGIN_LOGO = require("../../../assets/icon.png");
 
 export const LoginPage = ({ navigation, route }: LoginPageProps) => {
   const { t } = useTranslation();
@@ -69,9 +59,7 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const handleIinChange = (value: string) => {
-    const onlyNumbers = value.replace(/\D/g, "");
-
-    setIin(onlyNumbers.slice(0, 12));
+    setIin(value.replace(/\D/g, "").slice(0, 12));
   };
 
   const validateForm = (): boolean => {
@@ -80,7 +68,6 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
         t("loginPage.alerts.errorTitle"),
         t("loginPage.validation.iinRequired"),
       );
-
       return false;
     }
 
@@ -89,7 +76,6 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
         t("loginPage.alerts.errorTitle"),
         t("loginPage.validation.iinLength"),
       );
-
       return false;
     }
 
@@ -98,7 +84,6 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
         t("loginPage.alerts.errorTitle"),
         t("loginPage.validation.passwordRequired"),
       );
-
       return false;
     }
 
@@ -107,7 +92,6 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
         t("loginPage.alerts.errorTitle"),
         t("loginPage.validation.passwordLength"),
       );
-
       return false;
     }
 
@@ -117,15 +101,12 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
   const parseResponse = async <T,>(response: Response): Promise<T | null> => {
     const responseText = await response.text();
 
-    if (!responseText) {
-      return null;
-    }
+    if (!responseText) return null;
 
     try {
       return JSON.parse(responseText) as T;
     } catch {
       console.error("Сервер вернул некорректный JSON:", responseText);
-
       return null;
     }
   };
@@ -175,18 +156,14 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
       routes: [
         {
           name: "MainTabs",
-          params: {
-            screen: redirectTab,
-          },
+          params: { screen: redirectTab },
         },
       ],
     });
   };
 
   const handleLogin = async () => {
-    if (isLoading || !validateForm()) {
-      return;
-    }
+    if (isLoading || !validateForm()) return;
 
     try {
       setIsLoading(true);
@@ -197,10 +174,7 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          iin,
-          password,
-        }),
+        body: JSON.stringify({ iin, password }),
       });
 
       const data = await parseResponse<LoginResponse>(response);
@@ -212,7 +186,6 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
             : data?.msg || t("loginPage.errors.loginFailed");
 
         Alert.alert(t("loginPage.alerts.authErrorTitle"), errorMessage);
-
         return;
       }
 
@@ -221,7 +194,6 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
           t("loginPage.alerts.errorTitle"),
           t("loginPage.errors.emptyResponse"),
         );
-
         return;
       }
 
@@ -230,7 +202,6 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
           t("loginPage.alerts.authErrorTitle"),
           data.msg || t("loginPage.errors.loginFailed"),
         );
-
         return;
       }
 
@@ -239,7 +210,6 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
           t("loginPage.alerts.errorTitle"),
           t("loginPage.errors.tokenMissing"),
         );
-
         return;
       }
 
@@ -251,10 +221,9 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
         const currentUser = await getCurrentUser(accessToken);
 
         console.log("Текущий пользователь:", currentUser);
-      } catch (meError) {
+      } catch (error) {
         await AsyncStorage.removeItem("access_token");
-
-        throw meError;
+        throw error;
       }
 
       handleSuccessfulLogin();
@@ -272,12 +241,9 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
     }
   };
 
-  const handleForgotPassword = () => {
-    Alert.alert(
-      t("loginPage.forgotPasswordModal.title"),
-      t("loginPage.forgotPasswordModal.message"),
-    );
-  };
+  const isIinInvalid = iin.length > 0 && iin.length < 12;
+
+  const isPasswordInvalid = password.length > 0 && password.length < 8;
 
   const isSubmitDisabled =
     isLoading || iin.length !== 12 || password.trim().length < 8;
@@ -295,9 +261,9 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
       }
     >
       <KeyboardAvoidingView
+        style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
-        style={styles.container}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -329,13 +295,13 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
               <View
                 style={[
                   styles.inputWrapper,
-                  iin.length > 0 && iin.length < 12 && styles.inputWrapperError,
+                  isIinInvalid && styles.inputWrapperError,
                 ]}
               >
                 <TextInput
                   style={styles.input}
                   placeholder={t("loginPage.fields.iinPlaceholder")}
-                  placeholderTextColor="#A7B0C0"
+                  placeholderTextColor={colors.inactive}
                   value={iin}
                   onChangeText={handleIinChange}
                   keyboardType="number-pad"
@@ -344,13 +310,13 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
                   autoCorrect={false}
                   editable={!isLoading}
                   returnKeyType="next"
-                  selectionColor="#0057B8"
+                  selectionColor={colors.accent}
                 />
 
                 <Text style={styles.inputCounter}>{iin.length}/12</Text>
               </View>
 
-              {iin.length > 0 && iin.length < 12 && (
+              {isIinInvalid && (
                 <Text style={styles.validationText}>
                   {t("loginPage.validation.remainingDigits", {
                     count: remainingIinDigits,
@@ -367,15 +333,13 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
               <View
                 style={[
                   styles.inputWrapper,
-                  password.length > 0 &&
-                    password.length < 8 &&
-                    styles.inputWrapperError,
+                  isPasswordInvalid && styles.inputWrapperError,
                 ]}
               >
                 <TextInput
                   style={styles.input}
                   placeholder={t("loginPage.fields.passwordPlaceholder")}
-                  placeholderTextColor="#A7B0C0"
+                  placeholderTextColor={colors.inactive}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!isPasswordVisible}
@@ -383,7 +347,7 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
                   autoCorrect={false}
                   editable={!isLoading}
                   returnKeyType="done"
-                  selectionColor="#0057B8"
+                  selectionColor={colors.accent}
                   onSubmitEditing={handleLogin}
                 />
 
@@ -391,9 +355,7 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
                   style={styles.passwordButton}
                   activeOpacity={0.7}
                   disabled={isLoading}
-                  onPress={() =>
-                    setIsPasswordVisible((currentValue) => !currentValue)
-                  }
+                  onPress={() => setIsPasswordVisible((current) => !current)}
                 >
                   <Text style={styles.passwordButtonText}>
                     {isPasswordVisible
@@ -403,7 +365,7 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
                 </TouchableOpacity>
               </View>
 
-              {password.length > 0 && password.length < 8 && (
+              {isPasswordInvalid && (
                 <Text style={styles.validationText}>
                   {t("loginPage.validation.passwordShort")}
                 </Text>
@@ -416,14 +378,14 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
                 isSubmitDisabled && styles.submitButtonDisabled,
               ]}
               activeOpacity={0.85}
-              onPress={handleLogin}
               disabled={isSubmitDisabled}
+              onPress={handleLogin}
             >
               {isLoading ? (
-                <View style={styles.loadingButtonContent}>
-                  <ActivityIndicator size="small" color="#FFFFFF" />
+                <View style={styles.loadingContent}>
+                  <ActivityIndicator size="small" color={colors.white} />
 
-                  <Text style={styles.submitButtonText}>
+                  <Text style={styles.loadingText}>
                     {t("loginPage.loggingIn")}
                   </Text>
                 </View>
@@ -433,16 +395,6 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
                 </Text>
               )}
             </TouchableOpacity>
-
-            {/* <TouchableOpacity
-              activeOpacity={0.7}
-              disabled={isLoading}
-              onPress={handleForgotPassword}
-            >
-              <Text style={styles.forgotPasswordText}>
-                {t("loginPage.forgotPassword")}
-              </Text>
-            </TouchableOpacity> */}
           </View>
 
           <View style={styles.registrationBlock}>
@@ -473,15 +425,15 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background || "#F4F7FB",
+    backgroundColor: colors.background,
   },
 
   scrollContent: {
     flexGrow: 1,
+    justifyContent: "center",
     paddingHorizontal: 20,
     paddingTop: 24,
     paddingBottom: 42,
-    justifyContent: "center",
   },
 
   headerBlock: {
@@ -496,13 +448,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 28,
-    backgroundColor: "#0867CD",
-
-    shadowColor: "#0867CD",
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
+    backgroundColor: colors.primary,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.24,
     shadowRadius: 17,
     elevation: 8,
@@ -514,7 +462,7 @@ const styles = StyleSheet.create({
   },
 
   brandTitle: {
-    color: "#111827",
+    color: colors.primary,
     fontSize: 27,
     lineHeight: 34,
     fontWeight: "800",
@@ -523,7 +471,7 @@ const styles = StyleSheet.create({
 
   pageTitle: {
     marginTop: 14,
-    color: "#172033",
+    color: colors.textDark,
     fontSize: 21,
     lineHeight: 28,
     fontWeight: "800",
@@ -533,10 +481,9 @@ const styles = StyleSheet.create({
   brandSubtitle: {
     maxWidth: 320,
     marginTop: 7,
-    color: "#687386",
+    color: colors.textLight,
     fontSize: 14,
     lineHeight: 21,
-    fontWeight: "400",
     textAlign: "center",
   },
 
@@ -544,15 +491,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 22,
     borderWidth: 1,
-    borderColor: "#E3EAF3",
+    borderColor: colors.border,
     borderRadius: 24,
-    backgroundColor: "#FFFFFF",
-
-    shadowColor: "#11233E",
-    shadowOffset: {
-      width: 0,
-      height: 7,
-    },
+    backgroundColor: colors.white,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 7 },
     shadowOpacity: 0.07,
     shadowRadius: 18,
     elevation: 4,
@@ -565,7 +508,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     marginBottom: 8,
     paddingLeft: 3,
-    color: "#344054",
+    color: colors.textDark,
     fontSize: 14,
     lineHeight: 19,
     fontWeight: "700",
@@ -578,14 +521,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#D9E1EC",
+    borderColor: colors.border,
     borderRadius: 15,
-    backgroundColor: "#F9FBFD",
+    backgroundColor: colors.lightGray,
   },
 
   inputWrapperError: {
-    borderColor: "#E96A6A",
-    backgroundColor: "#FFF9F9",
+    borderColor: colors.dangerBorder,
+    backgroundColor: colors.dangerLight,
   },
 
   input: {
@@ -593,7 +536,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
     minHeight: 54,
     paddingVertical: 12,
-    color: "#172033",
+    color: colors.textDark,
     fontSize: 15,
     lineHeight: 20,
     fontWeight: "500",
@@ -601,7 +544,7 @@ const styles = StyleSheet.create({
 
   inputCounter: {
     marginLeft: 10,
-    color: "#98A2B3",
+    color: colors.textLight,
     fontSize: 12,
     fontWeight: "600",
   },
@@ -614,7 +557,7 @@ const styles = StyleSheet.create({
   },
 
   passwordButtonText: {
-    color: "#0057B8",
+    color: colors.accent,
     fontSize: 12,
     fontWeight: "700",
   },
@@ -622,7 +565,7 @@ const styles = StyleSheet.create({
   validationText: {
     marginTop: 6,
     paddingLeft: 3,
-    color: "#D14343",
+    color: colors.danger,
     fontSize: 12,
     lineHeight: 17,
     fontWeight: "500",
@@ -635,45 +578,39 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 16,
-    backgroundColor: "#0057B8",
-
-    shadowColor: "#0057B8",
-    shadowOffset: {
-      width: 0,
-      height: 6,
-    },
-    shadowOpacity: 0.2,
+    backgroundColor: colors.accent,
+    shadowColor: colors.accent,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.22,
     shadowRadius: 12,
     elevation: 5,
   },
 
   submitButtonDisabled: {
-    backgroundColor: "#AEBFD4",
+    backgroundColor: colors.inactive,
     shadowOpacity: 0,
     elevation: 0,
   },
 
-  loadingButtonContent: {
+  loadingContent: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
   },
 
   submitButtonText: {
-    marginLeft: 8,
-    color: "#FFFFFF",
+    color: colors.white,
     fontSize: 16,
     lineHeight: 22,
     fontWeight: "800",
   },
 
-  forgotPasswordText: {
-    marginTop: 18,
-    color: "#0057B8",
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: "700",
-    textAlign: "center",
+  loadingText: {
+    marginLeft: 8,
+    color: colors.white,
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: "800",
   },
 
   registrationBlock: {
@@ -685,7 +622,7 @@ const styles = StyleSheet.create({
   },
 
   registrationDescription: {
-    color: "#7A8494",
+    color: colors.textLight,
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "500",
@@ -693,7 +630,7 @@ const styles = StyleSheet.create({
 
   registrationLink: {
     marginLeft: 5,
-    color: "#0057B8",
+    color: colors.accent,
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "800",
