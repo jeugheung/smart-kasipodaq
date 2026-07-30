@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "smart-kasipodaq",
+    "name": "Smart Kasipodaq",
     "slug": "smart-kasipodaq",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,7 +13,8 @@
       "backgroundColor": "#0A192F"
     },
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
+      "buildNumber": "1",
       "bundleIdentifier": "com.jeugheung.smart-kasipodaq",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Приложению требуется доступ к галерее, чтобы вы могли прикрепить фото к вашей заявке.",
