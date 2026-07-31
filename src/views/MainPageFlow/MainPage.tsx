@@ -7,7 +7,7 @@ import { colors } from "@shared/theme/colors";
 import { API_CONFIG } from "@shared/api/config";
 
 import { DefaultLayout } from "@widgets/Layout/DefaultLayout";
-import { WelcomeCard } from "@widgets/WelcomeCard";
+import { WelcomeCard, WelcomeCardSkeleton } from "@widgets/WelcomeCard";
 import { NewsWidget } from "@widgets/NewsWidget";
 import { NewsSkeleton } from "@widgets/NewsWidget/NewsSkeleton";
 import { RequestsTabWidget } from "@widgets/RequestsTabWidget";
@@ -170,13 +170,19 @@ export const MainPage = ({ navigation }: any) => {
       onRightPress={() => Alert.alert("Язык", lang.toUpperCase())}
     >
       <View style={styles.content}>
-        <WelcomeCard
-          loading={userLoading}
-          firstName={client?.first_name}
-          middleName={client?.middle_name}
-          profsoyuzName={client?.profsoyuz?.name}
-          status={client?.status}
-        />
+
+        {loading ? (
+          <WelcomeCardSkeleton />
+        ) : (
+          <WelcomeCard
+            loading={userLoading}
+            firstName={client?.first_name}
+            middleName={client?.middle_name}
+            profsoyuzName={client?.profsoyuz?.name}
+            status={client?.status}
+          />
+        )}
+        
 
         {loading ? (
           <NewsSkeleton />

@@ -8,7 +8,7 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/icon-main.png",
       "resizeMode": "contain",
       "backgroundColor": "#0A192F"
     },
@@ -30,8 +30,6 @@
       },
       "permissions": [
         "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
       "edgeToEdgeEnabled": true,
@@ -49,6 +47,11 @@
         }
       ],
       "expo-document-picker"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "c87d1ce4-10da-4d70-9b56-db3556c876ba"
+      }
+    }
   }
 }

@@ -11,11 +11,8 @@ import {
   Alert,
   FlatList,
   Image,
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -369,209 +366,195 @@ export const RegisterPage = ({ navigation, route }: RegisterPageProps) => {
 
   return (
     <DefaultLayout variant="back" title={t("registerPage.layoutTitle")}>
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.headerBlock}>
-            <View style={styles.logoContainer}>
-              <Image
-                source={LOGIN_LOGO}
-                style={styles.logo}
-                resizeMode="contain"
-              />
-            </View>
-
-            <Text style={styles.brandName}>Smart Kasipodaq</Text>
-            <Text style={styles.brandTitle}>{t("registerPage.title")}</Text>
-            <Text style={styles.brandSubtitle}>
-              {t("registerPage.subtitle")}
-            </Text>
+      <View style={styles.scrollContent}>
+        <View style={styles.headerBlock}>
+          <View style={styles.logoContainer}>
+            <Image
+              source={LOGIN_LOGO}
+              style={styles.logo}
+              resizeMode="contain"
+            />
           </View>
 
-          <View style={styles.formCard}>
-            <FormInput
-              label={t("registerPage.fields.lastNameLabel")}
-              placeholder={t("registerPage.fields.lastNamePlaceholder")}
-              value={form.lastName}
-              onChangeText={(value) => updateField("lastName", value)}
-              editable={!isSubmitting}
-              autoCapitalize="words"
-            />
+          <Text style={styles.brandName}>Smart Kasipodaq</Text>
+          <Text style={styles.brandTitle}>{t("registerPage.title")}</Text>
+          <Text style={styles.brandSubtitle}>{t("registerPage.subtitle")}</Text>
+        </View>
 
-            <FormInput
-              label={t("registerPage.fields.firstNameLabel")}
-              placeholder={t("registerPage.fields.firstNamePlaceholder")}
-              value={form.firstName}
-              onChangeText={(value) => updateField("firstName", value)}
-              editable={!isSubmitting}
-              autoCapitalize="words"
-            />
+        <View style={styles.formCard}>
+          <FormInput
+            label={t("registerPage.fields.lastNameLabel")}
+            placeholder={t("registerPage.fields.lastNamePlaceholder")}
+            value={form.lastName}
+            onChangeText={(value) => updateField("lastName", value)}
+            editable={!isSubmitting}
+            autoCapitalize="words"
+          />
 
-            <FormInput
-              label={t("registerPage.fields.middleNameLabel")}
-              placeholder={t("registerPage.fields.middleNamePlaceholder")}
-              value={form.middleName}
-              onChangeText={(value) => updateField("middleName", value)}
-              editable={!isSubmitting}
-              autoCapitalize="words"
-            />
+          <FormInput
+            label={t("registerPage.fields.firstNameLabel")}
+            placeholder={t("registerPage.fields.firstNamePlaceholder")}
+            value={form.firstName}
+            onChangeText={(value) => updateField("firstName", value)}
+            editable={!isSubmitting}
+            autoCapitalize="words"
+          />
 
-            <FormInput
-              label={t("registerPage.fields.iinLabel")}
-              placeholder="000000000000"
-              value={form.iin}
-              onChangeText={handleIinChange}
-              editable={!isSubmitting}
-              keyboardType="number-pad"
-              maxLength={12}
-              error={iinError}
-            />
+          <FormInput
+            label={t("registerPage.fields.middleNameLabel")}
+            placeholder={t("registerPage.fields.middleNamePlaceholder")}
+            value={form.middleName}
+            onChangeText={(value) => updateField("middleName", value)}
+            editable={!isSubmitting}
+            autoCapitalize="words"
+          />
 
-            <FormInput
-              label={t("registerPage.fields.emailLabel")}
-              placeholder="example@mail.com"
-              value={form.email}
-              onChangeText={(value) => updateField("email", value)}
-              editable={!isSubmitting}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
+          <FormInput
+            label={t("registerPage.fields.iinLabel")}
+            placeholder="000000000000"
+            value={form.iin}
+            onChangeText={handleIinChange}
+            editable={!isSubmitting}
+            keyboardType="number-pad"
+            maxLength={12}
+            error={iinError}
+          />
 
-            <FormInput
-              label={t("registerPage.fields.phoneLabel")}
-              placeholder="+77001234567"
-              value={form.phone}
-              onChangeText={handlePhoneChange}
-              editable={!isSubmitting}
-              keyboardType="phone-pad"
-              maxLength={12}
-            />
+          <FormInput
+            label={t("registerPage.fields.emailLabel")}
+            placeholder="example@mail.com"
+            value={form.email}
+            onChangeText={(value) => updateField("email", value)}
+            editable={!isSubmitting}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>
-                {t("registerPage.fields.profsoyuzLabel")}
-              </Text>
+          <FormInput
+            label={t("registerPage.fields.phoneLabel")}
+            placeholder="+77001234567"
+            value={form.phone}
+            onChangeText={handlePhoneChange}
+            editable={!isSubmitting}
+            keyboardType="phone-pad"
+            maxLength={12}
+          />
 
-              <TouchableOpacity
-                style={styles.select}
-                activeOpacity={0.8}
-                disabled={isSubmitting || isProfsoyuzLoading}
-                onPress={() => setIsSelectOpen(true)}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>
+              {t("registerPage.fields.profsoyuzLabel")}
+            </Text>
+
+            <TouchableOpacity
+              style={styles.select}
+              activeOpacity={0.8}
+              disabled={isSubmitting || isProfsoyuzLoading}
+              onPress={() => setIsSelectOpen(true)}
+            >
+              <Text
+                style={[
+                  styles.selectText,
+                  !selectedProfsoyuz && styles.placeholder,
+                ]}
+                numberOfLines={1}
               >
-                <Text
-                  style={[
-                    styles.selectText,
-                    !selectedProfsoyuz && styles.placeholder,
-                  ]}
-                  numberOfLines={1}
-                >
-                  {isProfsoyuzLoading
-                    ? t("registerPage.profsoyuz.loading")
-                    : (selectedProfsoyuz?.name ??
-                      t("registerPage.profsoyuz.placeholder"))}
-                </Text>
-
-                {isProfsoyuzLoading ? (
-                  <ActivityIndicator size="small" color={colors.accent} />
-                ) : (
-                  <View style={styles.selectArrow} />
-                )}
-              </TouchableOpacity>
-
-              {!isProfsoyuzLoading && !profsoyuzList.length && (
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={() => void loadProfsoyuzList()}
-                >
-                  <Text style={styles.retryText}>
-                    {t("registerPage.profsoyuz.retry")}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-
-            <PasswordInput
-              label={t("registerPage.fields.passwordLabel")}
-              placeholder={t("registerPage.fields.passwordPlaceholder")}
-              value={form.password}
-              error={passwordError}
-              visible={isPasswordVisible}
-              disabled={isSubmitting}
-              onChangeText={(value) => updateField("password", value)}
-              onToggle={() => setIsPasswordVisible((current) => !current)}
-              visibleText={t("registerPage.fields.hidePassword")}
-              hiddenText={t("registerPage.fields.showPassword")}
-            />
-
-            <PasswordInput
-              label={t("registerPage.fields.confirmPasswordLabel")}
-              placeholder={t("registerPage.fields.confirmPasswordPlaceholder")}
-              value={form.confirmPassword}
-              error={confirmPasswordError}
-              visible={isConfirmPasswordVisible}
-              disabled={isSubmitting}
-              returnKeyType="done"
-              onSubmitEditing={handleRegister}
-              onChangeText={(value) => updateField("confirmPassword", value)}
-              onToggle={() =>
-                setIsConfirmPasswordVisible((current) => !current)
-              }
-              visibleText={t("registerPage.fields.hidePassword")}
-              hiddenText={t("registerPage.fields.showPassword")}
-            />
-
-            <TouchableOpacity
-              style={[
-                styles.submitButton,
-                isSubmitDisabled && styles.submitButtonDisabled,
-              ]}
-              activeOpacity={0.85}
-              disabled={isSubmitDisabled}
-              onPress={handleRegister}
-            >
-              {isSubmitting ? (
-                <View style={styles.loadingContent}>
-                  <ActivityIndicator size="small" color={colors.white} />
-                  <Text style={styles.loadingText}>
-                    {t("registerPage.registering")}
-                  </Text>
-                </View>
-              ) : (
-                <Text style={styles.submitButtonText}>
-                  {t("registerPage.registerButton")}
-                </Text>
-              )}
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.loginBlock}>
-            <Text style={styles.loginQuestion}>
-              {t("registerPage.alreadyHaveAccount")}
-            </Text>
-
-            <TouchableOpacity
-              activeOpacity={0.7}
-              disabled={isSubmitting}
-              onPress={() =>
-                navigation.replace("LoginPage", {
-                  redirectTab: route.params?.redirectTab,
-                })
-              }
-            >
-              <Text style={styles.loginLink}>
-                {t("registerPage.loginButton")}
+                {isProfsoyuzLoading
+                  ? t("registerPage.profsoyuz.loading")
+                  : (selectedProfsoyuz?.name ??
+                    t("registerPage.profsoyuz.placeholder"))}
               </Text>
+
+              {isProfsoyuzLoading ? (
+                <ActivityIndicator size="small" color={colors.accent} />
+              ) : (
+                <View style={styles.selectArrow} />
+              )}
             </TouchableOpacity>
+
+            {!isProfsoyuzLoading && !profsoyuzList.length && (
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => void loadProfsoyuzList()}
+              >
+                <Text style={styles.retryText}>
+                  {t("registerPage.profsoyuz.retry")}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+
+          <PasswordInput
+            label={t("registerPage.fields.passwordLabel")}
+            placeholder={t("registerPage.fields.passwordPlaceholder")}
+            value={form.password}
+            error={passwordError}
+            visible={isPasswordVisible}
+            disabled={isSubmitting}
+            onChangeText={(value) => updateField("password", value)}
+            onToggle={() => setIsPasswordVisible((current) => !current)}
+            visibleText={t("registerPage.fields.hidePassword")}
+            hiddenText={t("registerPage.fields.showPassword")}
+          />
+
+          <PasswordInput
+            label={t("registerPage.fields.confirmPasswordLabel")}
+            placeholder={t("registerPage.fields.confirmPasswordPlaceholder")}
+            value={form.confirmPassword}
+            error={confirmPasswordError}
+            visible={isConfirmPasswordVisible}
+            disabled={isSubmitting}
+            returnKeyType="done"
+            onSubmitEditing={handleRegister}
+            onChangeText={(value) => updateField("confirmPassword", value)}
+            onToggle={() => setIsConfirmPasswordVisible((current) => !current)}
+            visibleText={t("registerPage.fields.hidePassword")}
+            hiddenText={t("registerPage.fields.showPassword")}
+          />
+
+          <TouchableOpacity
+            style={[
+              styles.submitButton,
+              isSubmitDisabled && styles.submitButtonDisabled,
+            ]}
+            activeOpacity={0.85}
+            disabled={isSubmitDisabled}
+            onPress={handleRegister}
+          >
+            {isSubmitting ? (
+              <View style={styles.loadingContent}>
+                <ActivityIndicator size="small" color={colors.white} />
+                <Text style={styles.loadingText}>
+                  {t("registerPage.registering")}
+                </Text>
+              </View>
+            ) : (
+              <Text style={styles.submitButtonText}>
+                {t("registerPage.registerButton")}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.loginBlock}>
+          <Text style={styles.loginQuestion}>
+            {t("registerPage.alreadyHaveAccount")}
+          </Text>
+
+          <TouchableOpacity
+            activeOpacity={0.7}
+            disabled={isSubmitting}
+            onPress={() =>
+              navigation.replace("LoginPage", {
+                redirectTab: route.params?.redirectTab,
+              })
+            }
+          >
+            <Text style={styles.loginLink}>
+              {t("registerPage.loginButton")}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
       <Modal
         visible={isSelectOpen}
@@ -771,15 +754,9 @@ const PasswordInput = ({
 );
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 20,
-    paddingTop: 22,
     paddingBottom: 44,
   },
 

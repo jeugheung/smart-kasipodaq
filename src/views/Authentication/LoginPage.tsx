@@ -4,15 +4,12 @@ import { API_CONFIG } from "@shared/api/config";
 import { RootStackParamList } from "@shared/navigation/types";
 import { colors } from "@shared/theme/colors";
 import { DefaultLayout } from "@widgets/Layout/DefaultLayout";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
   Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -46,12 +43,20 @@ type MeResponse = {
   [key: string]: unknown;
 };
 
-type LoginPageProps = NativeStackScreenProps<RootStackParamList, "LoginPage">;
+type LoginPageProps = NativeStackScreenProps<
+  RootStackParamList,
+  "LoginPage"
+>;
 
 const LOGIN_LOGO = require("../../../assets/icon.png");
 
-export const LoginPage = ({ navigation, route }: LoginPageProps) => {
+export const LoginPage = ({
+  navigation,
+  route,
+}: LoginPageProps) => {
   const { t } = useTranslation();
+
+  const passwordInputRef = useRef<TextInput>(null);
 
   const [iin, setIin] = useState("");
   const [password, setPassword] = useState("");
@@ -68,6 +73,7 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
         t("loginPage.alerts.errorTitle"),
         t("loginPage.validation.iinRequired"),
       );
+
       return false;
     }
 
@@ -76,6 +82,7 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
         t("loginPage.alerts.errorTitle"),
         t("loginPage.validation.iinLength"),
       );
+
       return false;
     }
 
@@ -84,6 +91,7 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
         t("loginPage.alerts.errorTitle"),
         t("loginPage.validation.passwordRequired"),
       );
+
       return false;
     }
 
@@ -92,21 +100,30 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
         t("loginPage.alerts.errorTitle"),
         t("loginPage.validation.passwordLength"),
       );
+
       return false;
     }
 
     return true;
   };
 
-  const parseResponse = async <T,>(response: Response): Promise<T | null> => {
+  const parseResponse = async <T,>(
+    response: Response,
+  ): Promise<T | null> => {
     const responseText = await response.text();
 
-    if (!responseText) return null;
+    if (!responseText) {
+      return null;
+    }
 
     try {
       return JSON.parse(responseText) as T;
     } catch {
-      console.error("Сервер вернул некорректный JSON:", responseText);
+      console.error(
+        "Сервер вернул некорректный JSON:",
+        responseText,
+      );
+
       return null;
     }
   };
@@ -131,7 +148,9 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
       });
 
       if (response.status === 401 || response.status === 403) {
-        throw new Error(t("loginPage.errors.invalidSession"));
+        throw new Error(
+          t("loginPage.errors.invalidSession"),
+        );
       }
 
       throw new Error(
@@ -142,50 +161,71 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
     }
 
     if (data?.result !== 1) {
-      throw new Error(data?.msg || t("loginPage.errors.userLoad"));
+      throw new Error(
+        data?.msg || t("loginPage.errors.userLoad"),
+      );
     }
 
     return data;
   };
 
   const handleSuccessfulLogin = () => {
-    const redirectTab = route.params?.redirectTab ?? "MainTab";
+    const redirectTab =
+      route.params?.redirectTab ?? "MainTab";
 
     navigation.reset({
       index: 0,
       routes: [
         {
           name: "MainTabs",
-          params: { screen: redirectTab },
+          params: {
+            screen: redirectTab,
+          },
         },
       ],
     });
   };
 
   const handleLogin = async () => {
-    if (isLoading || !validateForm()) return;
+    if (isLoading || !validateForm()) {
+      return;
+    }
 
     try {
       setIsLoading(true);
 
-      const response = await fetch(API_CONFIG.LOGIN_API, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
+      const response = await fetch(
+        API_CONFIG.LOGIN_API,
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            iin,
+            password,
+          }),
         },
-        body: JSON.stringify({ iin, password }),
-      });
+      );
 
-      const data = await parseResponse<LoginResponse>(response);
+      const data =
+        await parseResponse<LoginResponse>(response);
 
       if (!response.ok) {
         const errorMessage =
           response.status === 401
-            ? t("loginPage.errors.invalidCredentials")
-            : data?.msg || t("loginPage.errors.loginFailed");
+            ? t(
+                "loginPage.errors.invalidCredentials",
+              )
+            : data?.msg ||
+              t("loginPage.errors.loginFailed");
 
-        Alert.alert(t("loginPage.alerts.authErrorTitle"), errorMessage);
+        Alert.alert(
+          t("loginPage.alerts.authErrorTitle"),
+          errorMessage,
+        );
+
         return;
       }
 
@@ -194,14 +234,17 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
           t("loginPage.alerts.errorTitle"),
           t("loginPage.errors.emptyResponse"),
         );
+
         return;
       }
 
       if (data.result !== 1) {
         Alert.alert(
           t("loginPage.alerts.authErrorTitle"),
-          data.msg || t("loginPage.errors.loginFailed"),
+          data.msg ||
+            t("loginPage.errors.loginFailed"),
         );
+
         return;
       }
 
@@ -210,19 +253,30 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
           t("loginPage.alerts.errorTitle"),
           t("loginPage.errors.tokenMissing"),
         );
+
         return;
       }
 
       const accessToken = data.access_token;
 
-      await AsyncStorage.setItem("access_token", accessToken);
+      await AsyncStorage.setItem(
+        "access_token",
+        accessToken,
+      );
 
       try {
-        const currentUser = await getCurrentUser(accessToken);
+        const currentUser =
+          await getCurrentUser(accessToken);
 
-        console.log("Текущий пользователь:", currentUser);
+        console.log(
+          "Текущий пользователь:",
+          currentUser,
+        );
       } catch (error) {
-        await AsyncStorage.removeItem("access_token");
+        await AsyncStorage.removeItem(
+          "access_token",
+        );
+
         throw error;
       }
 
@@ -235,204 +289,280 @@ export const LoginPage = ({ navigation, route }: LoginPageProps) => {
           ? error.message
           : t("loginPage.errors.connection");
 
-      Alert.alert(t("loginPage.alerts.errorTitle"), message);
+      Alert.alert(
+        t("loginPage.alerts.errorTitle"),
+        message,
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const isIinInvalid = iin.length > 0 && iin.length < 12;
+  const isIinInvalid =
+    iin.length > 0 && iin.length < 12;
 
-  const isPasswordInvalid = password.length > 0 && password.length < 8;
+  const isPasswordInvalid =
+    password.length > 0 &&
+    password.length < 8;
 
   const isSubmitDisabled =
-    isLoading || iin.length !== 12 || password.trim().length < 8;
+    isLoading ||
+    iin.length !== 12 ||
+    password.trim().length < 8;
 
-  const remainingIinDigits = 12 - iin.length;
+  const remainingIinDigits =
+    12 - iin.length;
 
   return (
     <DefaultLayout
       variant="back"
-      onRightPress={() =>
-        Alert.alert(
-          t("loginPage.language.title"),
-          t("loginPage.language.message"),
-        )
-      }
+      onBackPress={() => navigation.goBack()}
     >
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.headerBlock}>
-            <View style={styles.logoContainer}>
-              <Image
-                source={LOGIN_LOGO}
-                style={styles.logo}
-                resizeMode="contain"
-              />
-            </View>
-
-            <Text style={styles.brandTitle}>Smart Kasipodaq</Text>
-
-            <Text style={styles.pageTitle}>{t("loginPage.title")}</Text>
-
-            <Text style={styles.brandSubtitle}>{t("loginPage.subtitle")}</Text>
+      <View style={styles.content}>
+        <View style={styles.headerBlock}>
+          <View style={styles.logoContainer}>
+            <Image
+              source={LOGIN_LOGO}
+              style={styles.logo}
+              resizeMode="contain"
+            />
           </View>
 
-          <View style={styles.formCard}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>
-                {t("loginPage.fields.iinLabel")}
-              </Text>
+          <Text style={styles.brandTitle}>
+            Smart Kasipodaq
+          </Text>
 
-              <View
-                style={[
-                  styles.inputWrapper,
-                  isIinInvalid && styles.inputWrapperError,
-                ]}
-              >
-                <TextInput
-                  style={styles.input}
-                  placeholder={t("loginPage.fields.iinPlaceholder")}
-                  placeholderTextColor={colors.inactive}
-                  value={iin}
-                  onChangeText={handleIinChange}
-                  keyboardType="number-pad"
-                  maxLength={12}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  editable={!isLoading}
-                  returnKeyType="next"
-                  selectionColor={colors.accent}
-                />
+          <Text style={styles.pageTitle}>
+            {t("loginPage.title")}
+          </Text>
 
-                <Text style={styles.inputCounter}>{iin.length}/12</Text>
-              </View>
+          <Text style={styles.brandSubtitle}>
+            {t("loginPage.subtitle")}
+          </Text>
+        </View>
 
-              {isIinInvalid && (
-                <Text style={styles.validationText}>
-                  {t("loginPage.validation.remainingDigits", {
-                    count: remainingIinDigits,
-                  })}
-                </Text>
+        <View style={styles.formCard}>
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>
+              {t(
+                "loginPage.fields.iinLabel",
               )}
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>
-                {t("loginPage.fields.passwordLabel")}
-              </Text>
-
-              <View
-                style={[
-                  styles.inputWrapper,
-                  isPasswordInvalid && styles.inputWrapperError,
-                ]}
-              >
-                <TextInput
-                  style={styles.input}
-                  placeholder={t("loginPage.fields.passwordPlaceholder")}
-                  placeholderTextColor={colors.inactive}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!isPasswordVisible}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  editable={!isLoading}
-                  returnKeyType="done"
-                  selectionColor={colors.accent}
-                  onSubmitEditing={handleLogin}
-                />
-
-                <TouchableOpacity
-                  style={styles.passwordButton}
-                  activeOpacity={0.7}
-                  disabled={isLoading}
-                  onPress={() => setIsPasswordVisible((current) => !current)}
-                >
-                  <Text style={styles.passwordButtonText}>
-                    {isPasswordVisible
-                      ? t("loginPage.fields.hidePassword")
-                      : t("loginPage.fields.showPassword")}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {isPasswordInvalid && (
-                <Text style={styles.validationText}>
-                  {t("loginPage.validation.passwordShort")}
-                </Text>
-              )}
-            </View>
-
-            <TouchableOpacity
-              style={[
-                styles.submitButton,
-                isSubmitDisabled && styles.submitButtonDisabled,
-              ]}
-              activeOpacity={0.85}
-              disabled={isSubmitDisabled}
-              onPress={handleLogin}
-            >
-              {isLoading ? (
-                <View style={styles.loadingContent}>
-                  <ActivityIndicator size="small" color={colors.white} />
-
-                  <Text style={styles.loadingText}>
-                    {t("loginPage.loggingIn")}
-                  </Text>
-                </View>
-              ) : (
-                <Text style={styles.submitButtonText}>
-                  {t("loginPage.loginButton")}
-                </Text>
-              )}
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.registrationBlock}>
-            <Text style={styles.registrationDescription}>
-              {t("loginPage.noAccount")}
             </Text>
 
-            <TouchableOpacity
-              activeOpacity={0.7}
-              disabled={isLoading}
-              onPress={() =>
-                navigation.navigate("RegisterPage", {
-                  redirectTab: route.params?.redirectTab,
-                })
+            <View
+              style={[
+                styles.inputWrapper,
+                isIinInvalid &&
+                  styles.inputWrapperError,
+              ]}
+            >
+              <TextInput
+                style={styles.input}
+                placeholder={t(
+                  "loginPage.fields.iinPlaceholder",
+                )}
+                placeholderTextColor={
+                  colors.inactive
+                }
+                value={iin}
+                onChangeText={handleIinChange}
+                keyboardType="number-pad"
+                maxLength={12}
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!isLoading}
+                returnKeyType="next"
+                selectionColor={colors.accent}
+                onSubmitEditing={() =>
+                  passwordInputRef.current?.focus()
+                }
+              />
+
+              <Text
+                style={styles.inputCounter}
+              >
+                {iin.length}/12
+              </Text>
+            </View>
+
+            {isIinInvalid && (
+              <Text
+                style={styles.validationText}
+              >
+                {t(
+                  "loginPage.validation.remainingDigits",
+                  {
+                    count:
+                      remainingIinDigits,
+                  },
+                )}
+              </Text>
+            )}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>
+              {t(
+                "loginPage.fields.passwordLabel",
+              )}
+            </Text>
+
+            <View
+              style={[
+                styles.inputWrapper,
+                isPasswordInvalid &&
+                  styles.inputWrapperError,
+              ]}
+            >
+              <TextInput
+                ref={passwordInputRef}
+                style={styles.input}
+                placeholder={t(
+                  "loginPage.fields.passwordPlaceholder",
+                )}
+                placeholderTextColor={
+                  colors.inactive
+                }
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={
+                  !isPasswordVisible
+                }
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!isLoading}
+                returnKeyType="done"
+                selectionColor={colors.accent}
+                onSubmitEditing={
+                  handleLogin
+                }
+              />
+
+              <TouchableOpacity
+                style={
+                  styles.passwordButton
+                }
+                activeOpacity={0.7}
+                disabled={isLoading}
+                onPress={() =>
+                  setIsPasswordVisible(
+                    current => !current,
+                  )
+                }
+              >
+                <Text
+                  style={
+                    styles.passwordButtonText
+                  }
+                >
+                  {isPasswordVisible
+                    ? t(
+                        "loginPage.fields.hidePassword",
+                      )
+                    : t(
+                        "loginPage.fields.showPassword",
+                      )}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {isPasswordInvalid && (
+              <Text
+                style={styles.validationText}
+              >
+                {t(
+                  "loginPage.validation.passwordShort",
+                )}
+              </Text>
+            )}
+          </View>
+
+          <TouchableOpacity
+            style={[
+              styles.submitButton,
+              isSubmitDisabled &&
+                styles.submitButtonDisabled,
+            ]}
+            activeOpacity={0.85}
+            disabled={isSubmitDisabled}
+            onPress={handleLogin}
+          >
+            {isLoading ? (
+              <View
+                style={styles.loadingContent}
+              >
+                <ActivityIndicator
+                  size="small"
+                  color={colors.white}
+                />
+
+                <Text
+                  style={styles.loadingText}
+                >
+                  {t(
+                    "loginPage.loggingIn",
+                  )}
+                </Text>
+              </View>
+            ) : (
+              <Text
+                style={
+                  styles.submitButtonText
+                }
+              >
+                {t(
+                  "loginPage.loginButton",
+                )}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        <View
+          style={styles.registrationBlock}
+        >
+          <Text
+            style={
+              styles.registrationDescription
+            }
+          >
+            {t("loginPage.noAccount")}
+          </Text>
+
+          <TouchableOpacity
+            activeOpacity={0.7}
+            disabled={isLoading}
+            onPress={() =>
+              navigation.navigate(
+                "RegisterPage",
+                {
+                  redirectTab:
+                    route.params
+                      ?.redirectTab,
+                },
+              )
+            }
+          >
+            <Text
+              style={
+                styles.registrationLink
               }
             >
-              <Text style={styles.registrationLink}>
-                {t("loginPage.registration")}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+              {t(
+                "loginPage.registration",
+              )}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </DefaultLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-
-  scrollContent: {
+  content: {
     flexGrow: 1,
-    justifyContent: "center",
     paddingHorizontal: 20,
-    paddingTop: 24,
     paddingBottom: 42,
   },
 
@@ -450,7 +580,10 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     backgroundColor: colors.primary,
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 8 },
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
     shadowOpacity: 0.24,
     shadowRadius: 17,
     elevation: 8,
@@ -495,7 +628,10 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     backgroundColor: colors.white,
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 7 },
+    shadowOffset: {
+      width: 0,
+      height: 7,
+    },
     shadowOpacity: 0.07,
     shadowRadius: 18,
     elevation: 4,
@@ -580,7 +716,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: colors.accent,
     shadowColor: colors.accent,
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
     shadowOpacity: 0.22,
     shadowRadius: 12,
     elevation: 5,
