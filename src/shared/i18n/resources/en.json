@@ -360,6 +360,14 @@
       "message": "Registration is complete. You can now sign in.",
       "loginButton": "Sign in"
     }
+  },
+  "update": {
+    "title": "Update available",
+    "message": "A new version of the app is available. Update the app to get the latest improvements and fixes.",
+    "button": "Update",
+    "later": "Later",
+    "storeErrorTitle": "Unable to open the store",
+    "storeErrorMessage": "Open the App Store or Google Play and update the app manually."
   }
 
 

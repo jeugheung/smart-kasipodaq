@@ -38,23 +38,12 @@ export default function App() {
       [
         {
           text: i18n.t("update.button") || "Обновить",
-          onPress: () => {
-            const url = Platform.OS === 'ios'
-              ? 'itms-apps://apps.apple.com/kz/app/su-solutions/id1583725427'
-              : 'market://details?id=com.feftio.susolutions';
-
-            Linking.canOpenURL(url).then(supported => {
-              if (supported) Linking.openURL(url);
-              else {
-                const webUrl = Platform.OS === 'ios' 
-                  ? 'https://apps.apple.com/kz/app/su-solutions/id1583725427' 
-                  : 'https://play.google.com/store/apps/details?id=com.feftio.susolutions';
-                Linking.openURL(webUrl);
-              }
-            });
-          },
+          onPress: () => {}, // просто закроет алерт
         },
-        { text: i18n.t("update.later") || "Позже", style: "cancel" }
+        {
+          text: i18n.t("update.later") || "Позже",
+          style: "cancel",
+        },
       ]
     );
   }, []);

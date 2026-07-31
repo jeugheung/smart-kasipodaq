@@ -2,7 +2,7 @@
   "expo": {
     "name": "Smart Kasipodaq",
     "slug": "smart-kasipodaq",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "buildNumber": "1",
+      "buildNumber": "2",
       "bundleIdentifier": "com.jeugheung.smart-kasipodaq",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Приложению требуется доступ к галерее, чтобы вы могли прикрепить фото к вашей заявке.",
