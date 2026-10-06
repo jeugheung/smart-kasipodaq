@@ -16,6 +16,7 @@ import {
   FlatList,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -59,13 +60,18 @@ export const RequestForm = ({ navigation }: any) => {
 
   const [activeTab, setActiveTab] = useState<RequestType>("violation");
 
+  // Заголовок проблемы
   const [problem, setProblem] = useState("");
+
+  // Описание / решение проблемы
+  const [solution, setSolution] = useState("");
+
   const [contacts, setContacts] = useState("");
 
   // По умолчанию заявка анонимная
   const [anonymous, setAnonymous] = useState(true);
 
-  // ID авторизованного пользователя для неанонимной заявки
+  // ID авторизованного пользователя
   const [clientId, setClientId] = useState<number | null>(null);
 
   const [loading, setLoading] = useState(false);
@@ -103,13 +109,13 @@ export const RequestForm = ({ navigation }: any) => {
       return JSON.parse(text) as T;
     } catch {
       console.error("Сервер вернул некорректный JSON:", text);
+
       return null;
     }
   };
 
   /**
    * Проверяет авторизацию и получает ID пользователя.
-   * Если токена нет или он недействителен — возвращает null.
    */
   const getAuthorizedClientId = async (): Promise<number | null> => {
     const accessToken = await AsyncStorage.getItem("access_token");
@@ -154,11 +160,7 @@ export const RequestForm = ({ navigation }: any) => {
   };
 
   /**
-   * Обрабатывает изменение анонимности.
-   *
-   * true  — включаем анонимную отправку сразу.
-   * false — сначала проверяем авторизацию,
-   *         затем показываем согласие на передачу данных.
+   * Переключение анонимности.
    */
   const handleAnonymousChange = async (nextValue: boolean) => {
     if (isCheckingUser || loading) return;
@@ -234,6 +236,8 @@ export const RequestForm = ({ navigation }: any) => {
     });
   };
 
+  /* ================= FILE SHEET ================= */
+
   const openSheet = () => {
     setIsMenuVisible(true);
     sheetAnim.setValue(400);
@@ -248,13 +252,17 @@ export const RequestForm = ({ navigation }: any) => {
   };
 
   const closeSheet = (nextAction?: FilePickerAction) => {
-    if (nextAction) setPendingAction(nextAction);
+    if (nextAction) {
+      setPendingAction(nextAction);
+    }
 
     Animated.timing(sheetAnim, {
       toValue: 400,
       duration: 250,
       useNativeDriver: true,
-    }).start(() => setIsMenuVisible(false));
+    }).start(() => {
+      setIsMenuVisible(false);
+    });
   };
 
   const handlePickImage = async () => {
@@ -280,7 +288,9 @@ export const RequestForm = ({ navigation }: any) => {
         quality: 0.8,
       });
 
-      if (result.canceled || !result.assets?.length) return;
+      if (result.canceled || !result.assets?.length) {
+        return;
+      }
 
       const timestamp = Date.now();
 
@@ -318,7 +328,9 @@ export const RequestForm = ({ navigation }: any) => {
   };
 
   useEffect(() => {
-    if (isMenuVisible || !pendingAction) return;
+    if (isMenuVisible || !pendingAction) {
+      return;
+    }
 
     const timer = setTimeout(() => {
       if (pendingAction === "gallery") {
@@ -339,11 +351,26 @@ export const RequestForm = ({ navigation }: any) => {
     setFiles((currentFiles) => currentFiles.filter((file) => file.uri !== uri));
   };
 
+  /* ================= SUBMIT ================= */
+
   const submit = async () => {
     if (!problem.trim()) {
       Alert.alert(
         t("requestForm.alerts.errorTitle"),
-        t("requestForm.alerts.problemRequired"),
+        t("requestForm.alerts.problemTitleRequired", {
+          defaultValue: "Укажите заголовок проблемы",
+        }),
+      );
+
+      return;
+    }
+
+    if (!solution.trim()) {
+      Alert.alert(
+        t("requestForm.alerts.errorTitle"),
+        t("requestForm.alerts.problemRequired", {
+          defaultValue: "Опишите проблему",
+        }),
       );
 
       return;
@@ -366,10 +393,8 @@ export const RequestForm = ({ navigation }: any) => {
       let senderIdentifier: string;
 
       if (anonymous) {
-        // Анонимная заявка — отправляем UUID устройства
         senderIdentifier = await getOrCreateUUID();
       } else {
-        // Неанонимная заявка — отправляем ID пользователя
         if (!clientId) {
           setAnonymous(true);
 
@@ -389,15 +414,19 @@ export const RequestForm = ({ navigation }: any) => {
 
       const payload = {
         type_name: activeTab,
+
+        // Заголовок проблемы
         problem: problem.trim(),
-        solution: problem.trim(),
+
+        // Полное описание проблемы
+        solution: solution.trim(),
+
         phone: contacts.trim() || undefined,
+
         files: files
           .filter((file) => file.serverPath)
           .map((file) => file.serverPath!),
 
-        // Для анонимной заявки — UUID.
-        // Для неанонимной заявки — ID пользователя.
         uuid: senderIdentifier,
       };
 
@@ -411,6 +440,7 @@ export const RequestForm = ({ navigation }: any) => {
       );
 
       setProblem("");
+      setSolution("");
       setContacts("");
       setAnonymous(true);
       setClientId(null);
@@ -429,10 +459,24 @@ export const RequestForm = ({ navigation }: any) => {
   };
 
   const isSubmitDisabled =
-    loading || uploading || isCheckingUser || !problem.trim();
+    loading ||
+    uploading ||
+    isCheckingUser ||
+    !problem.trim() ||
+    !solution.trim();
+
+  /* ================= RENDER ================= */
 
   return (
-    <View style={styles.content}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="interactive"
+    >
+      {/* ================= TOPICS ================= */}
+
       <View style={styles.tabsWrapper}>
         <Text style={styles.tabsTitle}>{t("requestForm.selectTopic")}</Text>
 
@@ -465,13 +509,30 @@ export const RequestForm = ({ navigation }: any) => {
         />
       </View>
 
+      {/* ================= ЗАГОЛОВОК ================= */}
+
       <InputWithCounter
         value={problem}
         onChangeText={setProblem}
-        placeholder={t("requestForm.placeholders.problem")}
+        placeholder={t("requestForm.placeholders.problemTitle", {
+          defaultValue: "Заголовок проблемы",
+        })}
+        maxLength={500}
+      />
+
+      {/* ================= ОПИСАНИЕ ================= */}
+
+      <InputWithCounter
+        value={solution}
+        onChangeText={setSolution}
+        placeholder={t("requestForm.placeholders.problem", {
+          defaultValue: "Опишите проблему",
+        })}
         multiline
         maxLength={1000}
       />
+
+      {/* ================= CONTACTS ================= */}
 
       <InputWithCounter
         value={contacts}
@@ -479,6 +540,8 @@ export const RequestForm = ({ navigation }: any) => {
         placeholder={t("requestForm.placeholders.contacts")}
         maxLength={100}
       />
+
+      {/* ================= FILE BUTTON ================= */}
 
       <Pressable
         onPress={openSheet}
@@ -495,6 +558,8 @@ export const RequestForm = ({ navigation }: any) => {
           />
         )}
       </Pressable>
+
+      {/* ================= FILES ================= */}
 
       {files.length > 0 && (
         <View style={styles.fileSection}>
@@ -574,7 +639,12 @@ export const RequestForm = ({ navigation }: any) => {
 
                   {!isUploaded && (
                     <View
-                      style={[styles.progressBar, { width: `${progress}%` }]}
+                      style={[
+                        styles.progressBar,
+                        {
+                          width: `${progress}%`,
+                        },
+                      ]}
                     />
                   )}
                 </View>
@@ -583,6 +653,8 @@ export const RequestForm = ({ navigation }: any) => {
           </View>
         </View>
       )}
+
+      {/* ================= ANONYMOUS ================= */}
 
       <View style={styles.anonBlock}>
         <View style={styles.anonTextBlock}>
@@ -615,6 +687,8 @@ export const RequestForm = ({ navigation }: any) => {
         </View>
       </View>
 
+      {/* ================= SUBMIT ================= */}
+
       <AppButton
         title={
           loading
@@ -630,7 +704,8 @@ export const RequestForm = ({ navigation }: any) => {
         disabled={isSubmitDisabled}
       />
 
-      {/* Модалка: пользователь не авторизован */}
+      {/* ================= AUTH MODAL ================= */}
+
       <Modal
         visible={isAuthModalVisible}
         transparent
@@ -687,7 +762,8 @@ export const RequestForm = ({ navigation }: any) => {
         </Pressable>
       </Modal>
 
-      {/* Модалка: согласие на передачу данных */}
+      {/* ================= CONSENT MODAL ================= */}
+
       <Modal
         visible={isConsentModalVisible}
         transparent
@@ -747,7 +823,8 @@ export const RequestForm = ({ navigation }: any) => {
         </Pressable>
       </Modal>
 
-      {/* Модалка выбора файла */}
+      {/* ================= FILE PICKER ================= */}
+
       <Modal
         visible={isMenuVisible}
         transparent
@@ -762,7 +839,11 @@ export const RequestForm = ({ navigation }: any) => {
             style={[
               styles.bottomMenu,
               {
-                transform: [{ translateY: sheetAnim }],
+                transform: [
+                  {
+                    translateY: sheetAnim,
+                  },
+                ],
               },
             ]}
           >
@@ -854,99 +935,91 @@ export const RequestForm = ({ navigation }: any) => {
           </Animated.View>
         </View>
       </Modal>
-    </View>
+    </ScrollView>
   );
 };
 
+/* ================= STYLES ================= */
+
 const styles = StyleSheet.create({
-  content: {
-    minHeight: "100%",
-    paddingHorizontal: 15,
-    paddingTop: 20,
-    paddingBottom: 100,
-    gap: 20,
+  scroll: {
+    flex: 1,
     backgroundColor: colors.background,
   },
 
-  tabsWrapper: {
-    marginHorizontal: -15,
-    gap: 12,
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+
+    // ВАЖНО:
+    // запас под кнопкой, чтобы нижний TabBar
+    // её не перекрывал
+    paddingBottom: 120,
+
+    gap: 16,
   },
 
-  tabsContent: {
-    paddingHorizontal: 15,
+  tabsWrapper: {
+    gap: 10,
   },
 
   tabsTitle: {
-    paddingLeft: 15,
-    color: colors.primary,
     fontSize: 16,
-    lineHeight: 24,
-    fontWeight: "800",
+    fontWeight: "500",
+    color: "#1F2937",
+  },
+
+  tabsContent: {
+    gap: 8,
+    paddingRight: 16,
   },
 
   tabButton: {
-    minHeight: 42,
-    marginRight: 8,
     paddingHorizontal: 16,
-    paddingVertical: 9,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 22,
-    backgroundColor: colors.lightGray,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: "#F3F4F6",
   },
 
   activeTab: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.18,
-    shadowRadius: 6,
-    elevation: 3,
+    backgroundColor: colors.accent,
   },
 
   tabText: {
-    color: colors.textLight,
     fontSize: 14,
-    fontWeight: "600",
-    textAlign: "center",
+    color: "#6B7280",
+    fontWeight: "500",
   },
 
   activeTabText: {
-    color: colors.white,
-    fontWeight: "800",
+    color: "#FFFFFF",
   },
 
   pressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.99 }],
+    opacity: 0.7,
   },
 
   uploadBtn: {
-    position: "relative",
-    minHeight: 52,
-    paddingHorizontal: 18,
-    flexDirection: "row",
+    minHeight: 50,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: colors.accent,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1.5,
-    borderColor: colors.accent,
-    borderRadius: 16,
-    backgroundColor: colors.primaryLight,
+    flexDirection: "row",
+    paddingHorizontal: 16,
   },
 
   uploadText: {
     color: colors.accent,
-    fontSize: 14,
-    fontWeight: "800",
+    fontSize: 15,
+    fontWeight: "500",
   },
 
   uploadIndicator: {
-    position: "absolute",
-    right: 17,
+    marginLeft: 10,
   },
 
   fileSection: {
@@ -956,68 +1029,62 @@ const styles = StyleSheet.create({
   fileSectionHeader: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
   },
 
   fileSectionTitle: {
-    color: colors.textDark,
     fontSize: 14,
-    fontWeight: "800",
+    fontWeight: "600",
+    color: "#1F2937",
   },
 
   fileCount: {
     minWidth: 24,
     height: 24,
-    marginLeft: 8,
-    paddingHorizontal: 7,
-    overflow: "hidden",
-    color: colors.white,
-    fontSize: 12,
-    lineHeight: 24,
-    fontWeight: "800",
-    textAlign: "center",
     borderRadius: 12,
-    backgroundColor: colors.accent,
+    textAlign: "center",
+    lineHeight: 24,
+    backgroundColor: "#EEF2F7",
+    color: "#6B7280",
+    fontSize: 12,
   },
 
   fileList: {
-    gap: 10,
+    gap: 8,
   },
 
   fileCard: {
-    position: "relative",
-    minHeight: 68,
-    paddingHorizontal: 12,
-    paddingVertical: 11,
-    overflow: "hidden",
+    minHeight: 64,
+    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    padding: 10,
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 15,
-    backgroundColor: colors.white,
+    overflow: "hidden",
   },
 
   fileCardSuccess: {
-    borderColor: colors.successBorder,
-    backgroundColor: colors.successLight,
+    borderColor: "#D1FAE5",
   },
 
   fileIconWrapper: {
-    width: 40,
-    height: 40,
-    marginRight: 11,
-    alignItems: "center",
+    width: 42,
+    height: 42,
+    borderRadius: 10,
+    backgroundColor: "#F3F4F6",
     justifyContent: "center",
-    borderRadius: 12,
-    backgroundColor: colors.primaryLight,
+    alignItems: "center",
+    marginRight: 10,
   },
 
   fileIconWrapperSuccess: {
-    backgroundColor: colors.successLight,
+    backgroundColor: "#ECFDF5",
   },
 
   fileIcon: {
-    fontSize: 19,
+    fontSize: 20,
   },
 
   fileInfo: {
@@ -1026,81 +1093,77 @@ const styles = StyleSheet.create({
   },
 
   fileName: {
-    color: colors.textDark,
-    fontSize: 14,
-    lineHeight: 19,
-    fontWeight: "700",
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#1F2937",
   },
 
   fileStatus: {
-    marginTop: 3,
-    color: colors.textLight,
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "500",
+    marginTop: 4,
+    fontSize: 11,
+    color: "#6B7280",
   },
 
   fileStatusSuccess: {
-    color: colors.success,
-    fontWeight: "700",
+    color: "#059669",
   },
 
   fileActions: {
     marginLeft: 10,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 8,
   },
 
   removeButton: {
-    width: 30,
-    height: 30,
+    width: 28,
+    height: 28,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 15,
-    backgroundColor: colors.lightGray,
   },
 
   removeIcon: {
-    marginTop: -2,
-    color: colors.textLight,
     fontSize: 22,
-    lineHeight: 24,
+    color: "#9CA3AF",
   },
 
   progressBar: {
     position: "absolute",
     bottom: 0,
     left: 0,
-    height: 3,
-    borderRadius: 2,
+    height: 2,
     backgroundColor: colors.accent,
   },
 
   anonBlock: {
+    minHeight: 76,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
 
   anonTextBlock: {
     flex: 1,
+    paddingRight: 12,
   },
 
   anonTitle: {
-    color: colors.textDark,
-    fontSize: 14,
-    lineHeight: 21,
-    fontWeight: "800",
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#1F2937",
   },
 
   anonSubtitle: {
-    marginTop: 2,
-    color: colors.textLight,
-    fontSize: 11,
+    marginTop: 4,
+    fontSize: 12,
     lineHeight: 17,
-    fontWeight: "500",
+    color: "#6B7280",
   },
 
   switchContainer: {
@@ -1109,63 +1172,57 @@ const styles = StyleSheet.create({
   },
 
   switchLoader: {
-    marginRight: 10,
+    marginRight: 8,
   },
 
   confirmOverlay: {
     flex: 1,
-    paddingHorizontal: 24,
-    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.45)",
     justifyContent: "center",
-    backgroundColor: colors.overlay,
+    alignItems: "center",
+    paddingHorizontal: 20,
   },
 
   confirmModal: {
     width: "100%",
-    maxWidth: 380,
+    maxWidth: 360,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
     padding: 22,
-    borderRadius: 22,
-    backgroundColor: colors.white,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 18,
-    elevation: 10,
+    alignItems: "center",
   },
 
   modalIcon: {
-    width: 58,
-    height: 58,
-    marginBottom: 15,
-    alignSelf: "center",
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#F3F4F6",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 29,
-    backgroundColor: colors.primaryLight,
+    marginBottom: 14,
   },
 
   modalIconText: {
-    fontSize: 26,
+    fontSize: 25,
   },
 
   confirmTitle: {
-    color: colors.primary,
-    fontSize: 19,
-    lineHeight: 26,
-    fontWeight: "800",
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#111827",
     textAlign: "center",
   },
 
   confirmDescription: {
     marginTop: 10,
-    color: colors.textLight,
     fontSize: 14,
-    lineHeight: 21,
-    fontWeight: "500",
+    lineHeight: 20,
+    color: "#6B7280",
     textAlign: "center",
   },
 
   confirmActions: {
+    width: "100%",
     marginTop: 22,
     flexDirection: "row",
     gap: 10,
@@ -1173,34 +1230,32 @@ const styles = StyleSheet.create({
 
   cancelButton: {
     flex: 1,
-    minHeight: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: "#F3F4F6",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 14,
-    backgroundColor: colors.lightGray,
   },
 
   cancelButtonText: {
-    color: colors.textDark,
-    fontSize: 14,
-    fontWeight: "700",
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#374151",
   },
 
   confirmButton: {
     flex: 1,
-    minHeight: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: colors.accent,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 14,
-    backgroundColor: colors.accent,
   },
 
   confirmButtonText: {
-    color: colors.white,
-    fontSize: 14,
-    fontWeight: "800",
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
 
   modalOverlay: {
@@ -1210,110 +1265,91 @@ const styles = StyleSheet.create({
 
   darkBackdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.overlay,
+    backgroundColor: "rgba(0,0,0,0.45)",
   },
 
   bottomMenu: {
-    overflow: "hidden",
-    borderTopLeftRadius: 26,
-    borderTopRightRadius: 26,
-    backgroundColor: colors.white,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: -5 },
-    shadowOpacity: 0.16,
-    shadowRadius: 15,
-    elevation: 12,
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 10,
+    paddingHorizontal: 16,
+    paddingBottom: 20,
   },
 
   sheetHandle: {
-    width: 44,
-    height: 5,
-    marginTop: 10,
-    marginBottom: 3,
     alignSelf: "center",
-    borderRadius: 3,
-    backgroundColor: colors.inactive,
+    width: 42,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#D1D5DB",
+    marginBottom: 16,
   },
 
   sheetHeader: {
-    paddingHorizontal: 20,
-    paddingTop: 15,
-    paddingBottom: 16,
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
-    borderBottomWidth: 1,
-    borderBottomColor: colors.lightGray,
+    marginBottom: 16,
   },
 
   sheetHeaderText: {
     flex: 1,
-    paddingRight: 12,
   },
 
   sheetTitle: {
-    color: colors.primary,
-    fontSize: 19,
-    lineHeight: 25,
-    fontWeight: "800",
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#111827",
   },
 
   sheetSubtitle: {
-    marginTop: 3,
-    color: colors.textLight,
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: "500",
+    marginTop: 4,
+    fontSize: 13,
+    color: "#6B7280",
   },
 
   sheetCloseButton: {
-    width: 38,
-    height: 38,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "#F3F4F6",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 19,
-    backgroundColor: colors.lightGray,
+    marginLeft: 12,
   },
 
   sheetClose: {
-    marginTop: -2,
-    color: colors.textLight,
-    fontSize: 25,
-    lineHeight: 27,
+    fontSize: 24,
+    lineHeight: 26,
+    color: "#6B7280",
   },
 
   sheetContent: {
-    paddingHorizontal: 15,
-    paddingTop: 15,
-    gap: 12,
+    gap: 10,
   },
 
   sheetItem: {
-    minHeight: 76,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    minHeight: 72,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    backgroundColor: "#F9FAFB",
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    backgroundColor: colors.white,
   },
 
   sheetItemPressed: {
-    opacity: 0.78,
-    transform: [{ scale: 0.99 }],
-    backgroundColor: colors.lightGray,
+    opacity: 0.65,
   },
 
   sheetItemIcon: {
-    width: 48,
-    height: 48,
-    marginRight: 13,
+    width: 46,
+    height: 46,
+    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 15,
-    backgroundColor: colors.primaryLight,
+    marginRight: 12,
   },
 
   sheetItemEmoji: {
@@ -1325,29 +1361,24 @@ const styles = StyleSheet.create({
   },
 
   sheetItemTitle: {
-    color: colors.textDark,
     fontSize: 15,
-    lineHeight: 20,
-    fontWeight: "800",
+    fontWeight: "600",
+    color: "#1F2937",
   },
 
   sheetItemDescription: {
     marginTop: 3,
-    color: colors.textLight,
     fontSize: 12,
-    lineHeight: 17,
-    fontWeight: "500",
+    color: "#6B7280",
   },
 
   sheetItemArrow: {
-    marginLeft: 10,
-    color: colors.accent,
-    fontSize: 30,
-    lineHeight: 31,
-    fontWeight: "300",
+    marginLeft: 8,
+    fontSize: 26,
+    color: "#9CA3AF",
   },
 
   sheetFooter: {
-    height: 34,
+    height: 8,
   },
 });
